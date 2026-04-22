@@ -756,9 +756,16 @@ export default function App() {
 
       {/* Header */}
       <div style={{ borderBottom: '1px solid rgba(255,255,255,0.28)', padding: '18px 36px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
-        <div>
-          <div style={{ fontSize: 14, letterSpacing: 3, color: '#C8A96E', fontWeight: 600, marginBottom: 3 }}>HIGHER EDUCATION</div>
-          <div style={{ fontSize: 19, fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>Brand Index</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+          <div>
+            <div style={{ fontSize: 14, letterSpacing: 3, color: '#C8A96E', fontWeight: 600, marginBottom: 3 }}>HIGHER EDUCATION</div>
+            <div style={{ fontSize: 19, fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>Brand Index</div>
+          </div>
+          <a href="/insights" style={{
+            fontSize: 11, letterSpacing: 1.8, color: '#C8A96E', textDecoration: 'none',
+            border: '1px solid rgba(200,169,110,0.5)', padding: '7px 12px', borderRadius: 4,
+            fontWeight: 600, textTransform: 'uppercase',
+          }}>↗ Insights</a>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {["carnegie","data","results"].map((s, i) => (
