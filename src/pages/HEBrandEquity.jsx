@@ -764,16 +764,19 @@ export default function App() {
   return (
     <div style={{ minHeight: '100vh', background: '#FFFFFF', fontFamily: "'Bitter', Georgia, serif", color: '#243551' }}>
 
+      {/* Brand color rule */}
+      <div style={{ height: 4, background: 'linear-gradient(to right, #1C3678 0%, #1C3678 35%, #EB5600 35%, #EB5600 55%, #6AA4C8 55%, #6AA4C8 75%, #E9EDEE 75%)' }} />
+
       {/* Header */}
-      <div style={{ borderBottom: '1px solid #F4F6F8', padding: '18px 36px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+      <div style={{ borderBottom: '1px solid #E9EDEE', padding: '20px 36px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
           <div>
-            <div style={{ fontSize: 14, letterSpacing: 3, color: '#EB5600', fontWeight: 600, marginBottom: 3 }}>HIGHER EDUCATION</div>
-            <div style={{ fontSize: 19, fontFamily: "'Young Serif', Georgia, serif", fontWeight: 700 }}>Brand Index</div>
+            <div style={{ fontSize: 10, letterSpacing: 2, color: '#595959', fontWeight: 600, marginBottom: 4, textTransform: 'uppercase' }}>Higher Education Brand Index</div>
+            <div style={{ fontSize: 28, fontFamily: "'Young Serif', Georgia, serif", color: '#243551', lineHeight: 1 }}>mcfadden<span style={{ color: '#EB5600' }}>+</span>co</div>
           </div>
           <a href="/insights" style={{
-            fontSize: 11, letterSpacing: 1.8, color: '#EB5600', textDecoration: 'none',
-            border: '1px solid rgba(235,86,0,0.5)', padding: '7px 12px', borderRadius: 4,
+            fontSize: 11, letterSpacing: 1.8, color: '#1C3678', textDecoration: 'none',
+            border: '1.5px solid #1C3678', padding: '7px 14px', borderRadius: 0,
             fontWeight: 600, textTransform: 'uppercase',
           }}>↗ Insights</a>
         </div>
@@ -782,28 +785,29 @@ export default function App() {
             <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 7,
-                opacity: step === s ? 1 : 0.35,
+                opacity: step === s ? 1 : 0.45,
                 cursor: (s !== "carnegie" && !carnegieId) ? 'not-allowed' : 'pointer',
               }} onClick={() => { if (s !== "carnegie" && !carnegieId) return; setStep(s); }}>
                 <div style={{
-                  width: 20, height: 20, borderRadius: '50%',
-                  background: step === s ? '#EB5600' : '#D6DCE5',
+                  width: 22, height: 22, borderRadius: '50%',
+                  background: step === s ? '#1C3678' : '#E9EDEE',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 14, fontWeight: 700, color: step === s ? '#FFFFFF' : '#243551',
+                  fontSize: 12, fontWeight: 700, color: step === s ? '#FFFFFF' : '#243551',
+                  fontFamily: "'Young Serif', Georgia, serif",
                 }}>{i + 1}</div>
-                <span style={{ fontSize: 14, letterSpacing: 1, textTransform: 'uppercase', fontWeight: step === s ? 700 : 400 }}>
+                <span style={{ fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: step === s ? 700 : 500, color: '#243551' }}>
                   {s === "carnegie" ? "Classify" : s === "data" ? "Enter Data" : "Results"}
                 </span>
               </div>
-              {i < 2 && <span style={{ color: '#6B7585', fontSize: 11 }}>›</span>}
+              {i < 2 && <span style={{ color: '#A6ADBA', fontSize: 11 }}>›</span>}
             </div>
           ))}
         </div>
         {overall !== null
           ? <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 14, letterSpacing: 2, color: '#243551', marginBottom: 2 }}>WEIGHTED SCORE</div>
-              <div style={{ fontSize: 34, fontFamily: "'Bitter', Georgia, serif", color: '#EB5600', lineHeight: 1 }}>{overall}</div>
-              <div style={{ fontSize: 14, color: '#6B7585' }}>/100 · {selectedCarnegie?.short}</div>
+              <div style={{ fontSize: 10, letterSpacing: 2, color: '#595959', marginBottom: 2, fontWeight: 600, textTransform: 'uppercase' }}>Weighted Score</div>
+              <div style={{ fontSize: 36, fontFamily: "'Young Serif', Georgia, serif", color: '#1C3678', lineHeight: 1 }}>{overall}</div>
+              <div style={{ fontSize: 12, color: '#595959' }}>/100 · {selectedCarnegie?.short}</div>
             </div>
           : <div style={{ width: 80 }} />
         }
