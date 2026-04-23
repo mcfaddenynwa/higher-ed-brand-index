@@ -8,33 +8,41 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* mcfadden+co brand palette — navy-led, orange accent */
+    --background: 0 0% 100%;            /* White #FFFFFF */
+    --foreground: 218 39% 23%;          /* Dark Navy #243551 */
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 218 39% 23%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 218 39% 23%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 220 62% 29%;             /* Navy #1C3678 */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 195 36% 92%;           /* Light Gray #E9EDEE */
+    --secondary-foreground: 218 39% 23%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 195 36% 95%;
+    --muted-foreground: 0 0% 35%;       /* Mid Gray #595959 */
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 22 100% 46%;              /* Orange #EB5600 */
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 22 100% 46%;         /* Orange (used sparingly) */
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 195 13% 92%;              /* Light Gray rule */
+    --input: 195 13% 92%;
+    --ring: 220 62% 29%;                /* Navy focus ring */
+
+    /* Brand-extended tokens */
+    --brand-navy: 220 62% 29%;          /* #1C3678 */
+    --brand-navy-deep: 218 39% 23%;     /* #243551 */
+    --brand-orange: 22 100% 46%;        /* #EB5600 */
+    --brand-steel: 200 47% 60%;         /* #6AA4C8 */
+    --brand-teal: 173 71% 35%;          /* #1A9988 */
 
     --radius: 0.5rem;
 
