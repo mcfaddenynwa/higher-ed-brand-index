@@ -13,7 +13,20 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        serif: ["'Young Serif'", "Georgia", "serif"],
+        sans: ["'Bitter'", "Georgia", "serif"],
+        body: ["'Bitter'", "Georgia", "serif"],
+        display: ["'Young Serif'", "Georgia", "serif"],
+      },
       colors: {
+        brand: {
+          navy: "hsl(var(--brand-navy))",
+          "navy-deep": "hsl(var(--brand-navy-deep))",
+          orange: "hsl(var(--brand-orange))",
+          steel: "hsl(var(--brand-steel))",
+          teal: "hsl(var(--brand-teal))",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
