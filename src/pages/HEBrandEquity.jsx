@@ -187,7 +187,7 @@ const AXES = [
     ]
   },
   {
-    key: "financial", label: "Financial Strength", color: "#1C3678",
+    key: "financial", label: "Financial Strength", color: "#243551",
     description: "Endowment per student, total operating revenue (Form 990 / state reports)",
     inputs: [
       { id: "endowmentPerStudent", label: "Endowment per student ($K)", labelIntl: "Endowment per student (USD equiv. $K)", placeholder: "e.g. 45", max: 600 },
@@ -195,7 +195,7 @@ const AXES = [
     ]
   },
   {
-    key: "profile", label: "Institutional Profile", color: "#243551",
+    key: "profile", label: "Institutional Profile", color: "#3F5A8A",
     description: "Academic medical center, law school, business school, engineering — auto-populated from institutional database (annual review recommended)",
     checkboxes: [
       { id: "chk_healthSystem", label: "Academic medical center / health system" },
@@ -206,7 +206,7 @@ const AXES = [
     inputs: [],
   },
   {
-    key: "research", label: "Academic & Research Reputation", color: "#EB5600",
+    key: "research", label: "Academic & Research Reputation", color: "#1C3678",
     description: "Federal R&D expenditures (NSF HERD), doctoral degrees awarded, 2025 Research Activity Designation",
     hiddenFor: ["associates", "tribal", "bac_arts", "bac_diverse", "intl_teaching", "intl_specialist"],
     inputs: [
@@ -225,7 +225,7 @@ const AXES = [
     ]
   },
   {
-    key: "alumni", label: "Alumni Engagement", color: "#EB5600",
+    key: "alumni", label: "Alumni Engagement", color: "#A47B57",
     description: "Alumni giving rate, number of living alumni (VSE survey / self-report)",
     inputs: [
       { id: "givingRate", label: "Alumni giving rate (%)", placeholder: "e.g. 14", max: 60 },
