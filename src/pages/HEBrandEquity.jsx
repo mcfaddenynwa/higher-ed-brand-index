@@ -774,11 +774,6 @@ export default function App() {
             <div style={{ fontSize: 10, letterSpacing: 2, color: '#595959', fontWeight: 600, marginBottom: 4, textTransform: 'uppercase' }}>Higher Education Brand Index</div>
             <div style={{ fontSize: 28, fontFamily: "'Young Serif', Georgia, serif", color: '#243551', lineHeight: 1 }}>mcfadden<span style={{ color: '#243551' }}>+</span>co</div>
           </div>
-          <a href="/insights" style={{
-            fontSize: 11, letterSpacing: 1.8, color: '#1C3678', textDecoration: 'none',
-            border: '1.5px solid #1C3678', padding: '7px 14px', borderRadius: 0,
-            fontWeight: 600, textTransform: 'uppercase',
-          }}>↗ Insights</a>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {["carnegie","data","results"].map((s, i) => (
