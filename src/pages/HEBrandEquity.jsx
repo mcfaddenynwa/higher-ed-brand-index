@@ -1274,6 +1274,29 @@ export default function App() {
             </div>
           </div>
 
+          {/* Strategic Insight Report — peer-relative readout */}
+          {overall !== null && Object.keys(scores).length > 0 && (
+            <InsightReport
+              focal={{
+                name: institution || "Your institution",
+                carnegieId,
+                usNewsList: values.usNewsList,
+                flags: {
+                  bigFour: values.chk_bigFour ? 1 : 0,
+                  d1:      values.chk_d1athletics ? 1 : 0,
+                },
+                intlGroup: scoredPool.find(p => p.name === institution)?.intlGroup,
+                socialIg: values.socialIg, socialLi: values.socialLi,
+                socialX:  values.socialX,  socialFb: values.socialFb,
+                socialYt: values.socialYt,
+                scores,
+              }}
+              scoredPool={scoredPool}
+              axes={activeAxes}
+              carnegieLabel={selectedCarnegie?.short || selectedCarnegie?.label || ''}
+            />
+          )}
+
           <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
             <button onClick={() => setStep("data")} style={{ background: 'transparent', color: 'rgba(255,255,255,0.82)', border: '1px solid rgba(255,255,255,0.32)', borderRadius: 6, padding: '8px 20px', fontSize: 14, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>← EDIT DATA</button>
             <button onClick={() => { setStep("carnegie"); setCarnegieId(''); setValues({}); setInstitution(''); setUnitid(''); setAutoPopulated([]); setSubmitted(false); }} style={{ background: 'transparent', color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.22)', borderRadius: 6, padding: '8px 20px', fontSize: 14, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>START OVER</button>
