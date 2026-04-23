@@ -680,6 +680,14 @@ export default function App() {
   const { carnegieAvg, globalAvg } = computeAggregates(submissions, carnegieId);
   const curAxis = activeAxes[Math.min(activeAxis, activeAxes.length - 1)];
 
+  // Score the institutional database for the insight framework's peer cohort.
+  // Memoized — only recomputes when the active axes change (i.e. on classification change).
+  const scoredPool = useMemo(() => {
+    if (!carnegieId) return [];
+    const combined = [...IPEDS_DB, ...INTL_DB];
+    return scorePool(combined, AXES, normalizeAxis);
+  }, [carnegieId]);
+
   // Institution typeahead
   const handleInstitutionInput = (val) => {
     setInstitution(val);
