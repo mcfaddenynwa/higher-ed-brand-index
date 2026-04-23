@@ -69,9 +69,9 @@ function LeaderRow({ rank, name, score, type, color = "#EB5600", maxScore = 100 
   );
 }
 
-function Card({ children, accent = "#EB5600" }) {
+function Card({ children, accent = "#1C3678" }) {
   return (
-    <div style={{ background: "#FAFBFC", border: "1px solid #EEF1F4", borderTop: `2px solid ${accent}`, borderRadius: 6, padding: 24 }}>
+    <div style={{ background: "#FAFBFC", border: "1px solid #E9EDEE", borderTop: `3px solid ${accent}`, borderRadius: 0, padding: 24 }}>
       {children}
     </div>
   );
@@ -109,13 +109,23 @@ export default function Insights() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#FFFFFF", color: "#243551", fontFamily: FONT }}>
+      {/* Brand color rule */}
+      <div style={{ height: 4, background: 'linear-gradient(to right, #1C3678 0%, #1C3678 35%, #EB5600 35%, #EB5600 55%, #6AA4C8 55%, #6AA4C8 75%, #E9EDEE 75%)' }} />
+
       {/* Header bar */}
-      <div style={{ borderBottom: "1px solid #EEF1F4", padding: "20px 32px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Link to="/" style={{ color: "#595959", textDecoration: "none", fontSize: 12, letterSpacing: 2, fontWeight: 600 }}>
-          ← BACK TO ASSESSMENT
-        </Link>
+      <div style={{ borderBottom: "1px solid #E9EDEE", padding: "20px 32px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
+          <Link to="/" style={{ color: "#595959", textDecoration: "none", fontSize: 11, letterSpacing: 2, fontWeight: 600, textTransform: "uppercase" }}>
+            ← Back to Assessment
+          </Link>
+          <div style={{ borderLeft: "1px solid #E9EDEE", paddingLeft: 24 }}>
+            <div style={{ fontSize: 22, fontFamily: SERIF, color: "#243551", lineHeight: 1 }}>
+              mcfadden<span style={{ color: "#EB5600" }}>+</span>co
+            </div>
+          </div>
+        </div>
         <a href="/HE_Brand_Equity_Insights.pdf" download
-           style={{ background: "#EB5600", color: "#FFFFFF", padding: "10px 18px", borderRadius: 4, fontSize: 11, letterSpacing: 1.5, fontWeight: 700, textDecoration: "none", textTransform: "uppercase" }}>
+           style={{ background: "#EB5600", color: "#FFFFFF", padding: "11px 20px", borderRadius: 0, fontSize: 11, letterSpacing: 1.5, fontWeight: 700, textDecoration: "none", textTransform: "uppercase", fontFamily: FONT }}>
           ↓ Download PDF Report
         </a>
       </div>
@@ -123,11 +133,12 @@ export default function Insights() {
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "60px 32px 100px" }}>
 
         {/* Hero */}
+        <div style={{ width: 56, height: 3, background: "#6AA4C8", marginBottom: 16 }} />
         <Eyebrow>Higher Education Brand Index</Eyebrow>
-        <h1 style={{ fontFamily: SERIF, fontWeight: 700, fontSize: 56, lineHeight: 1.05, color: "#243551", margin: "12px 0 18px", letterSpacing: -0.5 }}>
+        <h1 style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 52, lineHeight: 1.05, color: "#243551", margin: "12px 0 18px", letterSpacing: -0.5 }}>
           Strategic Insights
         </h1>
-        <p style={{ fontFamily: SERIF, fontStyle: "italic", fontSize: 20, color: "rgba(28,54,120,0.7)", maxWidth: 760, lineHeight: 1.45, margin: 0 }}>
+        <p style={{ fontFamily: FONT, fontStyle: "italic", fontSize: 18, color: "#595959", maxWidth: 760, lineHeight: 1.5, margin: 0 }}>
           A cross-sectional analysis of brand equity across {insights.totalInstitutions} institutions, surfacing visibility gaps, marketing leverage, and growth signals.
         </p>
 
