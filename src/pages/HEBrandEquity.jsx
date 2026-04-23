@@ -639,8 +639,8 @@ function BenchmarkDropdown({ field, carnegieId, color }) {
 
 const iStyle = {
   width: '100%', boxSizing: 'border-box',
-  background: 'rgba(28,54,120,0.28)',
-  border: '1px solid rgba(28,54,120,0.26)',
+  background: '#FFFFFF',
+  border: '1px solid #D6DCE5',
   borderRadius: 6, padding: '9px 12px',
   color: '#243551', fontSize: 14,
   fontFamily: "'Bitter', Georgia, serif", outline: 'none',
