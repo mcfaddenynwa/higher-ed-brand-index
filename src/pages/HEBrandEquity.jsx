@@ -772,7 +772,7 @@ export default function App() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
           <div>
             <div style={{ fontSize: 10, letterSpacing: 2, color: '#595959', fontWeight: 600, marginBottom: 4, textTransform: 'uppercase' }}>Higher Education Brand Index</div>
-            <div style={{ fontSize: 28, fontFamily: "'Young Serif', Georgia, serif", color: '#243551', lineHeight: 1 }}>mcfadden<span style={{ color: '#EB5600' }}>+</span>co</div>
+            <div style={{ fontSize: 28, fontFamily: "'Young Serif', Georgia, serif", color: '#243551', lineHeight: 1 }}>mcfadden<span style={{ color: '#243551' }}>+</span>co</div>
           </div>
           <a href="/insights" style={{
             fontSize: 11, letterSpacing: 1.8, color: '#1C3678', textDecoration: 'none',
