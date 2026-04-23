@@ -772,13 +772,8 @@ export default function App() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
           <div>
             <div style={{ fontSize: 10, letterSpacing: 2, color: '#595959', fontWeight: 600, marginBottom: 4, textTransform: 'uppercase' }}>Higher Education Brand Index</div>
-            <div style={{ fontSize: 28, fontFamily: "'Young Serif', Georgia, serif", color: '#243551', lineHeight: 1 }}>mcfadden<span style={{ color: '#EB5600' }}>+</span>co</div>
+            <div style={{ fontSize: 28, fontFamily: "'Young Serif', Georgia, serif", color: '#243551', lineHeight: 1 }}>mcfadden<span style={{ color: '#243551' }}>+</span>co</div>
           </div>
-          <a href="/insights" style={{
-            fontSize: 11, letterSpacing: 1.8, color: '#1C3678', textDecoration: 'none',
-            border: '1.5px solid #1C3678', padding: '7px 14px', borderRadius: 0,
-            fontWeight: 600, textTransform: 'uppercase',
-          }}>↗ Insights</a>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {["carnegie","data","results"].map((s, i) => (
@@ -1259,9 +1254,20 @@ export default function App() {
               {/* Submit */}
               <div style={{ marginTop: 20, padding: '16px', background: '#F4F6F8', border: '1px solid rgba(28,54,120,0.22)', borderRadius: 10 }}>
                 {submitted
-                  ? <div style={{ fontSize: 14, color: '#1A9988', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 16 }}>✓</span>
-                      Submitted. Your data contributes to aggregate benchmarks anonymously.
+                  ? <div>
+                      <div style={{ fontSize: 14, color: '#1A9988', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 16 }}>✓</span>
+                        Submitted. Your data contributes to aggregate benchmarks anonymously.
+                      </div>
+                      <a href="/insights" style={{
+                        display: 'inline-block', marginTop: 12,
+                        fontSize: 12, letterSpacing: 1.5, color: '#FFFFFF', textDecoration: 'none',
+                        background: '#1C3678', padding: '9px 18px', borderRadius: 0,
+                        fontWeight: 700, textTransform: 'uppercase',
+                        fontFamily: "'Bitter', Georgia, serif"
+                      }}>
+                        View Strategic Insights →
+                      </a>
                     </div>
                   : <>
                       <div style={{ fontSize: 14, color: '#243551', marginBottom: 10, lineHeight: 1.5 }}>

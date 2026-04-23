@@ -120,7 +120,7 @@ export default function Insights() {
           </Link>
           <div style={{ borderLeft: "1px solid #E9EDEE", paddingLeft: 24 }}>
             <div style={{ fontSize: 22, fontFamily: SERIF, color: "#243551", lineHeight: 1 }}>
-              mcfadden<span style={{ color: "#EB5600" }}>+</span>co
+              mcfadden<span style={{ color: "#243551" }}>+</span>co
             </div>
           </div>
         </div>
