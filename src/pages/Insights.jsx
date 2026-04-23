@@ -29,15 +29,15 @@ function SectionTitle({ eyebrow, title, lead }) {
     <div style={{ marginBottom: 24 }}>
       <Eyebrow>{eyebrow}</Eyebrow>
       <h2 style={{ fontFamily: SERIF, fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: "#243551", margin: "8px 0 10px" }}>{title}</h2>
-      {lead && <p style={{ fontFamily: SERIF, fontStyle: "italic", fontSize: 17, color: "rgba(28,54,120,0.65)", lineHeight: 1.5, maxWidth: 720, margin: 0 }}>{lead}</p>}
-      <div style={{ marginTop: 16, height: 1, background: "rgba(28,54,120,0.12)" }} />
+      {lead && <p style={{ fontFamily: SERIF, fontStyle: "italic", fontSize: 17, color: "#595959", lineHeight: 1.5, maxWidth: 720, margin: 0 }}>{lead}</p>}
+      <div style={{ marginTop: 16, height: 1, background: "#E9EDEE" }} />
     </div>
   );
 }
 
 function StatCard({ value, label, accent = "#EB5600" }) {
   return (
-    <div style={{ background: "rgba(28,54,120,0.03)", border: "1px solid rgba(28,54,120,0.08)", borderRadius: 8, padding: "20px 22px" }}>
+    <div style={{ background: "#FAFBFC", border: "1px solid #EEF1F4", borderRadius: 8, padding: "20px 22px" }}>
       <div style={{ fontFamily: MONO, fontSize: 36, color: "#243551", fontWeight: 500, lineHeight: 1 }}>{value}</div>
       <div style={{ fontFamily: FONT, fontSize: 10, letterSpacing: 1.5, color: accent, textTransform: "uppercase", marginTop: 10, fontWeight: 600 }}>{label}</div>
     </div>
@@ -47,7 +47,7 @@ function StatCard({ value, label, accent = "#EB5600" }) {
 function Bar({ value, max = 100, color = "#EB5600", height = 8 }) {
   const pct = Math.max(0, Math.min(100, (value / max) * 100));
   return (
-    <div style={{ width: "100%", height, background: "rgba(28,54,120,0.06)", borderRadius: 4, overflow: "hidden" }}>
+    <div style={{ width: "100%", height, background: "#F4F6F8", borderRadius: 4, overflow: "hidden" }}>
       <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: 4 }} />
     </div>
   );
@@ -55,11 +55,11 @@ function Bar({ value, max = 100, color = "#EB5600", height = 8 }) {
 
 function LeaderRow({ rank, name, score, type, color = "#EB5600", maxScore = 100 }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "32px 1fr 80px 60px", gap: 12, alignItems: "center", padding: "12px 0", borderBottom: "1px solid rgba(28,54,120,0.06)" }}>
-      <div style={{ fontFamily: MONO, fontSize: 12, color: "rgba(28,54,120,0.4)" }}>{String(rank).padStart(2, "0")}</div>
+    <div style={{ display: "grid", gridTemplateColumns: "32px 1fr 80px 60px", gap: 12, alignItems: "center", padding: "12px 0", borderBottom: "1px solid #F4F6F8" }}>
+      <div style={{ fontFamily: MONO, fontSize: 12, color: "#8A93A1" }}>{String(rank).padStart(2, "0")}</div>
       <div>
         <div style={{ fontFamily: FONT, fontSize: 14, color: "#243551", fontWeight: 500 }}>{name}</div>
-        {type && <div style={{ fontFamily: FONT, fontSize: 10, color: "rgba(28,54,120,0.45)", letterSpacing: 1, marginTop: 2, textTransform: "uppercase" }}>{type}</div>}
+        {type && <div style={{ fontFamily: FONT, fontSize: 10, color: "#8A93A1", letterSpacing: 1, marginTop: 2, textTransform: "uppercase" }}>{type}</div>}
       </div>
       <Bar value={score} max={maxScore} color={color} />
       <div style={{ fontFamily: MONO, fontSize: 16, color: "#243551", textAlign: "right", fontWeight: 500 }}>{typeof score === "number" ? Math.round(score) : score}</div>
@@ -69,7 +69,7 @@ function LeaderRow({ rank, name, score, type, color = "#EB5600", maxScore = 100 
 
 function Card({ children, accent = "#EB5600" }) {
   return (
-    <div style={{ background: "rgba(28,54,120,0.03)", border: "1px solid rgba(28,54,120,0.08)", borderTop: `2px solid ${accent}`, borderRadius: 6, padding: 24 }}>
+    <div style={{ background: "#FAFBFC", border: "1px solid #EEF1F4", borderTop: `2px solid ${accent}`, borderRadius: 6, padding: 24 }}>
       {children}
     </div>
   );
@@ -108,8 +108,8 @@ export default function Insights() {
   return (
     <div style={{ minHeight: "100vh", background: "#FFFFFF", color: "#243551", fontFamily: FONT }}>
       {/* Header bar */}
-      <div style={{ borderBottom: "1px solid rgba(28,54,120,0.08)", padding: "20px 32px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Link to="/" style={{ color: "rgba(28,54,120,0.6)", textDecoration: "none", fontSize: 12, letterSpacing: 2, fontWeight: 600 }}>
+      <div style={{ borderBottom: "1px solid #EEF1F4", padding: "20px 32px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Link to="/" style={{ color: "#595959", textDecoration: "none", fontSize: 12, letterSpacing: 2, fontWeight: 600 }}>
           ← BACK TO ASSESSMENT
         </Link>
         <a href="/HE_Brand_Equity_Insights.pdf" download
@@ -142,7 +142,7 @@ export default function Insights() {
             lead="Each finding points to a strategic question marketing and enrollment leadership should be ready to answer." />
           <div style={{ display: "grid", gap: 16 }}>
             {findings.map((f, i) => (
-              <div key={i} style={{ display: "grid", gridTemplateColumns: "60px 1fr", gap: 20, padding: "20px 0", borderBottom: "1px solid rgba(28,54,120,0.08)" }}>
+              <div key={i} style={{ display: "grid", gridTemplateColumns: "60px 1fr", gap: 20, padding: "20px 0", borderBottom: "1px solid #EEF1F4" }}>
                 <div style={{ fontFamily: MONO, fontSize: 14, color: "#EB5600", paddingTop: 4 }}>{String(i + 1).padStart(2, "0")}</div>
                 <div>
                   <div style={{ fontFamily: FONT, fontSize: 17, fontWeight: 600, color: "#243551", marginBottom: 8 }}>{f.h}</div>
@@ -168,7 +168,7 @@ export default function Insights() {
             </Card>
             <Card accent="#EB5600">
               <Eyebrow color="#EB5600">Bottom 10</Eyebrow>
-              <p style={{ fontSize: 12, color: "rgba(28,54,120,0.5)", marginTop: 8, lineHeight: 1.5 }}>
+              <p style={{ fontSize: 12, color: "#6B7585", marginTop: 8, lineHeight: 1.5 }}>
                 Lower composite scores often reflect mission focus rather than brand weakness — they show where dimension weights diverge most from peer norms.
               </p>
               <div style={{ marginTop: 16 }}>
@@ -195,7 +195,7 @@ export default function Insights() {
             </Card>
             <Card accent="#6AA4C8">
               <Eyebrow color="#6AA4C8">QS Ranking Band</Eyebrow>
-              <p style={{ fontSize: 12, color: "rgba(28,54,120,0.5)", marginTop: 8, lineHeight: 1.5 }}>
+              <p style={{ fontSize: 12, color: "#6B7585", marginTop: 8, lineHeight: 1.5 }}>
                 Global ranking position remains the single most predictive external signal of overall brand equity.
               </p>
               <div style={{ marginTop: 16 }}>
@@ -236,38 +236,38 @@ export default function Insights() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }}>
             <Card accent="#EB5600">
               <Eyebrow>Marketing-Forward</Eyebrow>
-              <p style={{ fontSize: 12, color: "rgba(28,54,120,0.55)", marginTop: 8, lineHeight: 1.55 }}>
+              <p style={{ fontSize: 12, color: "#6B7585", marginTop: 8, lineHeight: 1.55 }}>
                 Visibility scores meaningfully exceed research scores. These are the brand machines — primarily teaching-focused universities punching above their R&D weight class.
               </p>
               <div style={{ marginTop: 16 }}>
                 {insights.marketingForward.map((d, i) => (
-                  <div key={d.name} style={{ display: "grid", gridTemplateColumns: "1fr 60px 60px 50px", gap: 10, alignItems: "center", padding: "10px 0", borderBottom: "1px solid rgba(28,54,120,0.06)" }}>
+                  <div key={d.name} style={{ display: "grid", gridTemplateColumns: "1fr 60px 60px 50px", gap: 10, alignItems: "center", padding: "10px 0", borderBottom: "1px solid #F4F6F8" }}>
                     <div style={{ fontSize: 13, color: "#243551", fontWeight: 500 }}>{d.name}</div>
                     <div style={{ fontFamily: MONO, fontSize: 13, color: "#EB5600", textAlign: "right" }}>{Math.round(d.visibility)}</div>
                     <div style={{ fontFamily: MONO, fontSize: 13, color: "#EB5600", textAlign: "right" }}>{Math.round(d.research)}</div>
                     <div style={{ fontFamily: MONO, fontSize: 14, color: "#243551", textAlign: "right", fontWeight: 700 }}>+{Math.round(d.gap)}</div>
                   </div>
                 ))}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 60px 60px 50px", gap: 10, fontSize: 9, color: "rgba(28,54,120,0.4)", letterSpacing: 1, marginTop: 10, textTransform: "uppercase" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 60px 60px 50px", gap: 10, fontSize: 9, color: "#8A93A1", letterSpacing: 1, marginTop: 10, textTransform: "uppercase" }}>
                   <div /><div style={{ textAlign: "right" }}>VIS</div><div style={{ textAlign: "right" }}>RES</div><div style={{ textAlign: "right" }}>GAP</div>
                 </div>
               </div>
             </Card>
             <Card accent="#EB5600">
               <Eyebrow color="#EB5600">Under-Leveraged Research</Eyebrow>
-              <p style={{ fontSize: 12, color: "rgba(28,54,120,0.55)", marginTop: 8, lineHeight: 1.55 }}>
+              <p style={{ fontSize: 12, color: "#6B7585", marginTop: 8, lineHeight: 1.55 }}>
                 Research output exceeds visibility — substantive work the broader market is not pricing into the brand. Marketing investment here typically returns the most.
               </p>
               <div style={{ marginTop: 16 }}>
                 {insights.underLeveraged.length > 0 ? insights.underLeveraged.map((d) => (
-                  <div key={d.name} style={{ display: "grid", gridTemplateColumns: "1fr 60px 60px 50px", gap: 10, alignItems: "center", padding: "10px 0", borderBottom: "1px solid rgba(28,54,120,0.06)" }}>
+                  <div key={d.name} style={{ display: "grid", gridTemplateColumns: "1fr 60px 60px 50px", gap: 10, alignItems: "center", padding: "10px 0", borderBottom: "1px solid #F4F6F8" }}>
                     <div style={{ fontSize: 13, color: "#243551", fontWeight: 500 }}>{d.name}</div>
                     <div style={{ fontFamily: MONO, fontSize: 13, color: "#EB5600", textAlign: "right" }}>{Math.round(d.research)}</div>
                     <div style={{ fontFamily: MONO, fontSize: 13, color: "#EB5600", textAlign: "right" }}>{Math.round(d.visibility)}</div>
                     <div style={{ fontFamily: MONO, fontSize: 14, color: "#243551", textAlign: "right", fontWeight: 700 }}>+{Math.round(d.gap)}</div>
                   </div>
                 )) : (
-                  <div style={{ fontSize: 13, color: "rgba(28,54,120,0.5)", padding: "20px 0" }}>
+                  <div style={{ fontSize: 13, color: "#6B7585", padding: "20px 0" }}>
                     No institutions in the dataset show a research-over-visibility gap above 15 points. The dataset's research-heavy schools are also visibility-heavy.
                   </div>
                 )}
@@ -285,8 +285,8 @@ export default function Insights() {
               <Eyebrow color="#1A9988">Fastest Growing</Eyebrow>
               <div style={{ marginTop: 16 }}>
                 {insights.enrollmentGrowth.map((d, i) => (
-                  <div key={d.name} style={{ display: "grid", gridTemplateColumns: "32px 1fr 80px", gap: 12, alignItems: "center", padding: "12px 0", borderBottom: "1px solid rgba(28,54,120,0.06)" }}>
-                    <div style={{ fontFamily: MONO, fontSize: 12, color: "rgba(28,54,120,0.4)" }}>{String(i + 1).padStart(2, "0")}</div>
+                  <div key={d.name} style={{ display: "grid", gridTemplateColumns: "32px 1fr 80px", gap: 12, alignItems: "center", padding: "12px 0", borderBottom: "1px solid #F4F6F8" }}>
+                    <div style={{ fontFamily: MONO, fontSize: 12, color: "#8A93A1" }}>{String(i + 1).padStart(2, "0")}</div>
                     <div style={{ fontFamily: FONT, fontSize: 14, color: "#243551" }}>{d.name}</div>
                     <div style={{ fontFamily: MONO, fontSize: 16, color: "#1A9988", textAlign: "right", fontWeight: 600 }}>+{d.trend.toFixed(1)}%</div>
                   </div>
@@ -297,8 +297,8 @@ export default function Insights() {
               <Eyebrow color="#EB5600">Sharpest Declines</Eyebrow>
               <div style={{ marginTop: 16 }}>
                 {insights.enrollmentDecline.map((d, i) => (
-                  <div key={d.name} style={{ display: "grid", gridTemplateColumns: "32px 1fr 80px", gap: 12, alignItems: "center", padding: "12px 0", borderBottom: "1px solid rgba(28,54,120,0.06)" }}>
-                    <div style={{ fontFamily: MONO, fontSize: 12, color: "rgba(28,54,120,0.4)" }}>{String(i + 1).padStart(2, "0")}</div>
+                  <div key={d.name} style={{ display: "grid", gridTemplateColumns: "32px 1fr 80px", gap: 12, alignItems: "center", padding: "12px 0", borderBottom: "1px solid #F4F6F8" }}>
+                    <div style={{ fontFamily: MONO, fontSize: 12, color: "#8A93A1" }}>{String(i + 1).padStart(2, "0")}</div>
                     <div style={{ fontFamily: FONT, fontSize: 14, color: "#243551" }}>{d.name}</div>
                     <div style={{ fontFamily: MONO, fontSize: 16, color: "#EB5600", textAlign: "right", fontWeight: 600 }}>{d.trend.toFixed(1)}%</div>
                   </div>
@@ -313,19 +313,19 @@ export default function Insights() {
           <SectionTitle eyebrow="Section 07" title="How the dimensions move together"
             lead="Pairwise correlations across the dataset reveal which brand levers are independent — and which are effectively the same." />
           <Card accent="#1C3678">
-            <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.2fr 80px 1.5fr", gap: 16, padding: "8px 0", borderBottom: "1px solid rgba(28,54,120,0.15)", fontSize: 10, letterSpacing: 1.5, color: "rgba(28,54,120,0.5)", textTransform: "uppercase", fontWeight: 600 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.2fr 80px 1.5fr", gap: 16, padding: "8px 0", borderBottom: "1px solid #E4E8EE", fontSize: 10, letterSpacing: 1.5, color: "#6B7585", textTransform: "uppercase", fontWeight: 600 }}>
               <div>Dimension A</div><div>Dimension B</div><div style={{ textAlign: "right" }}>r</div><div>Reading</div>
             </div>
             {insights.correlations.map((c, i) => {
               const r = c.r;
               const reading = r > 0.6 ? "Strong positive" : r > 0.3 ? "Moderate positive" : r > 0.1 ? "Weak positive" : Math.abs(r) <= 0.1 ? "No relationship" : r > -0.3 ? "Weak negative" : r > -0.6 ? "Moderate negative" : "Strong negative";
-              const color = r > 0.6 ? "#1A9988" : r > 0.1 ? "rgba(26,153,136,0.7)" : Math.abs(r) <= 0.1 ? "rgba(28,54,120,0.4)" : r > -0.3 ? "rgba(235,86,0,0.7)" : "#EB5600";
+              const color = r > 0.6 ? "#1A9988" : r > 0.1 ? "rgba(26,153,136,0.7)" : Math.abs(r) <= 0.1 ? "#8A93A1" : r > -0.3 ? "rgba(235,86,0,0.7)" : "#EB5600";
               return (
-                <div key={i} style={{ display: "grid", gridTemplateColumns: "1.2fr 1.2fr 80px 1.5fr", gap: 16, padding: "12px 0", borderBottom: "1px solid rgba(28,54,120,0.06)", alignItems: "center" }}>
+                <div key={i} style={{ display: "grid", gridTemplateColumns: "1.2fr 1.2fr 80px 1.5fr", gap: 16, padding: "12px 0", borderBottom: "1px solid #F4F6F8", alignItems: "center" }}>
                   <div style={{ fontSize: 13, color: "#243551", textTransform: "capitalize" }}>{c.a}</div>
                   <div style={{ fontSize: 13, color: "#243551", textTransform: "capitalize" }}>{c.b}</div>
                   <div style={{ fontFamily: MONO, fontSize: 15, color, textAlign: "right", fontWeight: 600 }}>{r >= 0 ? "+" : ""}{r.toFixed(2)}</div>
-                  <div style={{ fontSize: 12, color: "rgba(28,54,120,0.6)" }}>{reading}</div>
+                  <div style={{ fontSize: 12, color: "#595959" }}>{reading}</div>
                 </div>
               );
             })}
@@ -344,7 +344,7 @@ export default function Insights() {
         </div>
 
         <div style={{ marginTop: 100, paddingTop: 30, borderTop: "1px solid rgba(28,54,120,0.1)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
-          <div style={{ fontFamily: FONT, fontSize: 11, color: "rgba(28,54,120,0.4)", letterSpacing: 1.5, textTransform: "uppercase" }}>
+          <div style={{ fontFamily: FONT, fontSize: 11, color: "#8A93A1", letterSpacing: 1.5, textTransform: "uppercase" }}>
             Higher Education Brand Index · Insights · April 2026
           </div>
           <a href="/HE_Brand_Equity_Insights.pdf" download

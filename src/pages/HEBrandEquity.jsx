@@ -427,11 +427,11 @@ function SpiderChart({ scores, carnegieAvg, globalAvg, axes }) {
           const angle = (2 * Math.PI * i) / n + angleOffset;
           return [cx + r * level * Math.cos(angle), cy + r * level * Math.sin(angle)];
         });
-        return <polygon key={level} points={pts.map(p => p.join(',')).join(' ')} fill="none" stroke="rgba(28,54,120,0.18)" strokeWidth="1" />;
+        return <polygon key={level} points={pts.map(p => p.join(',')).join(' ')} fill="none" stroke="#E4E8EE" strokeWidth="1" />;
       })}
       {axes.map((_, i) => {
         const angle = (2 * Math.PI * i) / n + angleOffset;
-        return <line key={i} x1={cx} y1={cy} x2={cx + r * Math.cos(angle)} y2={cy + r * Math.sin(angle)} stroke="rgba(28,54,120,0.15)" strokeWidth="1" />;
+        return <line key={i} x1={cx} y1={cy} x2={cx + r * Math.cos(angle)} y2={cy + r * Math.sin(angle)} stroke="#E4E8EE" strokeWidth="1" />;
       })}
 
       {globalAvg && (
@@ -444,8 +444,8 @@ function SpiderChart({ scores, carnegieAvg, globalAvg, axes }) {
       )}
       {carnegieAvg && (
         <path d={toPath(ptsFn(carnVals))}
-          fill="rgba(28,54,120,0.06)"
-          stroke="rgba(28,54,120,0.55)"
+          fill="#F4F6F8"
+          stroke="#6B7585"
           strokeWidth="1.5"
           strokeDasharray="5 3"
         />
@@ -490,7 +490,7 @@ function SpiderChart({ scores, carnegieAvg, globalAvg, axes }) {
                 textAnchor="middle"
                 fontSize="12"
                 fontFamily="'Bitter', Georgia, serif"
-                fill="rgba(28,54,120,0.75)"
+                fill="#3D4F6B"
               >{Math.round(s)}</text>
             )}
           </g>
@@ -602,7 +602,7 @@ function BenchmarkDropdown({ field, carnegieId, color }) {
     <div style={{ marginTop: 5 }}>
       <button onClick={() => setOpen(o => !o)} style={{
         background: 'transparent', border: 'none', padding: 0,
-        color: open ? color : 'rgba(28,54,120,0.35)',
+        color: open ? color : '#A6ADBA',
         fontSize: 10, letterSpacing: 1, cursor: 'pointer',
         fontFamily: "'Bitter', Georgia, serif", display: 'flex', alignItems: 'center', gap: 4,
         textDecoration: 'none',
@@ -613,22 +613,22 @@ function BenchmarkDropdown({ field, carnegieId, color }) {
       {open && (
         <div style={{
           marginTop: 7, padding: '10px 12px',
-          background: 'rgba(28,54,120,0.04)',
+          background: '#F8FAFB',
           border: `1px solid ${color}44`,
           borderRadius: 6,
         }}>
-          <div style={{ fontSize: 9, letterSpacing: 1.5, color: 'rgba(28,54,120,0.38)', marginBottom: 8, textTransform: 'uppercase' }}>
+          <div style={{ fontSize: 9, letterSpacing: 1.5, color: '#8A93A1', marginBottom: 8, textTransform: 'uppercase' }}>
             {label} — Carnegie Peer Benchmarks
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
             {[['MIN', data.min], ['MEDIAN', data.median], ['MEAN', data.mean], ['MAX', data.max]].map(([lbl, val]) => (
               <div key={lbl} style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 9, color: 'rgba(28,54,120,0.40)', letterSpacing: 1, marginBottom: 3 }}>{lbl}</div>
+                <div style={{ fontSize: 9, color: '#8A93A1', letterSpacing: 1, marginBottom: 3 }}>{lbl}</div>
                 <div style={{ fontSize: 14, fontFamily: "'Bitter', Georgia, serif", color, fontWeight: 500 }}>{val}</div>
               </div>
             ))}
           </div>
-          <div style={{ fontSize: 9, color: 'rgba(28,54,120,0.25)', marginTop: 8 }}>
+          <div style={{ fontSize: 9, color: '#C7CCD4', marginTop: 8 }}>
             Source: NACUBO, CASE, IPEDS aggregates. Figures are approximate sector medians.
           </div>
         </div>
@@ -765,7 +765,7 @@ export default function App() {
     <div style={{ minHeight: '100vh', background: '#FFFFFF', fontFamily: "'Bitter', Georgia, serif", color: '#243551' }}>
 
       {/* Header */}
-      <div style={{ borderBottom: '1px solid rgba(28,54,120,0.28)', padding: '18px 36px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
+      <div style={{ borderBottom: '1px solid #F4F6F8', padding: '18px 36px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
           <div>
             <div style={{ fontSize: 14, letterSpacing: 3, color: '#EB5600', fontWeight: 600, marginBottom: 3 }}>HIGHER EDUCATION</div>
@@ -787,7 +787,7 @@ export default function App() {
               }} onClick={() => { if (s !== "carnegie" && !carnegieId) return; setStep(s); }}>
                 <div style={{
                   width: 20, height: 20, borderRadius: '50%',
-                  background: step === s ? '#EB5600' : 'rgba(28,54,120,0.26)',
+                  background: step === s ? '#EB5600' : '#D6DCE5',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 14, fontWeight: 700, color: step === s ? '#FFFFFF' : '#243551',
                 }}>{i + 1}</div>
@@ -795,15 +795,15 @@ export default function App() {
                   {s === "carnegie" ? "Classify" : s === "data" ? "Enter Data" : "Results"}
                 </span>
               </div>
-              {i < 2 && <span style={{ color: 'rgba(28,54,120,0.52)', fontSize: 11 }}>›</span>}
+              {i < 2 && <span style={{ color: '#6B7585', fontSize: 11 }}>›</span>}
             </div>
           ))}
         </div>
         {overall !== null
           ? <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 14, letterSpacing: 2, color: 'rgba(28,54,120,0.85)', marginBottom: 2 }}>WEIGHTED SCORE</div>
+              <div style={{ fontSize: 14, letterSpacing: 2, color: '#243551', marginBottom: 2 }}>WEIGHTED SCORE</div>
               <div style={{ fontSize: 34, fontFamily: "'Bitter', Georgia, serif", color: '#EB5600', lineHeight: 1 }}>{overall}</div>
-              <div style={{ fontSize: 14, color: 'rgba(28,54,120,0.52)' }}>/100 · {selectedCarnegie?.short}</div>
+              <div style={{ fontSize: 14, color: '#6B7585' }}>/100 · {selectedCarnegie?.short}</div>
             </div>
           : <div style={{ width: 80 }} />
         }
@@ -813,21 +813,21 @@ export default function App() {
       {step === "carnegie" && (
         <div style={{ maxWidth: 780, margin: '0 auto', padding: '36px 36px' }}>
           <div style={{ fontSize: 22, fontFamily: "'Young Serif', Georgia, serif", marginBottom: 8 }}>Identify Your Institution</div>
-          <div style={{ fontSize: 14, color: 'rgba(28,54,120,0.80)', marginBottom: 20, lineHeight: 1.6, maxWidth: 560 }}>
+          <div style={{ fontSize: 14, color: '#243551', marginBottom: 20, lineHeight: 1.6, maxWidth: 560 }}>
             {isIntl
               ? "Start typing your institution’s name. International institutions are sourced from our global database. Revenue and endowment fields use USD equivalents."
               : "Start typing your institution’s name. If it’s in our database, we’ll pre-fill your IPEDS data automatically and suggest your Carnegie classification."}
           </div>
 
           {/* US / International toggle */}
-          <div style={{ display: 'flex', gap: 0, marginBottom: 24, width: 'fit-content', border: '1px solid rgba(28,54,120,0.18)', borderRadius: 8, overflow: 'hidden' }}>
+          <div style={{ display: 'flex', gap: 0, marginBottom: 24, width: 'fit-content', border: '1px solid #E4E8EE', borderRadius: 8, overflow: 'hidden' }}>
             {[{ label: 'US Institution', val: false }, { label: 'International', val: true }].map(({ label, val }) => (
               <button key={label} onClick={() => { setIsIntl(val); setInstitution(''); setSuggestions([]); setUnitid(''); setAutoPopulated([]); }}
                 style={{
                   padding: '8px 20px', fontSize: 12, letterSpacing: 1, fontFamily: "'Bitter', Georgia, serif",
                   border: 'none', cursor: 'pointer', transition: 'all 0.15s',
-                  background: isIntl === val ? '#EB5600' : 'rgba(28,54,120,0.05)',
-                  color: isIntl === val ? '#FFFFFF' : 'rgba(28,54,120,0.55)',
+                  background: isIntl === val ? '#EB5600' : '#F8FAFB',
+                  color: isIntl === val ? '#FFFFFF' : '#6B7585',
                   fontWeight: isIntl === val ? 700 : 400,
                 }}>
                 {label}
@@ -837,7 +837,7 @@ export default function App() {
 
           {/* Typeahead */}
           <div style={{ marginBottom: 28, position: 'relative', maxWidth: 440 }}>
-            <label style={{ fontSize: 14, letterSpacing: 2, color: 'rgba(28,54,120,0.80)', display: 'block', marginBottom: 8 }}>INSTITUTION NAME</label>
+            <label style={{ fontSize: 14, letterSpacing: 2, color: '#243551', display: 'block', marginBottom: 8 }}>INSTITUTION NAME</label>
             <input
               ref={inputRef}
               value={institution}
@@ -849,13 +849,13 @@ export default function App() {
             {showSuggestions && suggestions.length > 0 && (
               <div style={{
                 position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100,
-                background: '#FFFFFF', border: '1px solid rgba(28,54,120,0.28)',
+                background: '#FFFFFF', border: '1px solid #F4F6F8',
                 borderRadius: 8, marginTop: 4, overflow: 'hidden',
               }}>
                 {suggestions.map(s => (
                   <div key={s.unitid ?? s.intlId} onMouseDown={() => selectInstitution(s)} style={{
                     padding: '10px 14px', cursor: 'pointer', fontSize: 14,
-                    borderBottom: '1px solid rgba(28,54,120,0.28)',
+                    borderBottom: '1px solid #F4F6F8',
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     transition: 'background 0.1s',
                   }}
@@ -879,7 +879,7 @@ export default function App() {
           </div>
 
           {/* Manual Carnegie selection */}
-          <div style={{ fontSize: 14, color: 'rgba(28,54,120,0.85)', marginBottom: 14 }}>
+          <div style={{ fontSize: 14, color: '#243551', marginBottom: 14 }}>
             {isIntl
               ? (autoPopulated.length > 0 ? "Confirm or change your international classification:" : "Select your international classification:")
               : (autoPopulated.length > 0 ? "Confirm or change your Carnegie classification:" : "Or select your Carnegie classification manually:")}
@@ -888,19 +888,19 @@ export default function App() {
 {(isIntl ? INTL_CATEGORIES : CARNEGIE_CATEGORIES).map(cat => (
               <button key={cat.id} onClick={() => { setCarnegieId(cat.id); if (USNEWS_LIST_MAP[cat.id]) setValues(p => ({ ...p, usNewsList: USNEWS_LIST_MAP[cat.id] })); }} style={{
                 textAlign: 'left', padding: '12px 14px',
-                background: carnegieId === cat.id ? 'rgba(235,86,0,0.11)' : 'rgba(28,54,120,0.28)',
-                border: carnegieId === cat.id ? '1px solid #EB560088' : '1px solid rgba(28,54,120,0.28)',
+                background: carnegieId === cat.id ? 'rgba(235,86,0,0.11)' : '#F4F6F8',
+                border: carnegieId === cat.id ? '1px solid #EB560088' : '1px solid #F4F6F8',
                 borderRadius: 8, cursor: 'pointer', transition: 'all 0.12s',
               }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: carnegieId === cat.id ? '#EB5600' : '#243551', marginBottom: 2 }}>{cat.short}</div>
-                <div style={{ fontSize: 14, color: 'rgba(28,54,120,0.76)', lineHeight: 1.4 }}>{cat.description}</div>
+                <div style={{ fontSize: 14, color: '#3D4F6B', lineHeight: 1.4 }}>{cat.description}</div>
               </button>
             ))}
           </div>
 
           {carnegieId
             ? <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <div style={{ fontSize: 14, color: 'rgba(28,54,120,0.80)' }}>
+                <div style={{ fontSize: 14, color: '#243551' }}>
                   Selected: <span style={{ color: '#EB5600', fontWeight: 600 }}>{selectedCarnegie?.label}</span>
                 </div>
                 <button onClick={() => setStep("data")} style={{
@@ -909,21 +909,21 @@ export default function App() {
                   letterSpacing: 1.5, cursor: 'pointer', fontFamily: "'Bitter', Georgia, serif",
                 }}>CONTINUE →</button>
               </div>
-            : <div style={{ fontSize: 14, color: 'rgba(28,54,120,0.78)', fontStyle: 'italic' }}>Select a classification to continue</div>
+            : <div style={{ fontSize: 14, color: '#3D4F6B', fontStyle: 'italic' }}>Select a classification to continue</div>
           }
 
           {/* Submission count */}
-          <div style={{ marginTop: 28, padding: '14px 16px', background: 'rgba(28,54,120,0.28)', borderRadius: 8, border: '1px solid rgba(28,54,120,0.28)', display: 'flex', gap: 28 }}>
+          <div style={{ marginTop: 28, padding: '14px 16px', background: '#F4F6F8', borderRadius: 8, border: '1px solid #F4F6F8', display: 'flex', gap: 28 }}>
             <div>
-              <div style={{ fontSize: 14, letterSpacing: 2, color: 'rgba(28,54,120,0.68)', marginBottom: 4 }}>TOTAL SUBMISSIONS</div>
+              <div style={{ fontSize: 14, letterSpacing: 2, color: '#595959', marginBottom: 4 }}>TOTAL SUBMISSIONS</div>
               <div style={{ fontSize: 22, fontFamily: "'Bitter', Georgia, serif", color: '#243551' }}>{globalN}</div>
             </div>
             {carnegieId && (
               <div>
-                <div style={{ fontSize: 14, letterSpacing: 2, color: 'rgba(28,54,120,0.68)', marginBottom: 4 }}>IN YOUR CLASSIFICATION</div>
+                <div style={{ fontSize: 14, letterSpacing: 2, color: '#595959', marginBottom: 4 }}>IN YOUR CLASSIFICATION</div>
                 <div style={{ fontSize: 22, fontFamily: "'Bitter', Georgia, serif", color: carnegieN >= MIN_N ? '#1A9988' : '#243551' }}>
                   {carnegieN}
-                  {carnegieN < MIN_N && <span style={{ fontSize: 14, color: 'rgba(28,54,120,0.68)', marginLeft: 8 }}>({MIN_N - carnegieN} more needed for avg)</span>}
+                  {carnegieN < MIN_N && <span style={{ fontSize: 14, color: '#595959', marginLeft: 8 }}>({MIN_N - carnegieN} more needed for avg)</span>}
                 </div>
               </div>
             )}
@@ -934,14 +934,14 @@ export default function App() {
       {/* STEP 2: Data entry */}
       {step === "data" && (
         <div style={{ display: 'flex', minHeight: 'calc(100vh - 73px)' }}>
-          <div style={{ width: 370, borderRight: '1px solid rgba(28,54,120,0.28)', padding: '22px 24px', overflowY: 'auto' }}>
+          <div style={{ width: 370, borderRight: '1px solid #F4F6F8', padding: '22px 24px', overflowY: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
                 <div style={{ fontSize: 14, letterSpacing: 2, color: '#EB5600', marginBottom: 2 }}>CLASSIFICATION</div>
                 <div style={{ fontSize: 14, fontWeight: 600 }}>{selectedCarnegie?.short}</div>
-                {institution && <div style={{ fontSize: 14, color: 'rgba(28,54,120,0.80)', marginTop: 1 }}>{institution}</div>}
+                {institution && <div style={{ fontSize: 14, color: '#243551', marginTop: 1 }}>{institution}</div>}
               </div>
-              <button onClick={() => setStep("carnegie")} style={{ fontSize: 14, color: 'rgba(28,54,120,0.68)', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: 1 }}>← BACK</button>
+              <button onClick={() => setStep("carnegie")} style={{ fontSize: 14, color: '#595959', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: 1 }}>← BACK</button>
             </div>
 
             {autoPopulated.length > 0 && (
@@ -951,7 +951,7 @@ export default function App() {
             )}
 
             {/* Axis tabs */}
-            <div style={{ fontSize: 14, letterSpacing: 2, color: 'rgba(28,54,120,0.80)', marginBottom: 8 }}>DIMENSIONS</div>
+            <div style={{ fontSize: 14, letterSpacing: 2, color: '#243551', marginBottom: 8 }}>DIMENSIONS</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginBottom: 16 }}>
               {activeAxes.map((a, i) => {
                 const s = scores[a.key];
@@ -959,13 +959,13 @@ export default function App() {
                 return (
                   <button key={a.key} onClick={() => setActiveAxis(i)} style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    background: activeAxis === i ? 'rgba(28,54,120,0.28)' : 'transparent',
+                    background: activeAxis === i ? '#F4F6F8' : 'transparent',
                     border: activeAxis === i ? `1px solid ${a.color}44` : '1px solid transparent',
                     borderRadius: 6, padding: '7px 10px', cursor: 'pointer', textAlign: 'left',
                   }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ width: 6, height: 6, borderRadius: '50%', background: a.color, flexShrink: 0 }} />
-                      <span style={{ fontSize: 14, color: activeAxis === i ? '#243551' : 'rgba(28,54,120,0.82)', fontWeight: activeAxis === i ? 600 : 400 }}>{a.label}</span>
+                      <span style={{ fontSize: 14, color: activeAxis === i ? '#243551' : '#243551', fontWeight: activeAxis === i ? 600 : 400 }}>{a.label}</span>
                       {isAuto && <span style={{ fontSize: 14, color: '#1A9988', letterSpacing: 0.5 }}>IPEDS</span>}
                     </span>
                     {s != null && <span style={{ fontSize: 14, fontFamily: "'Bitter', Georgia, serif", color: a.color }}>{Math.round(s)}</span>}
@@ -975,14 +975,14 @@ export default function App() {
             </div>
 
             {curAxis && (
-              <div style={{ background: 'rgba(28,54,120,0.28)', border: `1px solid ${curAxis.color}33`, borderRadius: 10, padding: '14px' }}>
+              <div style={{ background: '#F4F6F8', border: `1px solid ${curAxis.color}33`, borderRadius: 10, padding: '14px' }}>
                 <div style={{ fontSize: 14, color: curAxis.color, fontWeight: 700, marginBottom: 3 }}>{curAxis.label}</div>
-                <div style={{ fontSize: 14, color: 'rgba(28,54,120,0.85)', marginBottom: 13, lineHeight: 1.5 }}>{curAxis.description}</div>
+                <div style={{ fontSize: 14, color: '#243551', marginBottom: 13, lineHeight: 1.5 }}>{curAxis.description}</div>
                 {curAxis.inputs.map(input => {
                   const isAutoPop = autoPopulated.includes(input.id);
                   return (
                     <div key={input.id} style={{ marginBottom: 11 }}>
-                      <label style={{ fontSize: 14, color: isAutoPop ? '#1A9988' : 'rgba(28,54,120,0.82)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, lineHeight: 1.4 }}>
+                      <label style={{ fontSize: 14, color: isAutoPop ? '#1A9988' : '#243551', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, lineHeight: 1.4 }}>
                         {input.id === 'usNews' && values.usNewsList
                           ? `US News ${USNEWS_LIST_LABELS[values.usNewsList]} Rank`
                           : (isIntl && input.labelIntl) ? input.labelIntl : input.label}
@@ -996,8 +996,8 @@ export default function App() {
                                 style={{
                                   padding: '4px 10px', fontSize: 11, borderRadius: 5, cursor: 'pointer',
                                   fontFamily: "'Bitter', Georgia, serif", border: 'none', transition: 'all 0.12s',
-                                  background: values.usNewsList === lst ? '#EB5600' : 'rgba(28,54,120,0.08)',
-                                  color: values.usNewsList === lst ? '#FFFFFF' : 'rgba(28,54,120,0.55)',
+                                  background: values.usNewsList === lst ? '#EB5600' : '#EEF1F4',
+                                  color: values.usNewsList === lst ? '#FFFFFF' : '#6B7585',
                                   fontWeight: values.usNewsList === lst ? 700 : 400,
                                 }}>
                                 {USNEWS_LIST_LABELS[lst]}
@@ -1005,7 +1005,7 @@ export default function App() {
                             ))}
                           </div>
                           {values.usNewsList && (
-                            <div style={{ fontSize: 10, color: 'rgba(28,54,120,0.35)', marginTop: 5 }}>
+                            <div style={{ fontSize: 10, color: '#A6ADBA', marginTop: 5 }}>
                               Auto-suggested: {USNEWS_LIST_LABELS[USNEWS_LIST_MAP[carnegieId]]}
                               {USNEWS_LIST_MAP[carnegieId] !== values.usNewsList && ' (overridden)'}
                             </div>
@@ -1017,7 +1017,7 @@ export default function App() {
                           <span style={{ fontSize: 9, letterSpacing: 1, opacity: 0.6 }}>AUTO</span>
                         </div>
                       ) : isAutoPop ? (
-                        <div style={{ ...iStyle, fontFamily: "'Bitter', Georgia, serif", background: 'rgba(26,153,136,0.06)', borderColor: 'rgba(26,153,136,0.30)', color: 'rgba(28,54,120,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'not-allowed' }}>
+                        <div style={{ ...iStyle, fontFamily: "'Bitter', Georgia, serif", background: 'rgba(26,153,136,0.06)', borderColor: 'rgba(26,153,136,0.30)', color: '#243551', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'not-allowed' }}>
                           <span>{input.nicheGrade ? (['A+','A','A-','B+','B','B-','C+','C','C-','D','F'][['100','91','83','75','67','58','50','42','33','25','0'].indexOf(String(values[input.id]))] ?? values[input.id]) : (values[input.id] ?? '—')}</span>
                           <span style={{ fontSize: 9, letterSpacing: 1, color: '#1A9988', opacity: 0.8 }}>LOCKED</span>
                         </div>
@@ -1039,7 +1039,7 @@ export default function App() {
                         </select>
                       ) : (
                         <input type="number" value={values[input.id] ?? ''} onChange={e => setValues(p => ({ ...p, [input.id]: e.target.value }))}
-                          placeholder={input.placeholder} style={{ ...iStyle, fontFamily: "'Bitter', Georgia, serif", borderColor: 'rgba(28,54,120,0.26)' }} />
+                          placeholder={input.placeholder} style={{ ...iStyle, fontFamily: "'Bitter', Georgia, serif", borderColor: '#D6DCE5' }} />
                       )}
                       {['endowmentPerStudent','totalRevenue'].includes(input.id) && (
                         <BenchmarkDropdown field={{ id: input.id, section: 'financial' }} carnegieId={carnegieId} color="#1C3678" />
@@ -1052,11 +1052,11 @@ export default function App() {
                 })}
 
                 {curAxis.checkboxes && curAxis.checkboxes.length > 0 && (
-                  <div style={{ marginTop: 14, borderTop: '1px solid rgba(28,54,120,0.10)', paddingTop: 14 }}>
-                    <div style={{ fontSize: 11, letterSpacing: 1.5, color: 'rgba(28,54,120,0.52)', marginBottom: 8, textTransform: 'uppercase' }}>
+                  <div style={{ marginTop: 14, borderTop: '1px solid #E9EDEE', paddingTop: 14 }}>
+                    <div style={{ fontSize: 11, letterSpacing: 1.5, color: '#6B7585', marginBottom: 8, textTransform: 'uppercase' }}>
                       {curAxis.key === 'visibility' ? 'Athletic Conference Visibility' : curAxis.key === 'profile' ? 'Institutional Profile Assets' : 'Academic & Institutional Assets'}
                     </div>
-                    <div style={{ fontSize: 11, color: 'rgba(28,54,120,0.50)', marginBottom: 10, lineHeight: 1.5 }}>
+                    <div style={{ fontSize: 11, color: '#6B7585', marginBottom: 10, lineHeight: 1.5 }}>
                       {curAxis.key === 'visibility'
                         ? 'Check all that apply. Athletic conferences drive significant national brand exposure.'
                         : curAxis.key === 'profile'
@@ -1070,34 +1070,34 @@ export default function App() {
                             display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px',
                             borderRadius: values[chk.id] && chk.rankId ? '6px 6px 0 0' : 6,
                             cursor: 'pointer',
-                            background: values[chk.id] ? 'rgba(28,54,120,0.15)' : 'rgba(28,54,120,0.03)',
-                            border: values[chk.id] ? '1px solid rgba(28,54,120,0.45)' : '1px solid rgba(28,54,120,0.12)',
+                            background: values[chk.id] ? '#E4E8EE' : '#FAFBFC',
+                            border: values[chk.id] ? '1px solid #8A93A1' : '1px solid #E9EDEE',
                             transition: 'all 0.12s',
                           }}>
                           <div style={{
                             width: 17, height: 17, borderRadius: 4, flexShrink: 0,
                             background: values[chk.id] ? '#1C3678' : 'transparent',
-                            border: values[chk.id] ? '1px solid #1C3678' : '1px solid rgba(28,54,120,0.32)',
+                            border: values[chk.id] ? '1px solid #1C3678' : '1px solid #A6ADBA',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                           }}>
                             {values[chk.id] && <span style={{ color: '#FFFFFF', fontSize: 11, fontWeight: 900, lineHeight: 1 }}>✓</span>}
                           </div>
-                          <span style={{ fontSize: 13, color: values[chk.id] ? '#ffffff' : 'rgba(28,54,120,0.65)', lineHeight: 1.4 }}>{chk.label}</span>
+                          <span style={{ fontSize: 13, color: values[chk.id] ? '#ffffff' : '#595959', lineHeight: 1.4 }}>{chk.label}</span>
                         </div>
                         {values[chk.id] && chk.rankId && (
                           <div style={{
                             padding: '8px 10px 10px',
-                            background: 'rgba(28,54,120,0.08)',
-                            border: '1px solid rgba(28,54,120,0.45)',
+                            background: '#EEF1F4',
+                            border: '1px solid #8A93A1',
                             borderTop: 'none',
                             borderRadius: '0 0 6px 6px',
                           }}>
-                            <label style={{ fontSize: 10, color: autoPopulated.includes(chk.rankId) ? '#1A9988' : 'rgba(28,54,120,0.55)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                              {chk.rankLabel} <span style={{ color: 'rgba(28,54,120,0.30)' }}>(blank if unranked in top {chk.rankMax})</span>
+                            <label style={{ fontSize: 10, color: autoPopulated.includes(chk.rankId) ? '#1A9988' : '#6B7585', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                              {chk.rankLabel} <span style={{ color: '#A6ADBA' }}>(blank if unranked in top {chk.rankMax})</span>
                               {autoPopulated.includes(chk.rankId) && <span style={{ fontSize: 8, letterSpacing: 1, color: '#1A9988' }}>IPEDS</span>}
                             </label>
                             {autoPopulated.includes(chk.rankId) ? (
-                              <div style={{ ...iStyle, fontFamily: "'Bitter', Georgia, serif", fontSize: 13, padding: '6px 10px', background: 'rgba(26,153,136,0.06)', borderColor: 'rgba(26,153,136,0.30)', color: 'rgba(28,54,120,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'not-allowed' }}>
+                              <div style={{ ...iStyle, fontFamily: "'Bitter', Georgia, serif", fontSize: 13, padding: '6px 10px', background: 'rgba(26,153,136,0.06)', borderColor: 'rgba(26,153,136,0.30)', color: '#243551', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'not-allowed' }}>
                                 <span>{values[chk.rankId] ?? '—'}</span>
                                 <span style={{ fontSize: 9, letterSpacing: 1, color: '#1A9988' }}>LOCKED</span>
                               </div>
@@ -1112,7 +1112,7 @@ export default function App() {
                         )}
                       </div>
                     ))}
-                    <div style={{ marginTop: 8, fontSize: 11, color: 'rgba(28,54,120,0.40)' }}>
+                    <div style={{ marginTop: 8, fontSize: 11, color: '#8A93A1' }}>
                       {curAxis.checkboxes.filter(c => values[c.id] === true).length} of {curAxis.checkboxes.length} selected
                     </div>
                   </div>
@@ -1122,8 +1122,8 @@ export default function App() {
 
             <button onClick={() => setStep("results")} disabled={overall === null} style={{
               width: '100%', marginTop: 14,
-              background: overall !== null ? '#EB5600' : 'rgba(28,54,120,0.28)',
-              color: overall !== null ? '#FFFFFF' : 'rgba(28,54,120,0.78)',
+              background: overall !== null ? '#EB5600' : '#F4F6F8',
+              color: overall !== null ? '#FFFFFF' : '#3D4F6B',
               border: 'none', borderRadius: 6, padding: '10px',
               fontSize: 14, fontWeight: 700, letterSpacing: 1.5,
               cursor: overall !== null ? 'pointer' : 'not-allowed',
@@ -1135,21 +1135,21 @@ export default function App() {
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px', gap: 16 }}>
             {institution && <div style={{ fontSize: 16, fontFamily: "'Young Serif', Georgia, serif" }}>{institution}</div>}
             <SpiderChart scores={scores} carnegieAvg={carnegieAvg} globalAvg={globalAvg} axes={activeAxes} />
-            <div style={{ display: 'flex', gap: 18, fontSize: 14, color: 'rgba(28,54,120,0.85)', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: 18, fontSize: 14, color: '#243551', flexWrap: 'wrap', justifyContent: 'center' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                 <span style={{ width: 16, height: 2, background: '#EB5600', display: 'inline-block' }} /> Your Institution
               </span>
               {carnegieAvg
                 ? <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <span style={{ width: 16, height: 0, border: '1px dashed rgba(28,54,120,0.68)', display: 'inline-block' }} /> {selectedCarnegie?.short} avg (n={carnegieAvg.n})
+                    <span style={{ width: 16, height: 0, border: '1px dashed #595959', display: 'inline-block' }} /> {selectedCarnegie?.short} avg (n={carnegieAvg.n})
                   </span>
-                : <span style={{ color: 'rgba(28,54,120,0.52)' }}>{selectedCarnegie?.short} avg: {Math.max(0, MIN_N - carnegieN)} more needed</span>
+                : <span style={{ color: '#6B7585' }}>{selectedCarnegie?.short} avg: {Math.max(0, MIN_N - carnegieN)} more needed</span>
               }
               {globalAvg
                 ? <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                     <span style={{ width: 16, height: 0, border: '1px dotted rgba(106,164,200,0.5)', display: 'inline-block' }} /> All institutions avg (n={globalAvg.n})
                   </span>
-                : <span style={{ color: 'rgba(28,54,120,0.52)' }}>All avg: {Math.max(0, MIN_N - globalN)} more needed</span>
+                : <span style={{ color: '#6B7585' }}>All avg: {Math.max(0, MIN_N - globalN)} more needed</span>
               }
             </div>
           </div>
@@ -1162,7 +1162,7 @@ export default function App() {
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28, gap: 24 }}>
             <div>
               {institution && <div style={{ fontSize: 22, fontFamily: "'Young Serif', Georgia, serif", marginBottom: 6 }}>{institution}</div>}
-              <div style={{ fontSize: 14, color: 'rgba(28,54,120,0.80)', marginBottom: 3 }}>
+              <div style={{ fontSize: 14, color: '#243551', marginBottom: 3 }}>
                 {selectedCarnegie?.label}
                 {values.qsRank && (
                   <span style={{ marginLeft: 10, fontSize: 11, letterSpacing: 1, color: '#EB5600', background: 'rgba(235,86,0,0.12)', border: '1px solid rgba(235,86,0,0.30)', borderRadius: 4, padding: '2px 7px' }}>
@@ -1170,13 +1170,13 @@ export default function App() {
                   </span>
                 )}
               </div>
-              {unitid && <div style={{ fontSize: 14, color: 'rgba(28,54,120,0.52)' }}>IPEDS Unit ID: {unitid}</div>}
+              {unitid && <div style={{ fontSize: 14, color: '#6B7585' }}>IPEDS Unit ID: {unitid}</div>}
             </div>
             {overall !== null && (
               <div style={{ textAlign: 'center', background: 'rgba(235,86,0,0.08)', border: '1px solid #EB560033', borderRadius: 12, padding: '16px 24px', flexShrink: 0 }}>
-                <div style={{ fontSize: 14, letterSpacing: 2, color: 'rgba(28,54,120,0.80)', marginBottom: 3 }}>WEIGHTED BRAND INDEX</div>
+                <div style={{ fontSize: 14, letterSpacing: 2, color: '#243551', marginBottom: 3 }}>WEIGHTED BRAND INDEX</div>
                 <div style={{ fontSize: 50, fontFamily: "'Bitter', Georgia, serif", color: '#EB5600', lineHeight: 1 }}>{overall}</div>
-                <div style={{ fontSize: 14, color: 'rgba(28,54,120,0.52)', marginTop: 2 }}>
+                <div style={{ fontSize: 14, color: '#6B7585', marginTop: 2 }}>
                   /100 · {selectedCarnegie?.short}
                   {values.qsRank && <span style={{ marginLeft: 8, color: 'rgba(235,86,0,0.70)', fontSize: 12 }}>· {QS_BAND_LABELS[qsBand]}</span>}
                 </div>
@@ -1189,16 +1189,16 @@ export default function App() {
               <SpiderChart scores={scores} carnegieAvg={carnegieAvg} globalAvg={globalAvg} axes={activeAxes} />
               {/* Legend */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10 }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: 'rgba(28,54,120,0.82)' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#243551' }}>
                   <span style={{ width: 20, height: 2, background: '#EB5600', display: 'inline-block', borderRadius: 1 }} />
                   {institution || "Your institution"}
                 </span>
                 {carnegieAvg
-                  ? <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: 'rgba(28,54,120,0.80)' }}>
-                      <span style={{ width: 20, height: 0, border: '1.5px dashed rgba(28,54,120,0.68)', display: 'inline-block' }} />
+                  ? <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#243551' }}>
+                      <span style={{ width: 20, height: 0, border: '1.5px dashed #595959', display: 'inline-block' }} />
                       {selectedCarnegie?.short} average (n={carnegieAvg.n})
                     </span>
-                  : <span style={{ fontSize: 14, color: 'rgba(28,54,120,0.52)', fontStyle: 'italic' }}>
+                  : <span style={{ fontSize: 14, color: '#6B7585', fontStyle: 'italic' }}>
                       {selectedCarnegie?.short} avg unlocks at n={MIN_N} ({Math.max(0, MIN_N - carnegieN)} more needed)
                     </span>
                 }
@@ -1207,7 +1207,7 @@ export default function App() {
                       <span style={{ width: 20, height: 0, border: '1.5px dotted rgba(106,164,200,0.5)', display: 'inline-block' }} />
                       All institutions average (n={globalAvg.n})
                     </span>
-                  : <span style={{ fontSize: 14, color: 'rgba(28,54,120,0.52)', fontStyle: 'italic' }}>
+                  : <span style={{ fontSize: 14, color: '#6B7585', fontStyle: 'italic' }}>
                       Global avg unlocks at n={MIN_N} ({Math.max(0, MIN_N - globalN)} more needed)
                     </span>
                 }
@@ -1215,7 +1215,7 @@ export default function App() {
             </div>
 
             <div style={{ flex: 1, minWidth: 260 }}>
-              <div style={{ fontSize: 14, letterSpacing: 2, color: 'rgba(28,54,120,0.80)', marginBottom: 10 }}>DIMENSION BREAKDOWN</div>
+              <div style={{ fontSize: 14, letterSpacing: 2, color: '#243551', marginBottom: 10 }}>DIMENSION BREAKDOWN</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {activeAxes.map(a => {
                   const s = scores[a.key];
@@ -1225,24 +1225,24 @@ export default function App() {
                   const w = WEIGHTS[carnegieId]?.[a.key] ?? 0;
                   return (
                     <div key={a.key} style={{
-                      background: 'rgba(28,54,120,0.28)', border: `1px solid ${a.color}1a`,
+                      background: '#F4F6F8', border: `1px solid ${a.color}1a`,
                       borderRadius: 8, padding: '10px 13px',
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                           <div style={{ width: 6, height: 6, borderRadius: '50%', background: a.color }} />
-                          <span style={{ fontSize: 14, color: 'rgba(28,54,120,0.6)' }}>{a.label}</span>
+                          <span style={{ fontSize: 14, color: '#595959' }}>{a.label}</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                           {delta !== null && <span style={{ fontSize: 14, color: delta >= 0 ? '#1A9988' : '#EB5600' }}>{delta >= 0 ? '+' : ''}{delta} vs {selectedCarnegie?.short}</span>}
-                          <span style={{ fontSize: 17, fontFamily: "'Bitter', Georgia, serif", color: s != null ? '#243551' : 'rgba(28,54,120,0.52)' }}>{s != null ? Math.round(s) : '–'}</span>
-                          <span style={{ fontSize: 14, color: 'rgba(28,54,120,0.52)' }}>{Math.round(w * 100)}%</span>
+                          <span style={{ fontSize: 17, fontFamily: "'Bitter', Georgia, serif", color: s != null ? '#243551' : '#6B7585' }}>{s != null ? Math.round(s) : '–'}</span>
+                          <span style={{ fontSize: 14, color: '#6B7585' }}>{Math.round(w * 100)}%</span>
                         </div>
                       </div>
                       {s != null && (
-                        <div style={{ position: 'relative', height: 4, borderRadius: 2, background: 'rgba(28,54,120,0.28)' }}>
+                        <div style={{ position: 'relative', height: 4, borderRadius: 2, background: '#F4F6F8' }}>
                           <div style={{ width: `${s}%`, height: '100%', background: a.color, borderRadius: 2, position: 'absolute', top: 0, left: 0 }} />
-                          {ca != null && <div style={{ width: 2, height: 8, background: 'rgba(28,54,120,0.80)', position: 'absolute', top: -2, left: `${ca}%`, borderRadius: 1 }} />}
+                          {ca != null && <div style={{ width: 2, height: 8, background: '#243551', position: 'absolute', top: -2, left: `${ca}%`, borderRadius: 1 }} />}
                           {ga != null && <div style={{ width: 2, height: 8, background: 'rgba(106,164,200,0.5)', position: 'absolute', top: -2, left: `${ga}%`, borderRadius: 1 }} />}
                         </div>
                       )}
@@ -1252,14 +1252,14 @@ export default function App() {
               </div>
 
               {/* Submit */}
-              <div style={{ marginTop: 20, padding: '16px', background: 'rgba(28,54,120,0.28)', border: '1px solid rgba(28,54,120,0.22)', borderRadius: 10 }}>
+              <div style={{ marginTop: 20, padding: '16px', background: '#F4F6F8', border: '1px solid rgba(28,54,120,0.22)', borderRadius: 10 }}>
                 {submitted
                   ? <div style={{ fontSize: 14, color: '#1A9988', display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ fontSize: 16 }}>✓</span>
                       Submitted. Your data contributes to aggregate benchmarks anonymously.
                     </div>
                   : <>
-                      <div style={{ fontSize: 14, color: 'rgba(28,54,120,0.82)', marginBottom: 10, lineHeight: 1.5 }}>
+                      <div style={{ fontSize: 14, color: '#243551', marginBottom: 10, lineHeight: 1.5 }}>
                         <strong style={{ color: '#243551' }}>Contribute to benchmarks.</strong> Your institution's name is recorded for deduplication only — it is never displayed to other users. All aggregate data is anonymous.
                       </div>
                       <button onClick={handleSubmit} disabled={saving || overall === null} style={{
@@ -1298,11 +1298,11 @@ export default function App() {
           )}
 
           <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
-            <button onClick={() => setStep("data")} style={{ background: 'transparent', color: 'rgba(28,54,120,0.82)', border: '1px solid rgba(28,54,120,0.32)', borderRadius: 6, padding: '8px 20px', fontSize: 14, cursor: 'pointer', fontFamily: "'Bitter', Georgia, serif" }}>← EDIT DATA</button>
-            <button onClick={() => { setStep("carnegie"); setCarnegieId(''); setValues({}); setInstitution(''); setUnitid(''); setAutoPopulated([]); setSubmitted(false); }} style={{ background: 'transparent', color: 'rgba(28,54,120,0.85)', border: '1px solid rgba(28,54,120,0.22)', borderRadius: 6, padding: '8px 20px', fontSize: 14, cursor: 'pointer', fontFamily: "'Bitter', Georgia, serif" }}>START OVER</button>
+            <button onClick={() => setStep("data")} style={{ background: 'transparent', color: '#243551', border: '1px solid #A6ADBA', borderRadius: 6, padding: '8px 20px', fontSize: 14, cursor: 'pointer', fontFamily: "'Bitter', Georgia, serif" }}>← EDIT DATA</button>
+            <button onClick={() => { setStep("carnegie"); setCarnegieId(''); setValues({}); setInstitution(''); setUnitid(''); setAutoPopulated([]); setSubmitted(false); }} style={{ background: 'transparent', color: '#243551', border: '1px solid rgba(28,54,120,0.22)', borderRadius: 6, padding: '8px 20px', fontSize: 14, cursor: 'pointer', fontFamily: "'Bitter', Georgia, serif" }}>START OVER</button>
           </div>
 
-          <div style={{ marginTop: 16, fontSize: 14, color: 'rgba(28,54,120,0.52)', lineHeight: 1.6, borderTop: '1px solid rgba(28,54,120,0.28)', paddingTop: 14 }}>
+          <div style={{ marginTop: 16, fontSize: 14, color: '#6B7585', lineHeight: 1.6, borderTop: '1px solid #F4F6F8', paddingTop: 14 }}>
             Weightings calibrated per the 2025 Carnegie Institutional Classification (ACE / Carnegie Foundation). Data sources: IPEDS, NSF HERD, VSE survey, Form 990 / state reports, American Caldwell Visibility Index / QS / Times. Institution names are used for deduplication only and are never displayed in aggregate views. Aggregate overlays require a minimum of {MIN_N} submissions per classification.
           </div>
         </div>
