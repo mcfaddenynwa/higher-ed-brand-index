@@ -109,5 +109,12 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Bitter', Georgia, serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Young Serif', Georgia, serif;
+    font-weight: 400;
+    color: hsl(var(--brand-navy-deep));
   }
 }
