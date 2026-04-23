@@ -891,13 +891,14 @@ export default function App() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 28 }}>
 {(isIntl ? INTL_CATEGORIES : CARNEGIE_CATEGORIES).map(cat => (
               <button key={cat.id} onClick={() => { setCarnegieId(cat.id); if (USNEWS_LIST_MAP[cat.id]) setValues(p => ({ ...p, usNewsList: USNEWS_LIST_MAP[cat.id] })); }} style={{
-                textAlign: 'left', padding: '12px 14px',
-                background: carnegieId === cat.id ? 'rgba(235,86,0,0.11)' : '#F4F6F8',
-                border: carnegieId === cat.id ? '1px solid #EB560088' : '1px solid #F4F6F8',
-                borderRadius: 8, cursor: 'pointer', transition: 'all 0.12s',
+                textAlign: 'left', padding: '14px 16px',
+                background: carnegieId === cat.id ? '#FFFFFF' : '#F4F6F8',
+                border: carnegieId === cat.id ? '2px solid #1C3678' : '1px solid #E9EDEE',
+                borderRadius: 0, cursor: 'pointer', transition: 'all 0.12s',
+                boxShadow: carnegieId === cat.id ? 'inset 4px 0 0 0 #EB5600' : 'none',
               }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: carnegieId === cat.id ? '#EB5600' : '#243551', marginBottom: 2 }}>{cat.short}</div>
-                <div style={{ fontSize: 14, color: '#3D4F6B', lineHeight: 1.4 }}>{cat.description}</div>
+                <div style={{ fontSize: 14, fontFamily: "'Young Serif', Georgia, serif", color: '#243551', marginBottom: 4 }}>{cat.short}</div>
+                <div style={{ fontSize: 13, color: '#595959', lineHeight: 1.5 }}>{cat.description}</div>
               </button>
             ))}
           </div>

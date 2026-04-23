@@ -6,40 +6,42 @@ const FONT = "'Bitter', Georgia, serif";
 const SERIF = "'Young Serif', Georgia, serif";
 const MONO = "'Bitter', Georgia, serif";
 
+// Slimmed brand-aligned axis palette (navy-led, orange/steel/teal accents)
 const AXIS = {
-  visibility: { label: "Visibility & Reach", color: "#EB5600" },
-  enrollment: { label: "Enrollment & Retention", color: "#1A9988" },
-  financial: { label: "Financial Strength", color: "#1C3678" },
-  profile: { label: "Institutional Profile", color: "#243551" },
-  research: { label: "Academic & Research", color: "#EB5600" },
-  diversity: { label: "Diversity & Access", color: "#6AA4C8" },
-  alumni: { label: "Alumni Engagement", color: "#EB5600" },
+  visibility:  { label: "Visibility & Reach",            color: "#EB5600" }, // orange
+  enrollment:  { label: "Enrollment & Retention",        color: "#1A9988" }, // teal
+  financial:   { label: "Financial Strength",            color: "#243551" }, // dark navy
+  profile:     { label: "Institutional Profile",         color: "#3F5A8A" }, // mid navy
+  research:    { label: "Academic & Research",           color: "#1C3678" }, // navy
+  diversity:   { label: "Diversity & Access",            color: "#6AA4C8" }, // steel
+  alumni:      { label: "Alumni Engagement",             color: "#A47B57" }, // warm tan (single supporting)
 };
 
-function Eyebrow({ children, color = "#EB5600" }) {
+function Eyebrow({ children, color = "#595959" }) {
   return (
-    <div style={{ fontFamily: FONT, fontSize: 11, letterSpacing: 2.5, color, textTransform: "uppercase", fontWeight: 600 }}>
+    <div style={{ fontFamily: FONT, fontSize: 10, letterSpacing: 2, color, textTransform: "uppercase", fontWeight: 600 }}>
       {children}
     </div>
   );
 }
 
+// Signature mcfadden+co section device: 56px Steel Blue rule + serif title
 function SectionTitle({ eyebrow, title, lead }) {
   return (
-    <div style={{ marginBottom: 24 }}>
-      <Eyebrow>{eyebrow}</Eyebrow>
-      <h2 style={{ fontFamily: SERIF, fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: "#243551", margin: "8px 0 10px" }}>{title}</h2>
-      {lead && <p style={{ fontFamily: SERIF, fontStyle: "italic", fontSize: 17, color: "#595959", lineHeight: 1.5, maxWidth: 720, margin: 0 }}>{lead}</p>}
-      <div style={{ marginTop: 16, height: 1, background: "#E9EDEE" }} />
+    <div style={{ marginBottom: 28 }}>
+      <div style={{ width: 56, height: 3, background: "#6AA4C8", marginBottom: 12 }} />
+      {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
+      <h2 style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 32, lineHeight: 1.15, color: "#243551", margin: "8px 0 10px" }}>{title}</h2>
+      {lead && <p style={{ fontFamily: FONT, fontSize: 15, color: "#595959", lineHeight: 1.6, maxWidth: 720, margin: 0 }}>{lead}</p>}
     </div>
   );
 }
 
-function StatCard({ value, label, accent = "#EB5600" }) {
+function StatCard({ value, label, accent = "#1C3678" }) {
   return (
-    <div style={{ background: "#FAFBFC", border: "1px solid #EEF1F4", borderRadius: 8, padding: "20px 22px" }}>
-      <div style={{ fontFamily: MONO, fontSize: 36, color: "#243551", fontWeight: 500, lineHeight: 1 }}>{value}</div>
-      <div style={{ fontFamily: FONT, fontSize: 10, letterSpacing: 1.5, color: accent, textTransform: "uppercase", marginTop: 10, fontWeight: 600 }}>{label}</div>
+    <div style={{ background: "#F4F6F8", border: "1px solid #E9EDEE", borderTop: `3px solid ${accent}`, borderRadius: 0, padding: "20px 22px" }}>
+      <div style={{ fontFamily: SERIF, fontSize: 36, color: "#243551", lineHeight: 1 }}>{value}</div>
+      <div style={{ fontFamily: FONT, fontSize: 10, letterSpacing: 1.5, color: "#595959", textTransform: "uppercase", marginTop: 10, fontWeight: 600 }}>{label}</div>
     </div>
   );
 }
