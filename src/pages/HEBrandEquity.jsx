@@ -1,4 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import InsightReport from "../components/InsightReport";
+import { scorePool } from "../lib/insightFramework";
 // LOVABLE SETUP: Add this to your index.html <head>:
 //
 
