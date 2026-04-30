@@ -1267,7 +1267,7 @@ export default function App() {
                       background: '#F4F6F8', border: `1px solid ${a.color}1a`,
                       borderRadius: 8, padding: '10px 13px',
                     }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 6 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                           <div style={{ width: 6, height: 6, borderRadius: '50%', background: a.color }} />
                           <span style={{ fontSize: 14, color: '#595959' }}>{a.label}</span>
