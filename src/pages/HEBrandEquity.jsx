@@ -661,14 +661,6 @@ export default function App() {
     [scoredPool, carnegieId, institution]
   );
 
-  // Score the institutional database for the insight framework's peer cohort.
-  // Memoized — only recomputes when the active axes change (i.e. on classification change).
-  const scoredPool = useMemo(() => {
-    if (!carnegieId) return [];
-    const combined = [...IPEDS_DB, ...INTL_DB];
-    return scorePool(combined, AXES, normalizeAxis);
-  }, [carnegieId]);
-
   // Classification cohort stats — surfaced in the Weighted Brand Index header card.
   const classificationCohort = useMemo(() => {
     if (!carnegieId) return [];
