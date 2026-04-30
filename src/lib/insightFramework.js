@@ -216,21 +216,22 @@ export function pillarNarrative(p, focalName) {
   if (p.tier === "insufficient") {
     return `Not enough peers in this cohort to position ${name} on ${p.axis.label.toLowerCase()}. Broaden the lens for a fuller read.`;
   }
-  const z = p.z != null ? `z = ${p.z >= 0 ? "+" : ""}${p.z}` : "";
-  const vsPeer = p.delta != null ? `${p.delta >= 0 ? "+" : ""}${p.delta} pts vs peer mean` : "";
+  const absDelta = p.delta != null ? Math.abs(p.delta) : null;
+  const aboveBy = absDelta != null ? `${absDelta} pts above the peer average` : "above the peer average";
+  const belowBy = absDelta != null ? `${absDelta} pts below the peer average` : "below the peer average";
   const leader = p.leaderName ? ` Cohort leader: ${p.leaderName} (${p.leaderScore}).` : "";
 
   switch (p.tier) {
     case "leader":
-      return `${name} is a category leader on ${p.axis.label.toLowerCase()} (${vsPeer}, ${z}). This is a defensible brand asset to lead with in market positioning.${leader}`;
+      return `${name} is a category leader on ${p.axis.label.toLowerCase()}, sitting ${aboveBy}. This is a defensible brand asset to lead with in market positioning.${leader}`;
     case "strength":
-      return `${name} runs above peer norm on ${p.axis.label.toLowerCase()} (${vsPeer}, ${z}). Worth amplifying in storytelling and recruitment messaging.${leader}`;
+      return `${name} runs ${aboveBy} on ${p.axis.label.toLowerCase()}. Worth amplifying in storytelling and recruitment messaging.${leader}`;
     case "on-par":
-      return `${name} performs roughly at peer parity on ${p.axis.label.toLowerCase()} (${vsPeer}, ${z}). Neither a competitive advantage nor a liability — opportunity to differentiate.${leader}`;
+      return `${name} performs roughly at peer parity on ${p.axis.label.toLowerCase()}. Neither a competitive advantage nor a liability — opportunity to differentiate.${leader}`;
     case "gap":
-      return `${name} trails peer norm on ${p.axis.label.toLowerCase()} (${vsPeer}, ${z}). Worth a focused investment plan if this pillar is strategically important.${leader}`;
+      return `${name} trails the peer average on ${p.axis.label.toLowerCase()} by ${absDelta ?? "a few"} pts. Worth a focused investment plan if this pillar is strategically important.${leader}`;
     case "critical-gap":
-      return `${name} is materially behind cohort on ${p.axis.label.toLowerCase()} (${vsPeer}, ${z}). High-priority gap — consider whether to invest aggressively or de-emphasize in positioning.${leader}`;
+      return `${name} is materially behind the cohort on ${p.axis.label.toLowerCase()}, ${belowBy}. High-priority gap — consider whether to invest aggressively or de-emphasize in positioning.${leader}`;
     default:
       return "";
   }
