@@ -493,7 +493,6 @@ function SpiderChart({ scores, carnegieAvg, globalAvg, axes }) {
 
 // Note: localStorage submission flow removed — every institution is auto-scored
 // from IPEDS and lives in scoredPool from the start.
-}
 
 
 // ── Benchmark reference data (NACUBO, CASE, CUPA-HR, IPEDS aggregates) ─────────
