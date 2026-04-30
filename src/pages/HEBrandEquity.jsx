@@ -631,14 +631,7 @@ export default function App() {
   const [isIntl, setIsIntl] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [submissions, setSubmissions] = useState([]);
-  const [submitted, setSubmitted] = useState(false);
-  const [saving, setSaving] = useState(false);
   const inputRef = useRef(null);
-
-  useEffect(() => {
-    loadSubmissions().then(setSubmissions);
-  }, []);
 
   const selectedCarnegie = CARNEGIE_CATEGORIES.find(c => c.id === carnegieId) ?? INTL_CATEGORIES.find(c => c.id === carnegieId);
   const activeAxes = AXES.filter(a => !a.hiddenFor || !a.hiddenFor.includes(carnegieId));
@@ -651,8 +644,22 @@ export default function App() {
 
   const qsBand = getQsBand(values.qsRank);
   const overall = carnegieId ? weightedOverall(scores, carnegieId, qsBand) : null;
-  const { carnegieAvg, globalAvg } = computeAggregates(submissions, carnegieId);
   const curAxis = activeAxes[Math.min(activeAxis, activeAxes.length - 1)];
+
+  // Score the institutional database for the insight framework's peer cohort.
+  // Memoized — only recomputes when the active axes change (i.e. on classification change).
+  const scoredPool = useMemo(() => {
+    if (!carnegieId) return [];
+    const combined = [...IPEDS_DB, ...INTL_DB];
+    return scorePool(combined, AXES, normalizeAxis);
+  }, [carnegieId]);
+
+  // Cohort overlays for the spider chart — derived from the same auto-scored pool
+  // that powers the cohort size in the header card.
+  const { carnegieAvg, globalAvg } = useMemo(
+    () => computeAggregates(scoredPool, carnegieId, institution),
+    [scoredPool, carnegieId, institution]
+  );
 
   // Score the institutional database for the insight framework's peer cohort.
   // Memoized — only recomputes when the active axes change (i.e. on classification change).
