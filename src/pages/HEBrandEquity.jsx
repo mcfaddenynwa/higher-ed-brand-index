@@ -224,16 +224,6 @@ const AXES = [
       { id: "firstGen", label: "First-generation students (%)", placeholder: "e.g. 22", max: 100 },
     ]
   },
-  {
-    key: "alumni", label: "Alumni Engagement", color: "#A47B57",
-    description: "Alumni giving rate, number of living alumni (VSE survey / self-report)",
-    inputs: [
-      { id: "givingRate", label: "Alumni giving rate (%)", placeholder: "e.g. 14", max: 60 },
-      { id: "livingAlumni", label: "Number of living alumni", placeholder: "e.g. 85000", max: 500000 },
-    ]
-  },
-
-
 ];
 
 // Minimum submissions to show aggregate overlay
