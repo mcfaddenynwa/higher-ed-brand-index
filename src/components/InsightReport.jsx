@@ -259,9 +259,10 @@ export default function InsightReport({
       )}
 
       <div style={{ marginTop: 22, fontSize: 11, color: '#8A93A1', lineHeight: 1.6, borderTop: '1px solid #EEF1F4', paddingTop: 14 }}>
-        Methodology: each pillar score is converted to a z-score against the selected peer cohort.
-        Tiers: <span style={{ color: tierColor('leader') }}>Leader (z ≥ +1.5)</span> · <span style={{ color: tierColor('strength') }}>Strength (+0.5)</span> · <span style={{ color: tierColor('on-par') }}>On par</span> · <span style={{ color: tierColor('gap') }}>Gap (−0.5)</span> · <span style={{ color: tierColor('critical-gap') }}>Critical gap (−1.5)</span>.
-        Cohorts of 3+ are recommended; pillars with peer dispersion below 1 point are suppressed to avoid spurious z-scores.
+        How we score: each pillar compares your institution to the peer cohort you selected. Tiers reflect
+        how far above or below the cohort average you sit:{' '}
+        <span style={{ color: tierColor('leader') }}>Leader</span> · <span style={{ color: tierColor('strength') }}>Strength</span> · <span style={{ color: tierColor('on-par') }}>On par</span> · <span style={{ color: tierColor('gap') }}>Gap</span> · <span style={{ color: tierColor('critical-gap') }}>Critical gap</span>.
+        Cohorts of 3+ schools give the most reliable read.
       </div>
     </div>
   );
