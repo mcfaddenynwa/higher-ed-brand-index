@@ -100,26 +100,26 @@ const INTL_CATEGORIES = [
 // International weight profiles — visibility and research weighted higher baseline
 // since global standing is inherently more central for international institutions
 const INTL_WEIGHTS = {
-  intl_elite:        { visibility: 0.22, enrollment: 0.12, financial: 0.13, profile: 0.12, research: 0.24, diversity: 0.09, alumni: 0.08 },
-  intl_research:     { visibility: 0.19, enrollment: 0.14, financial: 0.14, profile: 0.11, research: 0.21, diversity: 0.11, alumni: 0.10 },
-  intl_comprehensive:{ visibility: 0.16, enrollment: 0.18, financial: 0.14, profile: 0.10, research: 0.13, diversity: 0.14, alumni: 0.15 },
-  intl_teaching:     { visibility: 0.14, enrollment: 0.21, financial: 0.13, profile: 0.08, research: 0.08, diversity: 0.18, alumni: 0.18 },
-  intl_specialist:   { visibility: 0.19, enrollment: 0.12, financial: 0.15, profile: 0.14, research: 0.16, diversity: 0.12, alumni: 0.12 },
+  intl_elite:        { visibility: 0.24, enrollment: 0.13, financial: 0.14, profile: 0.13, research: 0.26, diversity: 0.10 },
+  intl_research:     { visibility: 0.21, enrollment: 0.16, financial: 0.16, profile: 0.12, research: 0.23, diversity: 0.12 },
+  intl_comprehensive:{ visibility: 0.19, enrollment: 0.21, financial: 0.16, profile: 0.12, research: 0.15, diversity: 0.17 },
+  intl_teaching:     { visibility: 0.17, enrollment: 0.26, financial: 0.16, profile: 0.10, research: 0.10, diversity: 0.21 },
+  intl_specialist:   { visibility: 0.22, enrollment: 0.14, financial: 0.17, profile: 0.16, research: 0.18, diversity: 0.13 },
 };
 
 const WEIGHTS = {
-  // 7 dimensions: profile = institutional assets (law, med, biz, eng)
-  r1:          { visibility: 0.22, enrollment: 0.13, financial: 0.14, profile: 0.10, research: 0.22, diversity: 0.10, alumni: 0.09 },
-  r2:          { visibility: 0.20, enrollment: 0.14, financial: 0.14, profile: 0.10, research: 0.20, diversity: 0.11, alumni: 0.11 },
-  r3:          { visibility: 0.18, enrollment: 0.15, financial: 0.14, profile: 0.10, research: 0.17, diversity: 0.13, alumni: 0.13 },
-  masters_l:   { visibility: 0.18, enrollment: 0.18, financial: 0.14, profile: 0.12, research: 0.10, diversity: 0.15, alumni: 0.13 },
-  masters_m:   { visibility: 0.16, enrollment: 0.19, financial: 0.13, profile: 0.12, research: 0.08, diversity: 0.16, alumni: 0.16 },
-  masters_s:   { visibility: 0.15, enrollment: 0.18, financial: 0.13, profile: 0.11, research: 0.07, diversity: 0.17, alumni: 0.19 },
-  bac_arts:    { visibility: 0.18, enrollment: 0.16, financial: 0.14, profile: 0.08, research: 0.06, diversity: 0.16, alumni: 0.22 },
-  bac_diverse: { visibility: 0.16, enrollment: 0.17, financial: 0.13, profile: 0.09, research: 0.07, diversity: 0.17, alumni: 0.21 },
-  associates:  { visibility: 0.13, enrollment: 0.22, financial: 0.14, profile: 0.06, research: 0.04, diversity: 0.27, alumni: 0.14 },
-  special:     { visibility: 0.20, enrollment: 0.13, financial: 0.15, profile: 0.14, research: 0.14, diversity: 0.12, alumni: 0.12 },
-  tribal:      { visibility: 0.11, enrollment: 0.18, financial: 0.15, profile: 0.06, research: 0.08, diversity: 0.29, alumni: 0.13 },
+  // 6 dimensions: profile = institutional assets (law, med, biz, eng)
+  r1:          { visibility: 0.24, enrollment: 0.14, financial: 0.15, profile: 0.11, research: 0.24, diversity: 0.12 },
+  r2:          { visibility: 0.22, enrollment: 0.16, financial: 0.16, profile: 0.11, research: 0.22, diversity: 0.13 },
+  r3:          { visibility: 0.21, enrollment: 0.17, financial: 0.16, profile: 0.11, research: 0.20, diversity: 0.15 },
+  masters_l:   { visibility: 0.21, enrollment: 0.21, financial: 0.16, profile: 0.14, research: 0.11, diversity: 0.17 },
+  masters_m:   { visibility: 0.19, enrollment: 0.23, financial: 0.15, profile: 0.14, research: 0.10, diversity: 0.19 },
+  masters_s:   { visibility: 0.19, enrollment: 0.22, financial: 0.16, profile: 0.14, research: 0.09, diversity: 0.20 },
+  bac_arts:    { visibility: 0.23, enrollment: 0.21, financial: 0.18, profile: 0.10, research: 0.08, diversity: 0.20 },
+  bac_diverse: { visibility: 0.20, enrollment: 0.22, financial: 0.16, profile: 0.11, research: 0.09, diversity: 0.22 },
+  associates:  { visibility: 0.15, enrollment: 0.26, financial: 0.16, profile: 0.07, research: 0.05, diversity: 0.31 },
+  special:     { visibility: 0.23, enrollment: 0.15, financial: 0.17, profile: 0.16, research: 0.16, diversity: 0.13 },
+  tribal:      { visibility: 0.13, enrollment: 0.21, financial: 0.17, profile: 0.07, research: 0.09, diversity: 0.33 },
 };
 
 
