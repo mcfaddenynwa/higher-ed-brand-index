@@ -1,0 +1,14 @@
+{
+  "_meta": {
+    "source": "Urban Institute Education Data Portal (https://educationdata.urban.org/)",
+    "endpoints": [
+      "/college-university/ipeds/finance/{year}/?unitid=...",
+      "/college-university/nacubo/endowments/{year}/?unitid=..."
+    ],
+    "license": "ODC Attribution License (ODC-By) v1.0",
+    "fetchedAt": null,
+    "financeYear": null,
+    "nacuboYear": null,
+    "note": "Run scripts/fetch-urban-finance.mjs to populate. US institutions only — international rows stay manual."
+  }
+}

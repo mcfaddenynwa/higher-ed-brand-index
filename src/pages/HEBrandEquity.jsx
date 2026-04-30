@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import InsightReport from "../components/InsightReport";
-import { scorePool } from "../lib/insightFramework";
+import { scorePool, buildCohort, cohortTopLine } from "../lib/insightFramework";
+import financeSnapshot from "../data/financeSnapshot.json";
 // LOVABLE SETUP: Add this to your index.html <head>:
 //
 
 // ─── SAMPLE IPEDS DATABASE (50 institutions) ───────────────────────────────
 // Real build: replace with full IPEDS extract keyed by unitid
 const IPEDS_DB = [
-  { name: "Pennsylvania State University", unitid: "214777", usNewsList: "natl_univ", flags: { bigFour: 1, d1: 0, health: 1, law: 0, aacsb: 1, eng: 1 }, socialIg: 260, socialLi: 700, socialX: 600, socialFb: 880, socialYt: 95,  qsRank: 331, theWorldRank: 161, usNewsLaw: null, usNewsBiz: 37, usNewsEng: 20, nicheRank: 25, nicheGrade: 91, theImpactListed: 1, theImpactRank: 601, retentionRate: 93, gradRate4yr: 68, gradRate6yr: 86, carnegieId: "r1", usNews: 91, enrollTrend: 1.2, yieldRate: 26, acceptRate: 54, pellPct: 22, firstGen: 18, rAndD: 998, doctoralOutput: 820, researchDesignation: 3, caldwellListed: 1, caldwellRank: 58 },
+  { name: "Pennsylvania State University", unitid: "214777", usNewsList: "natl_univ", flags: { bigFour: 1, d1: 0, health: 1, law: 1, aacsb: 1, eng: 1 }, socialIg: 260, socialLi: 700, socialX: 600, socialFb: 880, socialYt: 95,  qsRank: 331, theWorldRank: 161, usNewsLaw: 64, usNewsBiz: 37, usNewsEng: 20, nicheRank: 25, nicheGrade: 91, theImpactListed: 1, theImpactRank: 601, retentionRate: 93, gradRate4yr: 68, gradRate6yr: 86, carnegieId: "r1", usNews: 60, enrollTrend: 1.2, yieldRate: 26, acceptRate: 54, pellPct: 22, firstGen: 18, rAndD: 998, doctoralOutput: 820, researchDesignation: 3, caldwellListed: 1, caldwellRank: 58 },
   { name: "University of Michigan", unitid: "170976", usNewsList: "natl_univ", flags: { bigFour: 1, d1: 0, health: 1, law: 1, aacsb: 1, eng: 1 }, socialIg: 310, socialLi: 850, socialX: 820, socialFb: 1100, socialYt: 120,  qsRank: 23, theWorldRank: 26, usNewsLaw: 9, usNewsBiz: 11, usNewsEng: 5, nicheRank: 2, nicheGrade: 100, theImpactListed: 1, theImpactRank: 201, retentionRate: 97, gradRate4yr: 79, gradRate6yr: 92, carnegieId: "r1", usNews: 23, enrollTrend: 2.1, yieldRate: 40, acceptRate: 18, pellPct: 16, firstGen: 14, rAndD: 1621, doctoralOutput: 1120, researchDesignation: 3, caldwellListed: 1, caldwellRank: 12 },
   { name: "Ohio State University", unitid: "204796", usNewsList: "natl_univ", flags: { bigFour: 1, d1: 0, health: 1, law: 1, aacsb: 1, eng: 1 }, socialIg: 290, socialLi: 760, socialX: 680, socialFb: 1000, socialYt: 110,  qsRank: 171, theWorldRank: 121, usNewsLaw: 33, usNewsBiz: 25, usNewsEng: 19, nicheRank: 22, nicheGrade: 91, theImpactListed: 1, theImpactRank: 401, retentionRate: 94, gradRate4yr: 61, gradRate6yr: 84, carnegieId: "r1", usNews: 44, enrollTrend: 0.8, yieldRate: 35, acceptRate: 48, pellPct: 21, firstGen: 17, rAndD: 1089, doctoralOutput: 980, researchDesignation: 3, caldwellListed: 1, caldwellRank: 24 },
   { name: "University of Wisconsin-Madison", unitid: "240444", usNewsList: "natl_univ", flags: { bigFour: 1, d1: 0, health: 1, law: 1, aacsb: 1, eng: 1 }, socialIg: 250, socialLi: 680, socialX: 580, socialFb: 900, socialYt: 90,  qsRank: 155, theWorldRank: 97, usNewsLaw: 33, usNewsBiz: 41, usNewsEng: 18, nicheRank: 8, nicheGrade: 100, theImpactListed: 1, theImpactRank: 301, retentionRate: 95, gradRate4yr: 60, gradRate6yr: 88, carnegieId: "r1", usNews: 35, enrollTrend: 1.5, yieldRate: 37, acceptRate: 51, pellPct: 18, firstGen: 15, rAndD: 1312, doctoralOutput: 890, researchDesignation: 3, caldwellListed: 1, caldwellRank: 18 },
@@ -100,26 +101,26 @@ const INTL_CATEGORIES = [
 // International weight profiles — visibility and research weighted higher baseline
 // since global standing is inherently more central for international institutions
 const INTL_WEIGHTS = {
-  intl_elite:        { visibility: 0.22, enrollment: 0.12, financial: 0.13, profile: 0.12, research: 0.24, diversity: 0.09, alumni: 0.08 },
-  intl_research:     { visibility: 0.19, enrollment: 0.14, financial: 0.14, profile: 0.11, research: 0.21, diversity: 0.11, alumni: 0.10 },
-  intl_comprehensive:{ visibility: 0.16, enrollment: 0.18, financial: 0.14, profile: 0.10, research: 0.13, diversity: 0.14, alumni: 0.15 },
-  intl_teaching:     { visibility: 0.14, enrollment: 0.21, financial: 0.13, profile: 0.08, research: 0.08, diversity: 0.18, alumni: 0.18 },
-  intl_specialist:   { visibility: 0.19, enrollment: 0.12, financial: 0.15, profile: 0.14, research: 0.16, diversity: 0.12, alumni: 0.12 },
+  intl_elite:        { visibility: 0.24, enrollment: 0.13, financial: 0.14, profile: 0.13, research: 0.26, diversity: 0.10 },
+  intl_research:     { visibility: 0.21, enrollment: 0.16, financial: 0.16, profile: 0.12, research: 0.23, diversity: 0.12 },
+  intl_comprehensive:{ visibility: 0.19, enrollment: 0.21, financial: 0.16, profile: 0.12, research: 0.15, diversity: 0.17 },
+  intl_teaching:     { visibility: 0.17, enrollment: 0.26, financial: 0.16, profile: 0.10, research: 0.10, diversity: 0.21 },
+  intl_specialist:   { visibility: 0.22, enrollment: 0.14, financial: 0.17, profile: 0.16, research: 0.18, diversity: 0.13 },
 };
 
 const WEIGHTS = {
-  // 7 dimensions: profile = institutional assets (law, med, biz, eng)
-  r1:          { visibility: 0.22, enrollment: 0.13, financial: 0.14, profile: 0.10, research: 0.22, diversity: 0.10, alumni: 0.09 },
-  r2:          { visibility: 0.20, enrollment: 0.14, financial: 0.14, profile: 0.10, research: 0.20, diversity: 0.11, alumni: 0.11 },
-  r3:          { visibility: 0.18, enrollment: 0.15, financial: 0.14, profile: 0.10, research: 0.17, diversity: 0.13, alumni: 0.13 },
-  masters_l:   { visibility: 0.18, enrollment: 0.18, financial: 0.14, profile: 0.12, research: 0.10, diversity: 0.15, alumni: 0.13 },
-  masters_m:   { visibility: 0.16, enrollment: 0.19, financial: 0.13, profile: 0.12, research: 0.08, diversity: 0.16, alumni: 0.16 },
-  masters_s:   { visibility: 0.15, enrollment: 0.18, financial: 0.13, profile: 0.11, research: 0.07, diversity: 0.17, alumni: 0.19 },
-  bac_arts:    { visibility: 0.18, enrollment: 0.16, financial: 0.14, profile: 0.08, research: 0.06, diversity: 0.16, alumni: 0.22 },
-  bac_diverse: { visibility: 0.16, enrollment: 0.17, financial: 0.13, profile: 0.09, research: 0.07, diversity: 0.17, alumni: 0.21 },
-  associates:  { visibility: 0.13, enrollment: 0.22, financial: 0.14, profile: 0.06, research: 0.04, diversity: 0.27, alumni: 0.14 },
-  special:     { visibility: 0.20, enrollment: 0.13, financial: 0.15, profile: 0.14, research: 0.14, diversity: 0.12, alumni: 0.12 },
-  tribal:      { visibility: 0.11, enrollment: 0.18, financial: 0.15, profile: 0.06, research: 0.08, diversity: 0.29, alumni: 0.13 },
+  // 6 dimensions: profile = institutional assets (law, med, biz, eng)
+  r1:          { visibility: 0.24, enrollment: 0.14, financial: 0.15, profile: 0.11, research: 0.24, diversity: 0.12 },
+  r2:          { visibility: 0.22, enrollment: 0.16, financial: 0.16, profile: 0.11, research: 0.22, diversity: 0.13 },
+  r3:          { visibility: 0.21, enrollment: 0.17, financial: 0.16, profile: 0.11, research: 0.20, diversity: 0.15 },
+  masters_l:   { visibility: 0.21, enrollment: 0.21, financial: 0.16, profile: 0.14, research: 0.11, diversity: 0.17 },
+  masters_m:   { visibility: 0.19, enrollment: 0.23, financial: 0.15, profile: 0.14, research: 0.10, diversity: 0.19 },
+  masters_s:   { visibility: 0.19, enrollment: 0.22, financial: 0.16, profile: 0.14, research: 0.09, diversity: 0.20 },
+  bac_arts:    { visibility: 0.23, enrollment: 0.21, financial: 0.18, profile: 0.10, research: 0.08, diversity: 0.20 },
+  bac_diverse: { visibility: 0.20, enrollment: 0.22, financial: 0.16, profile: 0.11, research: 0.09, diversity: 0.22 },
+  associates:  { visibility: 0.15, enrollment: 0.26, financial: 0.16, profile: 0.07, research: 0.05, diversity: 0.31 },
+  special:     { visibility: 0.23, enrollment: 0.15, financial: 0.17, profile: 0.16, research: 0.16, diversity: 0.13 },
+  tribal:      { visibility: 0.13, enrollment: 0.21, financial: 0.17, profile: 0.07, research: 0.09, diversity: 0.33 },
 };
 
 
@@ -188,7 +189,7 @@ const AXES = [
   },
   {
     key: "financial", label: "Financial Strength", color: "#243551",
-    description: "Endowment per student, total operating revenue (Form 990 / state reports)",
+    description: "Endowment per student, total operating revenue. Auto-populated for US institutions from IPEDS Finance + NACUBO via the Urban Institute Education Data Portal (annual refresh). International institutions: manual entry, USD equivalent.",
     inputs: [
       { id: "endowmentPerStudent", label: "Endowment per student ($K)", labelIntl: "Endowment per student (USD equiv. $K)", placeholder: "e.g. 45", max: 600 },
       { id: "totalRevenue", label: "Total annual revenue ($M)", labelIntl: "Total annual revenue (USD equiv. $M)", placeholder: "e.g. 800", max: 5000 },
@@ -224,16 +225,6 @@ const AXES = [
       { id: "firstGen", label: "First-generation students (%)", placeholder: "e.g. 22", max: 100 },
     ]
   },
-  {
-    key: "alumni", label: "Alumni Engagement", color: "#A47B57",
-    description: "Alumni giving rate, number of living alumni (VSE survey / self-report)",
-    inputs: [
-      { id: "givingRate", label: "Alumni giving rate (%)", placeholder: "e.g. 14", max: 60 },
-      { id: "livingAlumni", label: "Number of living alumni", placeholder: "e.g. 85000", max: 500000 },
-    ]
-  },
-
-
 ];
 
 // Minimum submissions to show aggregate overlay
@@ -328,12 +319,12 @@ function normalizeAxis(axis, values) {
 // QS World University Rankings bands — weight profiles
 // Higher bands emphasize visibility & research; lower/unranked shift to enrollment, diversity, brand
 const QS_BAND_WEIGHTS = {
-  top100:    { visibility: 0.26, enrollment: 0.12, financial: 0.13, profile: 0.10, research: 0.24, diversity: 0.09, alumni: 0.06 },
-  r101_200:  { visibility: 0.23, enrollment: 0.13, financial: 0.13, profile: 0.10, research: 0.22, diversity: 0.10, alumni: 0.09 },
-  r201_400:  { visibility: 0.20, enrollment: 0.14, financial: 0.14, profile: 0.10, research: 0.19, diversity: 0.12, alumni: 0.11 },
-  r401_600:  { visibility: 0.17, enrollment: 0.16, financial: 0.14, profile: 0.10, research: 0.15, diversity: 0.14, alumni: 0.14 },
-  r601plus:  { visibility: 0.14, enrollment: 0.17, financial: 0.14, profile: 0.09, research: 0.11, diversity: 0.17, alumni: 0.18 },
-  unranked:  { visibility: 0.11, enrollment: 0.19, financial: 0.14, profile: 0.08, research: 0.09, diversity: 0.20, alumni: 0.19 },
+  top100:    { visibility: 0.28, enrollment: 0.13, financial: 0.14, profile: 0.11, research: 0.26, diversity: 0.08 },
+  r101_200:  { visibility: 0.25, enrollment: 0.14, financial: 0.14, profile: 0.11, research: 0.24, diversity: 0.12 },
+  r201_400:  { visibility: 0.22, enrollment: 0.16, financial: 0.16, profile: 0.11, research: 0.21, diversity: 0.14 },
+  r401_600:  { visibility: 0.20, enrollment: 0.19, financial: 0.16, profile: 0.12, research: 0.17, diversity: 0.16 },
+  r601plus:  { visibility: 0.17, enrollment: 0.21, financial: 0.17, profile: 0.11, research: 0.13, diversity: 0.21 },
+  unranked:  { visibility: 0.14, enrollment: 0.23, financial: 0.17, profile: 0.10, research: 0.11, diversity: 0.25 },
 };
 
 const QS_BAND_LABELS = {
@@ -688,6 +679,20 @@ export default function App() {
     return scorePool(combined, AXES, normalizeAxis);
   }, [carnegieId]);
 
+  // Classification cohort stats — surfaced in the Weighted Brand Index header card.
+  const classificationCohort = useMemo(() => {
+    if (!carnegieId) return [];
+    const focal = { name: institution, carnegieId };
+    return buildCohort({ focal, scoredPool, lensId: "carnegie" });
+  }, [carnegieId, institution, scoredPool]);
+
+  const classificationTopLine = useMemo(
+    () => cohortTopLine({ cohort: classificationCohort, axes: activeAxes }),
+    [classificationCohort, activeAxes]
+  );
+  const classificationCohortSize = classificationCohort.length;
+  const classificationCohortAvg = classificationTopLine?.cohortAvg ?? null;
+
   // Institution typeahead
   const handleInstitutionInput = (val) => {
     setInstitution(val);
@@ -735,6 +740,19 @@ export default function App() {
     }
     // Auto-check defaults (international programs)
     if (school.checkboxDefaults) { school.checkboxDefaults.forEach(id => { populated[id] = true; }); }
+    // Merge live IPEDS Finance / NACUBO snapshot (US institutions only).
+    // Snapshot wins over hardcoded values for US rows; intl rows stay manual.
+    if (!isIntl && school.unitid && financeSnapshot[school.unitid]) {
+      const fin = financeSnapshot[school.unitid];
+      if (fin.endowmentPerStudent != null) {
+        populated.endowmentPerStudent = String(fin.endowmentPerStudent);
+        autoFields.push('endowmentPerStudent');
+      }
+      if (fin.totalRevenue != null) {
+        populated.totalRevenue = String(fin.totalRevenue);
+        autoFields.push('totalRevenue');
+      }
+    }
     setValues(prev => ({ ...prev, ...populated }));
     setAutoPopulated(autoFields);
     setSuggestions([]);
@@ -1173,12 +1191,33 @@ export default function App() {
               {unitid && <div style={{ fontSize: 14, color: '#6B7585' }}>IPEDS Unit ID: {unitid}</div>}
             </div>
             {overall !== null && (
-              <div style={{ textAlign: 'center', background: 'rgba(235,86,0,0.08)', border: '1px solid #EB560033', borderRadius: 12, padding: '16px 24px', flexShrink: 0 }}>
-                <div style={{ fontSize: 14, letterSpacing: 2, color: '#243551', marginBottom: 3 }}>WEIGHTED BRAND INDEX</div>
-                <div style={{ fontSize: 50, fontFamily: "'Bitter', Georgia, serif", color: '#EB5600', lineHeight: 1 }}>{overall}</div>
-                <div style={{ fontSize: 14, color: '#6B7585', marginTop: 2 }}>
-                  /100 · {selectedCarnegie?.short}
-                  {values.qsRank && <span style={{ marginLeft: 8, color: 'rgba(235,86,0,0.70)', fontSize: 12 }}>· {QS_BAND_LABELS[qsBand]}</span>}
+              <div style={{ background: 'rgba(235,86,0,0.08)', border: '1px solid #EB560033', borderRadius: 12, padding: '16px 22px', flexShrink: 0, minWidth: 280 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 11, letterSpacing: 2, color: '#243551', marginBottom: 3 }}>WEIGHTED BRAND INDEX</div>
+                    <div style={{ fontSize: 50, fontFamily: "'Bitter', Georgia, serif", color: '#EB5600', lineHeight: 1 }}>{overall}</div>
+                    <div style={{ fontSize: 12, color: '#6B7585', marginTop: 2 }}>
+                      /100 · {selectedCarnegie?.short}
+                      {values.qsRank && <span style={{ marginLeft: 6, color: 'rgba(235,86,0,0.70)', fontSize: 11 }}>· {QS_BAND_LABELS[qsBand]}</span>}
+                    </div>
+                  </div>
+                  <div style={{ width: 1, alignSelf: 'stretch', background: '#EB560033' }} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div>
+                      <div style={{ fontSize: 9, letterSpacing: 1.5, color: '#6B7585', marginBottom: 2 }}>COHORT SIZE</div>
+                      <div style={{ fontSize: 18, fontFamily: "'Bitter', Georgia, serif", color: '#243551', lineHeight: 1 }}>
+                        {classificationCohortSize}
+                        <span style={{ fontSize: 11, color: '#6B7585', marginLeft: 4 }}>schools</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 9, letterSpacing: 1.5, color: '#6B7585', marginBottom: 2 }}>COHORT AVG INDEX</div>
+                      <div style={{ fontSize: 18, fontFamily: "'Bitter', Georgia, serif", color: '#243551', lineHeight: 1 }}>
+                        {classificationCohortAvg ?? '–'}
+                        <span style={{ fontSize: 11, color: '#6B7585', marginLeft: 4 }}>/100</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -1254,20 +1293,9 @@ export default function App() {
               {/* Submit */}
               <div style={{ marginTop: 20, padding: '16px', background: '#F4F6F8', border: '1px solid rgba(28,54,120,0.22)', borderRadius: 10 }}>
                 {submitted
-                  ? <div>
-                      <div style={{ fontSize: 14, color: '#1A9988', display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 16 }}>✓</span>
-                        Submitted. Your data contributes to aggregate benchmarks anonymously.
-                      </div>
-                      <a href="/insights" style={{
-                        display: 'inline-block', marginTop: 12,
-                        fontSize: 12, letterSpacing: 1.5, color: '#FFFFFF', textDecoration: 'none',
-                        background: '#1C3678', padding: '9px 18px', borderRadius: 0,
-                        fontWeight: 700, textTransform: 'uppercase',
-                        fontFamily: "'Bitter', Georgia, serif"
-                      }}>
-                        View Strategic Insights →
-                      </a>
+                  ? <div style={{ fontSize: 14, color: '#1A9988', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 16 }}>✓</span>
+                      Submitted. Your data contributes to aggregate benchmarks anonymously.
                     </div>
                   : <>
                       <div style={{ fontSize: 14, color: '#243551', marginBottom: 10, lineHeight: 1.5 }}>
