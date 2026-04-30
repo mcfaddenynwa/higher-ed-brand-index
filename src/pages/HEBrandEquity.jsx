@@ -227,9 +227,8 @@ const AXES = [
   },
 ];
 
-// Minimum submissions to show aggregate overlay
+// Minimum cohort size to show aggregate overlay
 const MIN_N = 3;
-const STORAGE_KEY = "hei-submissions-v1";
 
 
 // Social reach: sum followers across platforms, normalize per 1000 enrolled students
