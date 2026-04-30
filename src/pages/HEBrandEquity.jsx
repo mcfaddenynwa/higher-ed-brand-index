@@ -216,7 +216,7 @@ const AXES = [
   {
     key: "research", label: "Academic & Research Reputation", color: "#1C3678",
     description: "Federal R&D expenditures (NSF HERD), doctoral degrees awarded, 2025 Research Activity Designation",
-    hiddenFor: ["associates", "tribal", "bac_arts", "bac_diverse", "intl_teaching", "intl_specialist"],
+    hiddenFor: ["associates", "tribal", "bac_arts", "mixed_bac", "prof_bac", "intl_teaching", "intl_specialist"],
     inputs: [
       { id: "rAndD", label: "Annual federal R&D expenditures ($M)", placeholder: "e.g. 120", max: 1000 },
       { id: "doctoralOutput", label: "Doctoral degrees awarded annually", placeholder: "e.g. 340", max: 2000 },
