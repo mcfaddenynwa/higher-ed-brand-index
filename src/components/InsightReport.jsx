@@ -102,9 +102,9 @@ export default function InsightReport({
           A peer-relative view for {focalName}
         </div>
         <div style={{ fontSize: 14, color: '#595959', lineHeight: 1.55, maxWidth: 720 }}>
-          Strengths and gaps are measured as z-scores against your selected peer cohort, so a school
-          can be excellent in five categories while still showing a clear gap in two. Switch between
-          your full classification cohort and a hand-picked comparison set of up to {MAX_COMPARE} schools.
+          Each pillar is scored against your selected peer cohort, so a school can be excellent in
+          several categories while still showing a clear gap in others. Switch between your full
+          classification cohort and a hand-picked comparison set of up to {MAX_COMPARE} schools.
         </div>
       </div>
 
