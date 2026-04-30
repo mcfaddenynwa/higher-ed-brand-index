@@ -740,6 +740,19 @@ export default function App() {
     }
     // Auto-check defaults (international programs)
     if (school.checkboxDefaults) { school.checkboxDefaults.forEach(id => { populated[id] = true; }); }
+    // Merge live IPEDS Finance / NACUBO snapshot (US institutions only).
+    // Snapshot wins over hardcoded values for US rows; intl rows stay manual.
+    if (!isIntl && school.unitid && financeSnapshot[school.unitid]) {
+      const fin = financeSnapshot[school.unitid];
+      if (fin.endowmentPerStudent != null) {
+        populated.endowmentPerStudent = String(fin.endowmentPerStudent);
+        autoFields.push('endowmentPerStudent');
+      }
+      if (fin.totalRevenue != null) {
+        populated.totalRevenue = String(fin.totalRevenue);
+        autoFields.push('totalRevenue');
+      }
+    }
     setValues(prev => ({ ...prev, ...populated }));
     setAutoPopulated(autoFields);
     setSuggestions([]);
