@@ -32,20 +32,20 @@ const IPEDS_DB = [
   { name: "Iowa State University", unitid: "153603", usNewsList: "natl_univ", flags: { bigFour: 1, d1: 0, health: 0, law: 0, aacsb: 1, eng: 1 }, socialIg: 125, socialLi: 360, socialX: 275, socialFb: 460, socialYt: 38,  qsRank: 591, theWorldRank: 401, usNewsLaw: null, usNewsBiz: null, usNewsEng: 28, nicheRank: 90, nicheGrade: 83, theImpactListed: 1, theImpactRank: 801, retentionRate: 83, gradRate4yr: 44, gradRate6yr: 64, carnegieId: "r1", usNews: 103, enrollTrend: -1.8, yieldRate: 28, acceptRate: 91, pellPct: 23, firstGen: 20, rAndD: 498, doctoralOutput: 520, researchDesignation: 3, caldwellListed: 1, caldwellRank: 148 },
   { name: "University of Colorado Boulder", unitid: "126614", usNewsList: "natl_univ", flags: { bigFour: 1, d1: 0, health: 0, law: 1, aacsb: 1, eng: 1 }, socialIg: 170, socialLi: 490, socialX: 390, socialFb: 640, socialYt: 58,  qsRank: 281, theWorldRank: 251, usNewsLaw: null, usNewsBiz: null, usNewsEng: 27, nicheRank: 60, nicheGrade: 83, theImpactListed: 1, theImpactRank: 601, retentionRate: 85, gradRate4yr: 47, gradRate6yr: 67, carnegieId: "r1", usNews: 90, enrollTrend: 1.4, yieldRate: 24, acceptRate: 80, pellPct: 18, firstGen: 15, rAndD: 612, doctoralOutput: 560, researchDesignation: 3, caldwellListed: 1, caldwellRank: 108 },
   { name: "University of Kansas", unitid: "155317", usNewsList: "natl_univ", flags: { bigFour: 1, d1: 0, health: 1, law: 1, aacsb: 1, eng: 1 }, socialIg: 110, socialLi: 320, socialX: 250, socialFb: 420, socialYt: 32,  qsRank: 651, theWorldRank: null, nicheRank: 95, nicheGrade: 83, theImpactListed: 0, theImpactRank: null, retentionRate: 79, gradRate4yr: 38, gradRate6yr: 60, carnegieId: "r2", usNews: 148, enrollTrend: -2.1, yieldRate: 30, acceptRate: 92, pellPct: 25, firstGen: 22, rAndD: 312, doctoralOutput: 380, researchDesignation: 2, caldwellListed: 1, caldwellRank: 220 },
-  { name: "University of Nebraska-Lincoln", unitid: "181464", usNewsList: "natl_univ", flags: { bigFour: 1, d1: 0, health: 1, law: 1, aacsb: 1, eng: 1 }, socialIg: 105, socialLi: 305, socialX: 240, socialFb: 400, socialYt: 30,  qsRank: 651, theWorldRank: null, nicheRank: 100, nicheGrade: 75, theImpactListed: 0, theImpactRank: null, retentionRate: 82, gradRate4yr: 43, gradRate6yr: 62, carnegieId: "r2", usNews: 134, enrollTrend: -0.4, yieldRate: 35, acceptRate: 78, pellPct: 22, firstGen: 19, rAndD: 298, doctoralOutput: 360, researchDesignation: 2, caldwellListed: 1, caldwellRank: 242 },
+  { name: "University of Nebraska-Lincoln", unitid: "181464", usNewsList: "natl_univ", flags: { bigFour: 1, d1: 0, health: 1, law: 1, aacsb: 1, eng: 1 }, socialIg: 105, socialLi: 305, socialX: 240, socialFb: 400, socialYt: 30,  qsRank: 651, theWorldRank: null, nicheRank: 100, nicheGrade: 75, theImpactListed: 0, theImpactRank: null, retentionRate: 82, gradRate4yr: 43, gradRate6yr: 62, carnegieId: "r1", usNews: 134, enrollTrend: -0.4, yieldRate: 35, acceptRate: 78, pellPct: 22, firstGen: 19, rAndD: 298, doctoralOutput: 360, researchDesignation: 2, caldwellListed: 1, caldwellRank: 242 },
   { name: "Virginia Tech", unitid: "233921", usNewsList: "natl_univ", flags: { bigFour: 1, d1: 0, health: 0, law: 0, aacsb: 1, eng: 1 }, socialIg: 145, socialLi: 420, socialX: 330, socialFb: 545, socialYt: 46,  qsRank: 388, theWorldRank: 401, usNewsLaw: null, usNewsBiz: null, usNewsEng: 15, nicheRank: 80, nicheGrade: 83, theImpactListed: 1, theImpactRank: 801, retentionRate: 91, gradRate4yr: 62, gradRate6yr: 82, carnegieId: "r1", usNews: 62, enrollTrend: 1.8, yieldRate: 33, acceptRate: 65, pellPct: 18, firstGen: 15, rAndD: 621, doctoralOutput: 580, researchDesignation: 3, caldwellListed: 1, caldwellRank: 84 },
   { name: "Auburn University", unitid: "100858", usNewsList: "natl_univ", flags: { bigFour: 1, d1: 0, health: 1, law: 0, aacsb: 1, eng: 1 }, socialIg: 120, socialLi: 350, socialX: 280, socialFb: 460, socialYt: 36,  qsRank: 731, theWorldRank: null, nicheRank: 110, nicheGrade: 75, theImpactListed: 0, theImpactRank: null, retentionRate: 87, gradRate4yr: 56, gradRate6yr: 72, carnegieId: "r1", usNews: 97, enrollTrend: 2.2, yieldRate: 28, acceptRate: 77, pellPct: 20, firstGen: 17, rAndD: 198, doctoralOutput: 420, researchDesignation: 2, caldwellListed: 1, caldwellRank: 189 },
-  { name: "Drexel University", unitid: "214591", usNewsList: "natl_univ", flags: { bigFour: 0, d1: 1, health: 1, law: 0, aacsb: 1, eng: 1 }, socialIg: 85, socialLi: 260, socialX: 195, socialFb: 320, socialYt: 24,  qsRank: 651, theWorldRank: null, nicheRank: 120, nicheGrade: 75, theImpactListed: 0, theImpactRank: null, retentionRate: 85, gradRate4yr: 46, gradRate6yr: 62, carnegieId: "r2", usNews: 96, enrollTrend: -3.2, yieldRate: 14, acceptRate: 78, pellPct: 26, firstGen: 22, rAndD: 142, doctoralOutput: 310, researchDesignation: 2, caldwellListed: 0, caldwellRank: null },
-  { name: "Duquesne University", unitid: "212577", usNewsList: "regional", flags: { bigFour: 0, d1: 1, health: 0, law: 1, aacsb: 0, eng: 0 }, socialIg: 45, socialLi: 140, socialX: 100, socialFb: 165, socialYt: 12,  qsRank: null, theWorldRank: null, nicheRank: 180, nicheGrade: 67, theImpactListed: 0, theImpactRank: null, retentionRate: 83, gradRate4yr: 52, gradRate6yr: 69, carnegieId: "r3", usNews: 162, enrollTrend: -1.9, yieldRate: 18, acceptRate: 74, pellPct: 28, firstGen: 23, rAndD: 42, doctoralOutput: 180, researchDesignation: 1, caldwellListed: 0, caldwellRank: null },
-  { name: "American University", unitid: "131159", usNewsList: "regional", flags: { bigFour: 0, d1: 1, health: 0, law: 1, aacsb: 1, eng: 0 }, socialIg: 65, socialLi: 200, socialX: 150, socialFb: 245, socialYt: 18,  qsRank: 651, theWorldRank: null, nicheRank: 140, nicheGrade: 75, theImpactListed: 0, theImpactRank: null, retentionRate: 87, gradRate4yr: 58, gradRate6yr: 73, carnegieId: "r3", usNews: 81, enrollTrend: 0.4, yieldRate: 17, acceptRate: 35, pellPct: 21, firstGen: 18, rAndD: 28, doctoralOutput: 140, researchDesignation: 1, caldwellListed: 0, caldwellRank: null },
+  { name: "Drexel University", unitid: "214591", usNewsList: "natl_univ", flags: { bigFour: 0, d1: 1, health: 1, law: 0, aacsb: 1, eng: 1 }, socialIg: 85, socialLi: 260, socialX: 195, socialFb: 320, socialYt: 24,  qsRank: 651, theWorldRank: null, nicheRank: 120, nicheGrade: 75, theImpactListed: 0, theImpactRank: null, retentionRate: 85, gradRate4yr: 46, gradRate6yr: 62, carnegieId: "r1", usNews: 96, enrollTrend: -3.2, yieldRate: 14, acceptRate: 78, pellPct: 26, firstGen: 22, rAndD: 142, doctoralOutput: 310, researchDesignation: 2, caldwellListed: 0, caldwellRank: null },
+  { name: "Duquesne University", unitid: "212577", usNewsList: "regional", flags: { bigFour: 0, d1: 1, health: 0, law: 1, aacsb: 0, eng: 0 }, socialIg: 45, socialLi: 140, socialX: 100, socialFb: 165, socialYt: 12,  qsRank: null, theWorldRank: null, nicheRank: 180, nicheGrade: 67, theImpactListed: 0, theImpactRank: null, retentionRate: 83, gradRate4yr: 52, gradRate6yr: 69, carnegieId: "r2", usNews: 162, enrollTrend: -1.9, yieldRate: 18, acceptRate: 74, pellPct: 28, firstGen: 23, rAndD: 42, doctoralOutput: 180, researchDesignation: 1, caldwellListed: 0, caldwellRank: null },
+  { name: "American University", unitid: "131159", usNewsList: "regional", flags: { bigFour: 0, d1: 1, health: 0, law: 1, aacsb: 1, eng: 0 }, socialIg: 65, socialLi: 200, socialX: 150, socialFb: 245, socialYt: 18,  qsRank: 651, theWorldRank: null, nicheRank: 140, nicheGrade: 75, theImpactListed: 0, theImpactRank: null, retentionRate: 87, gradRate4yr: 58, gradRate6yr: 73, carnegieId: "r1", usNews: 81, enrollTrend: 0.4, yieldRate: 17, acceptRate: 35, pellPct: 21, firstGen: 18, rAndD: 28, doctoralOutput: 140, researchDesignation: 1, caldwellListed: 0, caldwellRank: null },
   { name: "Fordham University", unitid: "192439", usNewsList: "natl_univ", flags: { bigFour: 0, d1: 1, health: 0, law: 1, aacsb: 1, eng: 0 }, socialIg: 72, socialLi: 220, socialX: 165, socialFb: 270, socialYt: 20,  qsRank: 651, theWorldRank: null, nicheRank: 160, nicheGrade: 75, theImpactListed: 0, theImpactRank: null, retentionRate: 88, gradRate4yr: 62, gradRate6yr: 76, carnegieId: "r2", usNews: 74, enrollTrend: 0.9, yieldRate: 20, acceptRate: 54, pellPct: 25, firstGen: 20, rAndD: 52, doctoralOutput: 280, researchDesignation: 2, caldwellListed: 0, caldwellRank: null },
-  { name: "Marquette University", unitid: "178420", usNewsList: "regional", flags: { bigFour: 0, d1: 1, health: 0, law: 1, aacsb: 1, eng: 1 }, socialIg: 58, socialLi: 175, socialX: 130, socialFb: 215, socialYt: 16,  qsRank: 651, theWorldRank: null, nicheRank: 130, nicheGrade: 75, theImpactListed: 0, theImpactRank: null, retentionRate: 86, gradRate4yr: 56, gradRate6yr: 73, carnegieId: "r3", usNews: 92, enrollTrend: -0.8, yieldRate: 19, acceptRate: 82, pellPct: 24, firstGen: 19, rAndD: 38, doctoralOutput: 160, researchDesignation: 1, caldwellListed: 0, caldwellRank: null },
-  { name: "Villanova University", unitid: "216597", usNewsList: "natl_univ", flags: { bigFour: 0, d1: 1, health: 0, law: 1, aacsb: 1, eng: 1 }, socialIg: 78, socialLi: 235, socialX: 175, socialFb: 285, socialYt: 22,  qsRank: 651, theWorldRank: null, nicheRank: 115, nicheGrade: 75, theImpactListed: 0, theImpactRank: null, retentionRate: 91, gradRate4yr: 72, gradRate6yr: 84, carnegieId: "masters_l", usNews: 49, enrollTrend: 1.2, yieldRate: 22, acceptRate: 28, pellPct: 15, firstGen: 12, rAndD: 14, doctoralOutput: 80, researchDesignation: 0, caldwellListed: 0, caldwellRank: null },
-  { name: "Butler University", unitid: "150136", usNewsList: "regional", flags: { bigFour: 0, d1: 1, health: 0, law: 0, aacsb: 1, eng: 0 }, socialIg: 42, socialLi: 130, socialX: 95, socialFb: 155, socialYt: 11,  qsRank: null, theWorldRank: null, nicheRank: 200, nicheGrade: 67, theImpactListed: 0, theImpactRank: null, retentionRate: 88, gradRate4yr: 68, gradRate6yr: 78, carnegieId: "masters_l", usNews: 4, enrollTrend: 0.6, yieldRate: 26, acceptRate: 68, pellPct: 21, firstGen: 18, rAndD: 4, doctoralOutput: 0, researchDesignation: 0, caldwellListed: 0, caldwellRank: null },
-  { name: "Elon University", unitid: "198464", usNewsList: "regional", flags: { bigFour: 0, d1: 1, health: 0, law: 0, aacsb: 1, eng: 0 }, socialIg: 38, socialLi: 118, socialX: 88, socialFb: 142, socialYt: 10,  qsRank: null, theWorldRank: null, nicheRank: 220, nicheGrade: 67, theImpactListed: 0, theImpactRank: null, retentionRate: 88, gradRate4yr: 69, gradRate6yr: 79, carnegieId: "masters_l", usNews: 7, enrollTrend: 1.4, yieldRate: 28, acceptRate: 72, pellPct: 18, firstGen: 15, rAndD: 2, doctoralOutput: 0, researchDesignation: 0, caldwellListed: 0, caldwellRank: null },
-  { name: "James Madison University", unitid: "233277", usNewsList: "regional", flags: { bigFour: 0, d1: 1, health: 0, law: 0, aacsb: 1, eng: 1 }, socialIg: 52, socialLi: 160, socialX: 118, socialFb: 195, socialYt: 14,  qsRank: null, theWorldRank: null, nicheRank: 210, nicheGrade: 67, theImpactListed: 0, theImpactRank: null, retentionRate: 87, gradRate4yr: 67, gradRate6yr: 77, carnegieId: "masters_l", usNews: 5, enrollTrend: 0.9, yieldRate: 32, acceptRate: 78, pellPct: 22, firstGen: 19, rAndD: 8, doctoralOutput: 20, researchDesignation: 0, caldwellListed: 0, caldwellRank: null },
-  { name: "Gonzaga University", unitid: "235316", usNewsList: "regional", flags: { bigFour: 0, d1: 1, health: 0, law: 1, aacsb: 1, eng: 0 }, socialIg: 55, socialLi: 168, socialX: 125, socialFb: 205, socialYt: 15,  qsRank: null, theWorldRank: null, nicheRank: 190, nicheGrade: 75, theImpactListed: 0, theImpactRank: null, retentionRate: 91, gradRate4yr: 68, gradRate6yr: 79, carnegieId: "masters_l", usNews: 84, enrollTrend: 0.5, yieldRate: 21, acceptRate: 67, pellPct: 20, firstGen: 17, rAndD: 6, doctoralOutput: 30, researchDesignation: 0, caldwellListed: 0, caldwellRank: null },
-  { name: "Quinnipiac University", unitid: "182795", usNewsList: "regional", flags: { bigFour: 0, d1: 1, health: 0, law: 1, aacsb: 1, eng: 0 }, socialIg: 35, socialLi: 108, socialX: 80, socialFb: 130, socialYt: 9,  qsRank: null, theWorldRank: null, nicheRank: 240, nicheGrade: 67, theImpactListed: 0, theImpactRank: null, retentionRate: 84, gradRate4yr: 58, gradRate6yr: 71, carnegieId: "masters_l", usNews: 156, enrollTrend: 1.8, yieldRate: 16, acceptRate: 74, pellPct: 22, firstGen: 18, rAndD: 5, doctoralOutput: 40, researchDesignation: 0, caldwellListed: 0, caldwellRank: null },
+  { name: "Marquette University", unitid: "178420", usNewsList: "regional", flags: { bigFour: 0, d1: 1, health: 0, law: 1, aacsb: 1, eng: 1 }, socialIg: 58, socialLi: 175, socialX: 130, socialFb: 215, socialYt: 16,  qsRank: 651, theWorldRank: null, nicheRank: 130, nicheGrade: 75, theImpactListed: 0, theImpactRank: null, retentionRate: 86, gradRate4yr: 56, gradRate6yr: 73, carnegieId: "r2", usNews: 92, enrollTrend: -0.8, yieldRate: 19, acceptRate: 82, pellPct: 24, firstGen: 19, rAndD: 38, doctoralOutput: 160, researchDesignation: 1, caldwellListed: 0, caldwellRank: null },
+  { name: "Villanova University", unitid: "216597", usNewsList: "natl_univ", flags: { bigFour: 0, d1: 1, health: 0, law: 1, aacsb: 1, eng: 1 }, socialIg: 78, socialLi: 235, socialX: 175, socialFb: 285, socialYt: 22,  qsRank: 651, theWorldRank: null, nicheRank: 115, nicheGrade: 75, theImpactListed: 0, theImpactRank: null, retentionRate: 91, gradRate4yr: 72, gradRate6yr: 84, carnegieId: "r2", usNews: 49, enrollTrend: 1.2, yieldRate: 22, acceptRate: 28, pellPct: 15, firstGen: 12, rAndD: 14, doctoralOutput: 80, researchDesignation: 0, caldwellListed: 0, caldwellRank: null },
+  { name: "Butler University", unitid: "150136", usNewsList: "regional", flags: { bigFour: 0, d1: 1, health: 0, law: 0, aacsb: 1, eng: 0 }, socialIg: 42, socialLi: 130, socialX: 95, socialFb: 155, socialYt: 11,  qsRank: null, theWorldRank: null, nicheRank: 200, nicheGrade: 67, theImpactListed: 0, theImpactRank: null, retentionRate: 88, gradRate4yr: 68, gradRate6yr: 78, carnegieId: "prof_doc", usNews: 4, enrollTrend: 0.6, yieldRate: 26, acceptRate: 68, pellPct: 21, firstGen: 18, rAndD: 4, doctoralOutput: 0, researchDesignation: 0, caldwellListed: 0, caldwellRank: null },
+  { name: "Elon University", unitid: "198464", usNewsList: "regional", flags: { bigFour: 0, d1: 1, health: 0, law: 0, aacsb: 1, eng: 0 }, socialIg: 38, socialLi: 118, socialX: 88, socialFb: 142, socialYt: 10,  qsRank: null, theWorldRank: null, nicheRank: 220, nicheGrade: 67, theImpactListed: 0, theImpactRank: null, retentionRate: 88, gradRate4yr: 69, gradRate6yr: 79, carnegieId: "rcu", usNews: 7, enrollTrend: 1.4, yieldRate: 28, acceptRate: 72, pellPct: 18, firstGen: 15, rAndD: 2, doctoralOutput: 0, researchDesignation: 0, caldwellListed: 0, caldwellRank: null },
+  { name: "James Madison University", unitid: "233277", usNewsList: "regional", flags: { bigFour: 0, d1: 1, health: 0, law: 0, aacsb: 1, eng: 1 }, socialIg: 52, socialLi: 160, socialX: 118, socialFb: 195, socialYt: 14,  qsRank: null, theWorldRank: null, nicheRank: 210, nicheGrade: 67, theImpactListed: 0, theImpactRank: null, retentionRate: 87, gradRate4yr: 67, gradRate6yr: 77, carnegieId: "r2", usNews: 5, enrollTrend: 0.9, yieldRate: 32, acceptRate: 78, pellPct: 22, firstGen: 19, rAndD: 8, doctoralOutput: 20, researchDesignation: 0, caldwellListed: 0, caldwellRank: null },
+  { name: "Gonzaga University", unitid: "235316", usNewsList: "regional", flags: { bigFour: 0, d1: 1, health: 0, law: 1, aacsb: 1, eng: 0 }, socialIg: 55, socialLi: 168, socialX: 125, socialFb: 205, socialYt: 15,  qsRank: null, theWorldRank: null, nicheRank: 190, nicheGrade: 75, theImpactListed: 0, theImpactRank: null, retentionRate: 91, gradRate4yr: 68, gradRate6yr: 79, carnegieId: "mixed_doc", usNews: 84, enrollTrend: 0.5, yieldRate: 21, acceptRate: 67, pellPct: 20, firstGen: 17, rAndD: 6, doctoralOutput: 30, researchDesignation: 0, caldwellListed: 0, caldwellRank: null },
+  { name: "Quinnipiac University", unitid: "182795", usNewsList: "regional", flags: { bigFour: 0, d1: 1, health: 0, law: 1, aacsb: 1, eng: 0 }, socialIg: 35, socialLi: 108, socialX: 80, socialFb: 130, socialYt: 9,  qsRank: null, theWorldRank: null, nicheRank: 240, nicheGrade: 67, theImpactListed: 0, theImpactRank: null, retentionRate: 84, gradRate4yr: 58, gradRate6yr: 71, carnegieId: "prof_doc", usNews: 156, enrollTrend: 1.8, yieldRate: 16, acceptRate: 74, pellPct: 22, firstGen: 18, rAndD: 5, doctoralOutput: 40, researchDesignation: 0, caldwellListed: 0, caldwellRank: null },
   { name: "Amherst College", unitid: "164465", usNewsList: "lib_arts", flags: { bigFour: 0, d1: 0, health: 0, law: 0, aacsb: 0, eng: 0 }, socialIg: 28, socialLi: 88, socialX: 65, socialFb: 105, socialYt: 8,  qsRank: null, theWorldRank: null, usNewsLaw: null, usNewsBiz: null, usNewsEng: null, nicheRank: 48, nicheGrade: 91, theImpactListed: 0, theImpactRank: null, retentionRate: 97, gradRate4yr: 88, gradRate6yr: 94, carnegieId: "bac_arts", usNews: 2, enrollTrend: 0.8, yieldRate: 36, acceptRate: 11, pellPct: 22, firstGen: 18, rAndD: 8, doctoralOutput: 0, researchDesignation: 0, caldwellListed: 0, caldwellRank: null },
   { name: "Williams College", unitid: "217156", usNewsList: "lib_arts", flags: { bigFour: 0, d1: 0, health: 0, law: 0, aacsb: 0, eng: 0 }, socialIg: 22, socialLi: 70, socialX: 52, socialFb: 85, socialYt: 6,  qsRank: null, theWorldRank: null, usNewsLaw: null, usNewsBiz: null, usNewsEng: null, nicheRank: 40, nicheGrade: 91, theImpactListed: 0, theImpactRank: null, retentionRate: 97, gradRate4yr: 90, gradRate6yr: 96, carnegieId: "bac_arts", usNews: 1, enrollTrend: 0.4, yieldRate: 42, acceptRate: 12, pellPct: 20, firstGen: 16, rAndD: 6, doctoralOutput: 0, researchDesignation: 0, caldwellListed: 0, caldwellRank: null },
   { name: "Bowdoin College", unitid: "161004", usNewsList: "lib_arts", flags: { bigFour: 0, d1: 0, health: 0, law: 0, aacsb: 0, eng: 0 }, socialIg: 20, socialLi: 65, socialX: 48, socialFb: 78, socialYt: 5,  qsRank: null, theWorldRank: null, usNewsLaw: null, usNewsBiz: null, usNewsEng: null, nicheRank: 55, nicheGrade: 83, theImpactListed: 0, theImpactRank: null, retentionRate: 96, gradRate4yr: 87, gradRate6yr: 93, carnegieId: "bac_arts", usNews: 6, enrollTrend: 0.3, yieldRate: 46, acceptRate: 9, pellPct: 18, firstGen: 14, rAndD: 4, doctoralOutput: 0, researchDesignation: 0, caldwellListed: 0, caldwellRank: null },
@@ -56,7 +56,7 @@ const IPEDS_DB = [
   { name: "Columbus State Community College", unitid: "203368", usNewsList: "best_colleges", flags: { bigFour: 0, d1: 0, health: 0, law: 0, aacsb: 0, eng: 0 }, socialIg: 12, socialLi: 38, socialX: 28, socialFb: 45, socialYt: 3,  qsRank: null, theWorldRank: null, nicheRank: null, nicheGrade: null, theImpactListed: 1, theImpactRank: 1001, retentionRate: 58, gradRate4yr: 14, gradRate6yr: 22, carnegieId: "associates", usNews: null, enrollTrend: -2.4, yieldRate: 88, acceptRate: 100, pellPct: 48, firstGen: 42, rAndD: 0, doctoralOutput: 0, researchDesignation: 0, caldwellListed: 0, caldwellRank: null },
   { name: "Valencia College", unitid: "141862", usNewsList: "best_colleges", flags: { bigFour: 0, d1: 0, health: 0, law: 0, aacsb: 0, eng: 0 }, socialIg: 22, socialLi: 68, socialX: 50, socialFb: 82, socialYt: 6,  qsRank: null, theWorldRank: null, nicheRank: null, nicheGrade: null, theImpactListed: 1, theImpactRank: 801, retentionRate: 64, gradRate4yr: 18, gradRate6yr: 28, carnegieId: "associates", usNews: null, enrollTrend: 3.8, yieldRate: 92, acceptRate: 100, pellPct: 52, firstGen: 46, rAndD: 0, doctoralOutput: 0, researchDesignation: 0, caldwellListed: 0, caldwellRank: null },
   { name: "Miami Dade College", unitid: "136172", usNewsList: "best_colleges", flags: { bigFour: 0, d1: 0, health: 0, law: 0, aacsb: 0, eng: 0 }, socialIg: 32, socialLi: 98, socialX: 72, socialFb: 118, socialYt: 9,  qsRank: null, theWorldRank: null, nicheRank: null, nicheGrade: null, theImpactListed: 1, theImpactRank: 1001, retentionRate: 66, gradRate4yr: 16, gradRate6yr: 26, carnegieId: "associates", usNews: null, enrollTrend: 1.2, yieldRate: 90, acceptRate: 100, pellPct: 58, firstGen: 52, rAndD: 0, doctoralOutput: 0, researchDesignation: 0, caldwellListed: 0, caldwellRank: null },
-  { name: "Thomas Jefferson University", unitid: "213783", usNewsList: "natl_univ", flags: { bigFour: 0, d1: 0, health: 1, law: 0, aacsb: 0, eng: 0 }, socialIg: 8, socialLi: 26, socialX: 19, socialFb: 31, socialYt: 2,  qsRank: null, theWorldRank: null, nicheRank: 350, nicheGrade: 58, theImpactListed: 0, theImpactRank: null, retentionRate: 86, gradRate4yr: 52, gradRate6yr: 68, carnegieId: "special", usNews: null, enrollTrend: 2.1, yieldRate: 22, acceptRate: 62, pellPct: 18, firstGen: 14, rAndD: 148, doctoralOutput: 120, researchDesignation: 2, caldwellListed: 0, caldwellRank: null },
+  { name: "Thomas Jefferson University", unitid: "213783", usNewsList: "natl_univ", flags: { bigFour: 0, d1: 0, health: 1, law: 0, aacsb: 0, eng: 0 }, socialIg: 8, socialLi: 26, socialX: 19, socialFb: 31, socialYt: 2,  qsRank: null, theWorldRank: null, nicheRank: 350, nicheGrade: 58, theImpactListed: 0, theImpactRank: null, retentionRate: 86, gradRate4yr: 52, gradRate6yr: 68, carnegieId: "r2", usNews: null, enrollTrend: 2.1, yieldRate: 22, acceptRate: 62, pellPct: 18, firstGen: 14, rAndD: 148, doctoralOutput: 120, researchDesignation: 2, caldwellListed: 0, caldwellRank: null },
   { name: "MCPHS University", unitid: "166683", usNewsList: "natl_univ", flags: { bigFour: 0, d1: 0, health: 1, law: 0, aacsb: 1, eng: 0 }, socialIg: 10, socialLi: 32, socialX: 24, socialFb: 38, socialYt: 3,  qsRank: null, theWorldRank: null, nicheRank: 300, nicheGrade: 67, theImpactListed: 0, theImpactRank: null, retentionRate: 84, gradRate4yr: 58, gradRate6yr: 72, carnegieId: "special", usNews: null, enrollTrend: 1.4, yieldRate: 18, acceptRate: 74, pellPct: 24, firstGen: 20, rAndD: 22, doctoralOutput: 80, researchDesignation: 1, caldwellListed: 0, caldwellRank: null },
   { name: "Scripps College", unitid: "123165", usNewsList: "lib_arts", flags: { bigFour: 0, d1: 0, health: 0, law: 0, aacsb: 0, eng: 0 }, socialIg: 18, socialLi: 55, socialX: 32, socialFb: 62, socialYt: 4, qsRank: null, theWorldRank: null, usNewsLaw: null, usNewsBiz: null, usNewsEng: null, nicheRank: 118, nicheGrade: 83, theImpactListed: 0, theImpactRank: null, retentionRate: 94, gradRate4yr: 61, gradRate6yr: 87, carnegieId: "bac_arts", usNews: 37, enrollTrend: 1.4, yieldRate: 25, acceptRate: 38, pellPct: 12, firstGen: 14, rAndD: 2, doctoralOutput: 0, researchDesignation: 0, caldwellListed: 0, caldwellRank: null },
   { name: "Smith College", unitid: "167835", usNewsList: "lib_arts", flags: { bigFour: 0, d1: 0, health: 0, law: 0, aacsb: 0, eng: 1 }, socialIg: 30, socialLi: 92, socialX: 68, socialFb: 110, socialYt: 8,  qsRank: null, theWorldRank: null, usNewsLaw: null, usNewsBiz: null, usNewsEng: null, nicheRank: 75, nicheGrade: 91, theImpactListed: 1, theImpactRank: 601, retentionRate: 93, gradRate4yr: 70, gradRate6yr: 88, carnegieId: "bac_arts", usNews: 13, enrollTrend: -2.0, yieldRate: 33, acceptRate: 20, pellPct: 18, firstGen: 17, rAndD: 5, doctoralOutput: 0, researchDesignation: 0, caldwellListed: 0, caldwellRank: null },
@@ -69,24 +69,28 @@ const IPEDS_DB = [
 const INTL_FIELDS = ["qsRank","theWorldRank","theImpactListed","theImpactRank","retentionRate","gradRate4yr","gradRate6yr","enrollTrend","acceptRate","accessPct","rAndD","doctoralOutput","researchDesignation","caldwellListed","caldwellRank","endowmentPerStudent","totalRevenue","socialIg","socialLi","socialX","socialFb","socialYt"];
 
 const INTL_DB = [
-  { name: "University of Liverpool", country: "UK", intlId: "liverpool-uk", socialIg: 42, socialLi: 145, socialX: 88, socialFb: 165, socialYt: 22, checkboxDefaults: ["chk_healthSystem","chk_lawSchool","chk_engineering"], qsRank: 165, theWorldRank: 160, theImpactListed: 1, theImpactRank: 201, retentionRate: 90, gradRate4yr: 85, gradRate6yr: 90, carnegieId: "intl_elite", intlGroup: "Russell Group", enrollTrend: 2.1, acceptRate: 14, accessPct: null, rAndD: 123, doctoralOutput: 520, researchDesignation: 3, caldwellListed: 1, caldwellRank: 312, endowmentPerStudent: 8, totalRevenue: 890 },
+  { name: "University of Liverpool", country: "UK", intlId: "liverpool-uk", socialIg: 42, socialLi: 145, socialX: 88, socialFb: 165, socialYt: 22, checkboxDefaults: ["chk_healthSystem","chk_lawSchool","chk_engineering"], qsRank: 165, theWorldRank: 160, theImpactListed: 1, theImpactRank: 201, retentionRate: 90, gradRate4yr: 85, gradRate6yr: 90, carnegieId: "special", intlGroup: "Russell Group", enrollTrend: 2.1, acceptRate: 14, accessPct: null, rAndD: 123, doctoralOutput: 520, researchDesignation: 3, caldwellListed: 1, caldwellRank: 312, endowmentPerStudent: 8, totalRevenue: 890 },
   { name: "Queen's University (Ontario)", country: "Canada", intlId: "queens-ca", socialIg: 38, socialLi: 128, socialX: 75, socialFb: 148, socialYt: 18, checkboxDefaults: ["chk_lawSchool","chk_aacsb","chk_engineering"], qsRank: 193, theWorldRank: 275, theImpactListed: 1, theImpactRank: 8, retentionRate: 93, gradRate4yr: 89, gradRate6yr: 92, carnegieId: "intl_elite", intlGroup: "U15 Canada", enrollTrend: 1.8, acceptRate: 42, accessPct: null, rAndD: 85, doctoralOutput: 380, researchDesignation: 2, caldwellListed: 1, caldwellRank: 428, endowmentPerStudent: 33, totalRevenue: 800 },
 ];
 
 const IPEDS_FIELDS = ["usNews","usNewsList","enrollTrend","yieldRate","acceptRate","pellPct","firstGen","rAndD","doctoralOutput","researchDesignation","caldwellListed","caldwellRank","retentionRate","gradRate4yr","gradRate6yr","theImpactListed","theImpactRank","nicheRank","nicheGrade","usNewsLaw","usNewsBiz","usNewsEng","theWorldRank","qsRank","socialIg","socialLi","socialX","socialFb","socialYt"];
 
+// 2025 Carnegie Classification — Research Activity Designations + Institutional Classification
+// (collapsed from the official 31-grouping spectrum into the working benchmarking cohorts)
 const CARNEGIE_CATEGORIES = [
-  { id: "r1", label: "R1 — Doctoral: Very High Research Activity", short: "R1 Doctoral", description: "Highest research activity, doctoral programs across many fields" },
-  { id: "r2", label: "R2 — Doctoral: High Research Activity", short: "R2 Doctoral", description: "High research activity, doctoral programs in multiple fields" },
-  { id: "r3", label: "R3 — Doctoral: Moderate Research Activity", short: "R3 Doctoral", description: "Moderate research activity with doctoral programs" },
-  { id: "masters_l", label: "M1 — Master's College or University: Larger Programs", short: "M1 Masters", description: "Large master's-level programs, limited doctoral" },
-  { id: "masters_m", label: "M2 — Master's College or University: Medium Programs", short: "M2 Masters", description: "Medium-sized master's programs" },
-  { id: "masters_s", label: "M3 — Master's College or University: Smaller Programs", short: "M3 Masters", description: "Smaller master's programs" },
-  { id: "bac_arts", label: "Bac/A&S — Baccalaureate: Arts & Sciences Focus", short: "Liberal Arts", description: "Arts & sciences emphasis, limited graduate programs" },
-  { id: "bac_diverse", label: "Bac/Diverse — Baccalaureate: Diverse Fields", short: "Bac/Diverse", description: "Broad mix of bachelor's programs across disciplines" },
-  { id: "associates", label: "Associate's College", short: "Associates", description: "Primarily associate degrees and certificates" },
-  { id: "special", label: "Special Focus Institution", short: "Special Focus", description: "Single field or narrow programs (medical, law, arts, theology)" },
-  { id: "tribal", label: "Tribal College or University", short: "Tribal College", description: "Tribal colleges and universities" },
+  { id: "r1", label: "Research 1 — Very High Research Spending and Doctorate Production", short: "R1 (Research 1)", description: "≥ $50M research spending AND ≥ 70 research doctorates awarded annually (2025 Research Activity Designation)" },
+  { id: "r2", label: "Research 2 — High Research Spending and Doctorate Production", short: "R2 (Research 2)", description: "≥ $5M research spending AND ≥ 20 research doctorates awarded annually (2025 Research Activity Designation)" },
+  { id: "rcu", label: "Research Colleges & Universities (RCU)", short: "RCU", description: "≥ $2.5M research spending; not classified as R1 or R2 (new in 2025)" },
+  { id: "mixed_doc", label: "Mixed Undergraduate/Graduate-Doctorate", short: "Mixed Doctoral", description: "Doctoral institutions with a balanced mix of academic and professional programs (no R1/R2/RCU designation)" },
+  { id: "prof_doc", label: "Professions-focused Undergraduate/Graduate-Doctorate", short: "Professions-focused Doctoral", description: "Doctoral institutions concentrated in professional fields (business, education, health, etc.)" },
+  { id: "mixed_masters", label: "Mixed Undergraduate/Graduate-Master's", short: "Mixed Master's", description: "Master's-dominant institutions with a balanced academic + professional mix (replaces M1/M2/M3)" },
+  { id: "prof_masters", label: "Professions-focused Undergraduate/Graduate-Master's", short: "Professions-focused Master's", description: "Master's-dominant institutions concentrated in professional fields" },
+  { id: "mixed_bac", label: "Mixed Baccalaureate", short: "Mixed Baccalaureate", description: "Baccalaureate institutions with a balanced academic + professional mix" },
+  { id: "prof_bac", label: "Professions-focused Baccalaureate", short: "Professions-focused Baccalaureate", description: "Baccalaureate institutions concentrated in professional fields (replaces Bac/Diverse)" },
+  { id: "bac_arts", label: "Special Focus: Arts and Sciences", short: "Arts & Sciences (Liberal Arts)", description: "Baccalaureate institutions with an arts & sciences emphasis (formerly Bac/A&S — Liberal Arts)" },
+  { id: "associates", label: "Associate's / Mixed Associate", short: "Associate's", description: "Primarily associate degrees and certificates" },
+  { id: "special", label: "Special Focus Institution", short: "Special Focus", description: "Single field or narrow programs (medicine, nursing, law, arts, theology, etc.)" },
+  { id: "tribal", label: "Tribal College or University", short: "Tribal College", description: "Designated TCU under the 2025 Population Served filter" },
 ];
 
 
@@ -110,28 +114,31 @@ const INTL_WEIGHTS = {
 
 const WEIGHTS = {
   // 6 dimensions: profile = institutional assets (law, med, biz, eng)
-  r1:          { visibility: 0.24, enrollment: 0.14, financial: 0.15, profile: 0.11, research: 0.24, diversity: 0.12 },
-  r2:          { visibility: 0.22, enrollment: 0.16, financial: 0.16, profile: 0.11, research: 0.22, diversity: 0.13 },
-  r3:          { visibility: 0.21, enrollment: 0.17, financial: 0.16, profile: 0.11, research: 0.20, diversity: 0.15 },
-  masters_l:   { visibility: 0.21, enrollment: 0.21, financial: 0.16, profile: 0.14, research: 0.11, diversity: 0.17 },
-  masters_m:   { visibility: 0.19, enrollment: 0.23, financial: 0.15, profile: 0.14, research: 0.10, diversity: 0.19 },
-  masters_s:   { visibility: 0.19, enrollment: 0.22, financial: 0.16, profile: 0.14, research: 0.09, diversity: 0.20 },
-  bac_arts:    { visibility: 0.23, enrollment: 0.21, financial: 0.18, profile: 0.10, research: 0.08, diversity: 0.20 },
-  bac_diverse: { visibility: 0.20, enrollment: 0.22, financial: 0.16, profile: 0.11, research: 0.09, diversity: 0.22 },
-  associates:  { visibility: 0.15, enrollment: 0.26, financial: 0.16, profile: 0.07, research: 0.05, diversity: 0.31 },
-  special:     { visibility: 0.23, enrollment: 0.15, financial: 0.17, profile: 0.16, research: 0.16, diversity: 0.13 },
-  tribal:      { visibility: 0.13, enrollment: 0.21, financial: 0.17, profile: 0.07, research: 0.09, diversity: 0.33 },
+  // Aligned to 2025 Carnegie cohorts.
+  r1:            { visibility: 0.24, enrollment: 0.14, financial: 0.15, profile: 0.11, research: 0.24, diversity: 0.12 },
+  r2:            { visibility: 0.22, enrollment: 0.16, financial: 0.16, profile: 0.11, research: 0.22, diversity: 0.13 },
+  rcu:           { visibility: 0.21, enrollment: 0.17, financial: 0.16, profile: 0.11, research: 0.20, diversity: 0.15 },
+  mixed_doc:     { visibility: 0.21, enrollment: 0.18, financial: 0.16, profile: 0.13, research: 0.17, diversity: 0.15 },
+  prof_doc:      { visibility: 0.21, enrollment: 0.18, financial: 0.16, profile: 0.16, research: 0.15, diversity: 0.14 },
+  mixed_masters: { visibility: 0.20, enrollment: 0.22, financial: 0.16, profile: 0.13, research: 0.11, diversity: 0.18 },
+  prof_masters:  { visibility: 0.20, enrollment: 0.22, financial: 0.16, profile: 0.16, research: 0.10, diversity: 0.16 },
+  mixed_bac:     { visibility: 0.21, enrollment: 0.22, financial: 0.17, profile: 0.10, research: 0.09, diversity: 0.21 },
+  prof_bac:      { visibility: 0.20, enrollment: 0.22, financial: 0.16, profile: 0.13, research: 0.09, diversity: 0.20 },
+  bac_arts:      { visibility: 0.23, enrollment: 0.21, financial: 0.18, profile: 0.10, research: 0.08, diversity: 0.20 },
+  associates:    { visibility: 0.15, enrollment: 0.26, financial: 0.16, profile: 0.07, research: 0.05, diversity: 0.31 },
+  special:       { visibility: 0.23, enrollment: 0.15, financial: 0.17, profile: 0.16, research: 0.16, diversity: 0.13 },
+  tribal:        { visibility: 0.13, enrollment: 0.21, financial: 0.17, profile: 0.07, research: 0.09, diversity: 0.33 },
 };
 
 
 // US News ranking list by Carnegie type
 // Used to auto-suggest which list an institution is on
 const USNEWS_LIST_MAP = {
-  r1: "natl_univ", r2: "natl_univ", r3: "natl_univ",
-  d_prof: "natl_univ",
-  masters_l: "regional", masters_m: "regional", masters_s: "regional",
+  r1: "natl_univ", r2: "natl_univ", rcu: "natl_univ",
+  mixed_doc: "natl_univ", prof_doc: "natl_univ",
+  mixed_masters: "regional", prof_masters: "regional",
   bac_arts: "lib_arts",
-  bac_diverse: "regional",
+  mixed_bac: "regional", prof_bac: "regional",
   associates: "best_colleges",
   special: null, tribal: null,
   intl_elite: null, intl_research: null, intl_comprehensive: null,
@@ -209,7 +216,7 @@ const AXES = [
   {
     key: "research", label: "Academic & Research Reputation", color: "#1C3678",
     description: "Federal R&D expenditures (NSF HERD), doctoral degrees awarded, 2025 Research Activity Designation",
-    hiddenFor: ["associates", "tribal", "bac_arts", "bac_diverse", "intl_teaching", "intl_specialist"],
+    hiddenFor: ["associates", "tribal", "bac_arts", "mixed_bac", "prof_bac", "intl_teaching", "intl_specialist"],
     inputs: [
       { id: "rAndD", label: "Annual federal R&D expenditures ($M)", placeholder: "e.g. 120", max: 1000 },
       { id: "doctoralOutput", label: "Doctoral degrees awarded annually", placeholder: "e.g. 340", max: 2000 },
@@ -346,7 +353,7 @@ function getQsBand(qsRank) {
 }
 
 function blendWeights(carnegieId, qsBand) {
-  const cw = INTL_WEIGHTS[carnegieId] ?? WEIGHTS[carnegieId] ?? WEIGHTS["masters_l"];
+  const cw = INTL_WEIGHTS[carnegieId] ?? WEIGHTS[carnegieId] ?? WEIGHTS["mixed_masters"];
   const qw = QS_BAND_WEIGHTS[qsBand] ?? QS_BAND_WEIGHTS["unranked"];
   const blended = {};
   Object.keys(cw).forEach(k => {
@@ -500,33 +507,37 @@ const BENCHMARKS = {
     endowmentPerStudent: {
       label: "Endowment per Student ($K)",
       byType: {
-        r1:       { min: 8,   median: 62,   mean: 118,  max: 600 },
-        r2:       { min: 3,   median: 28,   mean: 52,   max: 280 },
-        d_prof:   { min: 2,   median: 18,   mean: 34,   max: 180 },
-        masters_l:{ min: 1,   median: 12,   mean: 24,   max: 120 },
-        masters_m:{ min: 1,   median: 9,    mean: 18,   max: 90  },
-        masters_s:{ min: 0,   median: 6,    mean: 14,   max: 70  },
-        bac_arts: { min: 4,   median: 55,   mean: 120,  max: 600 },
-        bac_diverse:{ min: 1, median: 14,   mean: 28,   max: 140 },
-        associates:{ min: 0,  median: 4,    mean: 8,    max: 45  },
-        tribal:   { min: 0,   median: 2,    mean: 4,    max: 18  },
-        special:  { min: 1,   median: 18,   mean: 36,   max: 180 },
+        r1:            { min: 8,  median: 62,  mean: 118, max: 600 },
+        r2:            { min: 3,  median: 28,  mean: 52,  max: 280 },
+        rcu:           { min: 2,  median: 18,  mean: 34,  max: 180 },
+        mixed_doc:     { min: 2,  median: 16,  mean: 30,  max: 160 },
+        prof_doc:      { min: 2,  median: 14,  mean: 26,  max: 140 },
+        mixed_masters: { min: 1,  median: 12,  mean: 24,  max: 120 },
+        prof_masters:  { min: 1,  median: 10,  mean: 20,  max: 100 },
+        bac_arts:      { min: 4,  median: 55,  mean: 120, max: 600 },
+        mixed_bac:     { min: 1,  median: 14,  mean: 28,  max: 140 },
+        prof_bac:      { min: 1,  median: 10,  mean: 22,  max: 110 },
+        associates:    { min: 0,  median: 4,   mean: 8,   max: 45  },
+        tribal:        { min: 0,  median: 2,   mean: 4,   max: 18  },
+        special:       { min: 1,  median: 18,  mean: 36,  max: 180 },
       }
     },
     totalRevenue: {
       label: "Total Annual Revenue ($M)",
       byType: {
-        r1:       { min: 120, median: 680,  mean: 1100, max: 5000 },
-        r2:       { min: 60,  median: 280,  mean: 420,  max: 1800 },
-        d_prof:   { min: 30,  median: 160,  mean: 240,  max: 900  },
-        masters_l:{ min: 20,  median: 90,   mean: 130,  max: 500  },
-        masters_m:{ min: 10,  median: 55,   mean: 80,   max: 300  },
-        masters_s:{ min: 5,   median: 30,   mean: 48,   max: 180  },
-        bac_arts: { min: 30,  median: 140,  mean: 200,  max: 800  },
-        bac_diverse:{ min: 10,median: 60,   mean: 90,   max: 350  },
-        associates:{ min: 10, median: 55,   mean: 80,   max: 400  },
-        tribal:   { min: 2,   median: 18,   mean: 28,   max: 100  },
-        special:  { min: 8,   median: 55,   mean: 90,   max: 420  },
+        r1:            { min: 120, median: 680, mean: 1100, max: 5000 },
+        r2:            { min: 60,  median: 280, mean: 420,  max: 1800 },
+        rcu:           { min: 30,  median: 160, mean: 240,  max: 900  },
+        mixed_doc:     { min: 25,  median: 140, mean: 210,  max: 800  },
+        prof_doc:      { min: 25,  median: 130, mean: 200,  max: 750  },
+        mixed_masters: { min: 15,  median: 80,  mean: 120,  max: 450  },
+        prof_masters:  { min: 12,  median: 65,  mean: 95,   max: 350  },
+        bac_arts:      { min: 30,  median: 140, mean: 200,  max: 800  },
+        mixed_bac:     { min: 10,  median: 60,  mean: 90,   max: 350  },
+        prof_bac:      { min: 8,   median: 45,  mean: 70,   max: 280  },
+        associates:    { min: 10,  median: 55,  mean: 80,   max: 400  },
+        tribal:        { min: 2,   median: 18,  mean: 28,   max: 100  },
+        special:       { min: 8,   median: 55,  mean: 90,   max: 420  },
       }
     }
   },
@@ -534,33 +545,37 @@ const BENCHMARKS = {
     mktgBudgetPct: {
       label: "Marketing Spend (% of Total Expenditure)",
       byType: {
-        r1:       { min: 0.3, median: 0.8,  mean: 1.0,  max: 3.2 },
-        r2:       { min: 0.4, median: 1.1,  mean: 1.3,  max: 4.0 },
-        d_prof:   { min: 0.5, median: 1.4,  mean: 1.6,  max: 4.5 },
-        masters_l:{ min: 0.6, median: 1.6,  mean: 1.9,  max: 5.2 },
-        masters_m:{ min: 0.7, median: 1.8,  mean: 2.1,  max: 5.5 },
-        masters_s:{ min: 0.5, median: 1.5,  mean: 1.8,  max: 5.0 },
-        bac_arts: { min: 0.8, median: 2.0,  mean: 2.3,  max: 6.0 },
-        bac_diverse:{ min: 0.6,median: 1.7, mean: 2.0,  max: 5.5 },
-        associates:{ min: 0.4, median: 1.2, mean: 1.5,  max: 4.2 },
-        tribal:   { min: 0.3, median: 0.9,  mean: 1.1,  max: 3.5 },
-        special:  { min: 0.5, median: 1.4,  mean: 1.7,  max: 5.0 },
+        r1:            { min: 0.3, median: 0.8, mean: 1.0, max: 3.2 },
+        r2:            { min: 0.4, median: 1.1, mean: 1.3, max: 4.0 },
+        rcu:           { min: 0.5, median: 1.4, mean: 1.6, max: 4.5 },
+        mixed_doc:     { min: 0.5, median: 1.4, mean: 1.7, max: 4.8 },
+        prof_doc:      { min: 0.6, median: 1.6, mean: 1.9, max: 5.0 },
+        mixed_masters: { min: 0.6, median: 1.7, mean: 2.0, max: 5.4 },
+        prof_masters:  { min: 0.7, median: 1.9, mean: 2.2, max: 5.6 },
+        bac_arts:      { min: 0.8, median: 2.0, mean: 2.3, max: 6.0 },
+        mixed_bac:     { min: 0.6, median: 1.7, mean: 2.0, max: 5.5 },
+        prof_bac:      { min: 0.7, median: 1.9, mean: 2.2, max: 5.6 },
+        associates:    { min: 0.4, median: 1.2, mean: 1.5, max: 4.2 },
+        tribal:        { min: 0.3, median: 0.9, mean: 1.1, max: 3.5 },
+        special:       { min: 0.5, median: 1.4, mean: 1.7, max: 5.0 },
       }
     },
     mktgFTE: {
       label: "Central Marketing FTE",
       byType: {
-        r1:       { min: 8,   median: 38,   mean: 48,   max: 150 },
-        r2:       { min: 4,   median: 20,   mean: 26,   max: 80  },
-        d_prof:   { min: 3,   median: 14,   mean: 18,   max: 60  },
-        masters_l:{ min: 2,   median: 10,   mean: 13,   max: 45  },
-        masters_m:{ min: 1,   median: 7,    mean: 9,    max: 30  },
-        masters_s:{ min: 1,   median: 5,    mean: 7,    max: 22  },
-        bac_arts: { min: 2,   median: 10,   mean: 13,   max: 42  },
-        bac_diverse:{ min: 1, median: 6,    mean: 8,    max: 28  },
-        associates:{ min: 1,  median: 5,    mean: 7,    max: 25  },
-        tribal:   { min: 0,   median: 2,    mean: 3,    max: 10  },
-        special:  { min: 1,   median: 6,    mean: 8,    max: 28  },
+        r1:            { min: 8, median: 38, mean: 48, max: 150 },
+        r2:            { min: 4, median: 20, mean: 26, max: 80  },
+        rcu:           { min: 3, median: 14, mean: 18, max: 60  },
+        mixed_doc:     { min: 3, median: 13, mean: 17, max: 55  },
+        prof_doc:      { min: 3, median: 12, mean: 16, max: 50  },
+        mixed_masters: { min: 2, median: 9,  mean: 12, max: 40  },
+        prof_masters:  { min: 1, median: 7,  mean: 10, max: 32  },
+        bac_arts:      { min: 2, median: 10, mean: 13, max: 42  },
+        mixed_bac:     { min: 1, median: 6,  mean: 8,  max: 28  },
+        prof_bac:      { min: 1, median: 5,  mean: 7,  max: 24  },
+        associates:    { min: 1, median: 5,  mean: 7,  max: 25  },
+        tribal:        { min: 0, median: 2,  mean: 3,  max: 10  },
+        special:       { min: 1, median: 6,  mean: 8,  max: 28  },
       }
     }
   }
