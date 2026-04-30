@@ -353,7 +353,7 @@ function getQsBand(qsRank) {
 }
 
 function blendWeights(carnegieId, qsBand) {
-  const cw = INTL_WEIGHTS[carnegieId] ?? WEIGHTS[carnegieId] ?? WEIGHTS["masters_l"];
+  const cw = INTL_WEIGHTS[carnegieId] ?? WEIGHTS[carnegieId] ?? WEIGHTS["mixed_masters"];
   const qw = QS_BAND_WEIGHTS[qsBand] ?? QS_BAND_WEIGHTS["unranked"];
   const blended = {};
   Object.keys(cw).forEach(k => {
