@@ -114,17 +114,20 @@ const INTL_WEIGHTS = {
 
 const WEIGHTS = {
   // 6 dimensions: profile = institutional assets (law, med, biz, eng)
-  r1:          { visibility: 0.24, enrollment: 0.14, financial: 0.15, profile: 0.11, research: 0.24, diversity: 0.12 },
-  r2:          { visibility: 0.22, enrollment: 0.16, financial: 0.16, profile: 0.11, research: 0.22, diversity: 0.13 },
-  r3:          { visibility: 0.21, enrollment: 0.17, financial: 0.16, profile: 0.11, research: 0.20, diversity: 0.15 },
-  masters_l:   { visibility: 0.21, enrollment: 0.21, financial: 0.16, profile: 0.14, research: 0.11, diversity: 0.17 },
-  masters_m:   { visibility: 0.19, enrollment: 0.23, financial: 0.15, profile: 0.14, research: 0.10, diversity: 0.19 },
-  masters_s:   { visibility: 0.19, enrollment: 0.22, financial: 0.16, profile: 0.14, research: 0.09, diversity: 0.20 },
-  bac_arts:    { visibility: 0.23, enrollment: 0.21, financial: 0.18, profile: 0.10, research: 0.08, diversity: 0.20 },
-  bac_diverse: { visibility: 0.20, enrollment: 0.22, financial: 0.16, profile: 0.11, research: 0.09, diversity: 0.22 },
-  associates:  { visibility: 0.15, enrollment: 0.26, financial: 0.16, profile: 0.07, research: 0.05, diversity: 0.31 },
-  special:     { visibility: 0.23, enrollment: 0.15, financial: 0.17, profile: 0.16, research: 0.16, diversity: 0.13 },
-  tribal:      { visibility: 0.13, enrollment: 0.21, financial: 0.17, profile: 0.07, research: 0.09, diversity: 0.33 },
+  // Aligned to 2025 Carnegie cohorts.
+  r1:            { visibility: 0.24, enrollment: 0.14, financial: 0.15, profile: 0.11, research: 0.24, diversity: 0.12 },
+  r2:            { visibility: 0.22, enrollment: 0.16, financial: 0.16, profile: 0.11, research: 0.22, diversity: 0.13 },
+  rcu:           { visibility: 0.21, enrollment: 0.17, financial: 0.16, profile: 0.11, research: 0.20, diversity: 0.15 },
+  mixed_doc:     { visibility: 0.21, enrollment: 0.18, financial: 0.16, profile: 0.13, research: 0.17, diversity: 0.15 },
+  prof_doc:      { visibility: 0.21, enrollment: 0.18, financial: 0.16, profile: 0.16, research: 0.15, diversity: 0.14 },
+  mixed_masters: { visibility: 0.20, enrollment: 0.22, financial: 0.16, profile: 0.13, research: 0.11, diversity: 0.18 },
+  prof_masters:  { visibility: 0.20, enrollment: 0.22, financial: 0.16, profile: 0.16, research: 0.10, diversity: 0.16 },
+  mixed_bac:     { visibility: 0.21, enrollment: 0.22, financial: 0.17, profile: 0.10, research: 0.09, diversity: 0.21 },
+  prof_bac:      { visibility: 0.20, enrollment: 0.22, financial: 0.16, profile: 0.13, research: 0.09, diversity: 0.20 },
+  bac_arts:      { visibility: 0.23, enrollment: 0.21, financial: 0.18, profile: 0.10, research: 0.08, diversity: 0.20 },
+  associates:    { visibility: 0.15, enrollment: 0.26, financial: 0.16, profile: 0.07, research: 0.05, diversity: 0.31 },
+  special:       { visibility: 0.23, enrollment: 0.15, financial: 0.17, profile: 0.16, research: 0.16, diversity: 0.13 },
+  tribal:        { visibility: 0.13, enrollment: 0.21, financial: 0.17, profile: 0.07, research: 0.09, diversity: 0.33 },
 };
 
 
