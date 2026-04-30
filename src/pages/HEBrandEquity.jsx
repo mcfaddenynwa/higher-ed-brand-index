@@ -368,27 +368,27 @@ function weightedOverall(scores, carnegieId, qsBand = "unranked") {
   return wSum > 0 ? Math.round(total / wSum) : null;
 }
 
-function computeAggregates(submissions, carnegieId) {
+function computeAggregates(scoredPool, carnegieId, focalName) {
   const allKeys = AXES.map(a => a.key);
-
   const avg = (arr) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
 
-  const carnegiePeers = submissions.filter(s => s.carnegieId === carnegieId);
-  const allSubs = submissions;
+  // Exclude the focal institution from its own peer averages
+  const others = scoredPool.filter(s => s.name !== focalName);
+  const carnegiePeers = others.filter(s => s.carnegieId === carnegieId);
 
   const buildOverlay = (subs) => {
     if (subs.length < MIN_N) return null;
     const result = {};
     allKeys.forEach(key => {
-      const vals = subs.map(s => s.scores[key]).filter(v => v != null);
-      result[key] = avg(vals);
+      const vals = subs.map(s => s.scores?.[key]).filter(v => v != null);
+      result[key] = vals.length ? avg(vals) : null;
     });
     return { scores: result, n: subs.length };
   };
 
   return {
     carnegieAvg: buildOverlay(carnegiePeers),
-    globalAvg: buildOverlay(allSubs),
+    globalAvg: buildOverlay(others),
   };
 }
 
@@ -491,23 +491,8 @@ function SpiderChart({ scores, carnegieAvg, globalAvg, axes }) {
   );
 }
 
-// Shared storage helpers
-async function loadSubmissions() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
-}
-
-async function saveSubmission(submission) {
-  try {
-    const existing = await loadSubmissions();
-    // Deduplicate by unitid or institution name
-    const filtered = existing.filter(s => s.unitid ? s.unitid !== submission.unitid : s.institution !== submission.institution);
-    filtered.push(submission);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
-    return filtered;
-  } catch (e) { console.error(e); return []; }
+// Note: localStorage submission flow removed — every institution is auto-scored
+// from IPEDS and lives in scoredPool from the start.
 }
 
 
