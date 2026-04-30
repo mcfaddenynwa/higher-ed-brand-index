@@ -892,22 +892,6 @@ export default function App() {
             : <div style={{ fontSize: 14, color: '#3D4F6B', fontStyle: 'italic' }}>Select a classification to continue</div>
           }
 
-          {/* Submission count */}
-          <div style={{ marginTop: 28, padding: '14px 16px', background: '#F4F6F8', borderRadius: 8, border: '1px solid #F4F6F8', display: 'flex', gap: 28 }}>
-            <div>
-              <div style={{ fontSize: 14, letterSpacing: 2, color: '#595959', marginBottom: 4 }}>TOTAL SUBMISSIONS</div>
-              <div style={{ fontSize: 22, fontFamily: "'Bitter', Georgia, serif", color: '#243551' }}>{globalN}</div>
-            </div>
-            {carnegieId && (
-              <div>
-                <div style={{ fontSize: 14, letterSpacing: 2, color: '#595959', marginBottom: 4 }}>IN YOUR CLASSIFICATION</div>
-                <div style={{ fontSize: 22, fontFamily: "'Bitter', Georgia, serif", color: carnegieN >= MIN_N ? '#1A9988' : '#243551' }}>
-                  {carnegieN}
-                  {carnegieN < MIN_N && <span style={{ fontSize: 14, color: '#595959', marginLeft: 8 }}>({MIN_N - carnegieN} more needed for avg)</span>}
-                </div>
-              </div>
-            )}
-          </div>
         </div>
       )}
 
