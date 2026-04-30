@@ -298,8 +298,9 @@ function HeadlineCard({ title, tone, items, empty }) {
                   <div style={{ fontSize: 13, color: '#243551' }}>{p.axis.label}</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: "'Bitter', Georgia, serif", fontSize: 12 }}>
-                  <span style={{ color: '#6B7585' }}>{p.delta >= 0 ? '+' : ''}{p.delta}</span>
-                  <span style={{ color: tierColor(p.tier), fontWeight: 700 }}>z {p.z >= 0 ? '+' : ''}{p.z}</span>
+                  <span style={{ color: tierColor(p.tier), fontWeight: 700 }}>
+                    {p.delta >= 0 ? '+' : ''}{p.delta} vs peers
+                  </span>
                 </div>
               </div>
             ))}
