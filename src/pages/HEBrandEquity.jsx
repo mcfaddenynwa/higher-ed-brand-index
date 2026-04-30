@@ -1280,20 +1280,9 @@ export default function App() {
               {/* Submit */}
               <div style={{ marginTop: 20, padding: '16px', background: '#F4F6F8', border: '1px solid rgba(28,54,120,0.22)', borderRadius: 10 }}>
                 {submitted
-                  ? <div>
-                      <div style={{ fontSize: 14, color: '#1A9988', display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 16 }}>✓</span>
-                        Submitted. Your data contributes to aggregate benchmarks anonymously.
-                      </div>
-                      <a href="/insights" style={{
-                        display: 'inline-block', marginTop: 12,
-                        fontSize: 12, letterSpacing: 1.5, color: '#FFFFFF', textDecoration: 'none',
-                        background: '#1C3678', padding: '9px 18px', borderRadius: 0,
-                        fontWeight: 700, textTransform: 'uppercase',
-                        fontFamily: "'Bitter', Georgia, serif"
-                      }}>
-                        View Strategic Insights →
-                      </a>
+                  ? <div style={{ fontSize: 14, color: '#1A9988', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 16 }}>✓</span>
+                      Submitted. Your data contributes to aggregate benchmarks anonymously.
                     </div>
                   : <>
                       <div style={{ fontSize: 14, color: '#243551', marginBottom: 10, lineHeight: 1.5 }}>
