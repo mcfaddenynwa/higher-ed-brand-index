@@ -679,6 +679,20 @@ export default function App() {
     return scorePool(combined, AXES, normalizeAxis);
   }, [carnegieId]);
 
+  // Classification cohort stats — surfaced in the Weighted Brand Index header card.
+  const classificationCohort = useMemo(() => {
+    if (!carnegieId) return [];
+    const focal = { name: institution, carnegieId };
+    return buildCohort({ focal, scoredPool, lensId: "carnegie" });
+  }, [carnegieId, institution, scoredPool]);
+
+  const classificationTopLine = useMemo(
+    () => cohortTopLine({ cohort: classificationCohort, axes: activeAxes }),
+    [classificationCohort, activeAxes]
+  );
+  const classificationCohortSize = classificationCohort.length;
+  const classificationCohortAvg = classificationTopLine?.cohortAvg ?? null;
+
   // Institution typeahead
   const handleInstitutionInput = (val) => {
     setInstitution(val);
