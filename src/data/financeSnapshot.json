@@ -1,14 +1,405 @@
 {
+  "100858": {
+    "sector": "public",
+    "totalRevenue": 1554,
+    "endowmentTotal": 1010,
+    "endowmentPerStudent": 35,
+    "fte": 28491,
+    "fiscalYear": "FY2022-23"
+  },
+  "104151": {
+    "sector": "public",
+    "totalRevenue": 3803,
+    "endowmentTotal": 1467,
+    "endowmentPerStudent": 20,
+    "fte": 74729,
+    "fiscalYear": "FY2022-23"
+  },
+  "123165": {
+    "sector": "private",
+    "totalRevenue": 107,
+    "endowmentTotal": 479,
+    "endowmentPerStudent": 438,
+    "fte": 1093,
+    "fiscalYear": "FY2022-23"
+  },
+  "126614": {
+    "sector": "public",
+    "totalRevenue": 2077,
+    "endowmentTotal": null,
+    "endowmentPerStudent": null,
+    "fte": 34608,
+    "fiscalYear": "FY2022-23"
+  },
+  "131159": {
+    "sector": "private",
+    "totalRevenue": 763,
+    "endowmentTotal": 961,
+    "endowmentPerStudent": 80,
+    "fte": 12007,
+    "fiscalYear": "FY2022-23"
+  },
+  "134130": {
+    "sector": "public",
+    "totalRevenue": 5209,
+    "endowmentTotal": 2334,
+    "endowmentPerStudent": 48,
+    "fte": 48183,
+    "fiscalYear": "FY2022-23"
+  },
+  "136172": {
+    "sector": "public",
+    "totalRevenue": 360,
+    "endowmentTotal": 134,
+    "endowmentPerStudent": 10,
+    "fte": 13584,
+    "fiscalYear": "FY2022-23"
+  },
+  "139959": {
+    "sector": "public",
+    "totalRevenue": 1961,
+    "endowmentTotal": 1811,
+    "endowmentPerStudent": 48,
+    "fte": 37956,
+    "fiscalYear": "FY2022-23"
+  },
+  "145637": {
+    "sector": "public",
+    "totalRevenue": 3102,
+    "endowmentTotal": 2514,
+    "endowmentPerStudent": 50,
+    "fte": 50671,
+    "fiscalYear": "FY2022-23"
+  },
+  "150136": {
+    "sector": "public",
+    "totalRevenue": 521,
+    "endowmentTotal": 238,
+    "endowmentPerStudent": 15,
+    "fte": 16035,
+    "fiscalYear": "FY2022-23"
+  },
+  "151351": {
+    "sector": "public",
+    "totalRevenue": 1987,
+    "endowmentTotal": 1875,
+    "endowmentPerStudent": 43,
+    "fte": 43803,
+    "fiscalYear": "FY2022-23"
+  },
+  "153603": {
+    "sector": "public",
+    "totalRevenue": 1432,
+    "endowmentTotal": 1470,
+    "endowmentPerStudent": 52,
+    "fte": 28140,
+    "fiscalYear": "FY2022-23"
+  },
+  "153658": {
+    "sector": "public",
+    "totalRevenue": 5215,
+    "endowmentTotal": 3260,
+    "endowmentPerStudent": 120,
+    "fte": 27081,
+    "fiscalYear": "FY2022-23"
+  },
+  "155317": {
+    "sector": "public",
+    "totalRevenue": 1684,
+    "endowmentTotal": 2383,
+    "endowmentPerStudent": 99,
+    "fte": 24000,
+    "fiscalYear": "FY2022-23"
+  },
+  "161004": {
+    "sector": "private",
+    "totalRevenue": 166,
+    "endowmentTotal": 2422,
+    "endowmentPerStudent": 1268,
+    "fte": 1911,
+    "fiscalYear": "FY2022-23"
+  },
+  "163286": {
+    "sector": "public",
+    "totalRevenue": 2640,
+    "endowmentTotal": 1026,
+    "endowmentPerStudent": 27,
+    "fte": 37934,
+    "fiscalYear": "FY2022-23"
+  },
+  "164465": {
+    "sector": "private",
+    "totalRevenue": 300,
+    "endowmentTotal": 3342,
+    "endowmentPerStudent": 1761,
+    "fte": 1898,
+    "fiscalYear": "FY2022-23"
+  },
+  "166683": {
+    "sector": "private",
+    "totalRevenue": 3167,
+    "endowmentTotal": 23453,
+    "endowmentPerStudent": 2002,
+    "fte": 11715,
+    "fiscalYear": "FY2022-23"
+  },
+  "167835": {
+    "sector": "private",
+    "totalRevenue": 308,
+    "endowmentTotal": 2470,
+    "endowmentPerStudent": 867,
+    "fte": 2850,
+    "fiscalYear": "FY2022-23"
+  },
+  "170976": {
+    "sector": "public",
+    "totalRevenue": 12611,
+    "endowmentTotal": 17627,
+    "endowmentPerStudent": 361,
+    "fte": 48806,
+    "fiscalYear": "FY2022-23"
+  },
+  "171100": {
+    "sector": "public",
+    "totalRevenue": 3125,
+    "endowmentTotal": 4580,
+    "endowmentPerStudent": 98,
+    "fte": 46500,
+    "fiscalYear": "FY2022-23"
+  },
+  "173258": {
+    "sector": "private",
+    "totalRevenue": 251,
+    "endowmentTotal": 1177,
+    "endowmentPerStudent": 574,
+    "fte": 2048,
+    "fiscalYear": "FY2022-23"
+  },
+  "174066": {
+    "sector": "public",
+    "totalRevenue": 3829,
+    "endowmentTotal": 5109,
+    "endowmentPerStudent": 114,
+    "fte": 44789,
+    "fiscalYear": "FY2022-23"
+  },
+  "178420": {
+    "sector": "public",
+    "totalRevenue": 250,
+    "endowmentTotal": 118,
+    "endowmentPerStudent": 13,
+    "fte": 9116,
+    "fiscalYear": "FY2022-23"
+  },
+  "181464": {
+    "sector": "public",
+    "totalRevenue": 1325,
+    "endowmentTotal": 1291,
+    "endowmentPerStudent": 59,
+    "fte": 21862,
+    "fiscalYear": "FY2022-23"
+  },
+  "182795": {
+    "sector": "private",
+    "totalRevenue": 52,
+    "endowmentTotal": 21,
+    "endowmentPerStudent": 14,
+    "fte": 1483,
+    "fiscalYear": "FY2022-23"
+  },
+  "186380": {
+    "sector": "public",
+    "totalRevenue": 4155,
+    "endowmentTotal": 1559,
+    "endowmentPerStudent": 34,
+    "fte": 46064,
+    "fiscalYear": "FY2022-23"
+  },
+  "198464": {
+    "sector": "public",
+    "totalRevenue": 1084,
+    "endowmentTotal": 280,
+    "endowmentPerStudent": 12,
+    "fte": 23008,
+    "fiscalYear": "FY2022-23"
+  },
+  "199120": {
+    "sector": "public",
+    "totalRevenue": 4033,
+    "endowmentTotal": 5201,
+    "endowmentPerStudent": 175,
+    "fte": 29685,
+    "fiscalYear": "FY2022-23"
+  },
+  "202763": {
+    "sector": "private",
+    "totalRevenue": 88,
+    "endowmentTotal": 54,
+    "endowmentPerStudent": 14,
+    "fte": 3714,
+    "fiscalYear": "FY2022-23"
+  },
+  "203368": {
+    "sector": "private",
+    "totalRevenue": 91,
+    "endowmentTotal": 263,
+    "endowmentPerStudent": 97,
+    "fte": 2710,
+    "fiscalYear": "FY2022-23"
+  },
+  "204796": {
+    "sector": "public",
+    "totalRevenue": 9771,
+    "endowmentTotal": 7356,
+    "endowmentPerStudent": 133,
+    "fte": 55503,
+    "fiscalYear": "FY2022-23"
+  },
+  "212577": {
+    "sector": "private",
+    "totalRevenue": 137,
+    "endowmentTotal": 431,
+    "endowmentPerStudent": 217,
+    "fte": 1986,
+    "fiscalYear": "FY2022-23"
+  },
+  "213987": {
+    "sector": "private",
+    "totalRevenue": 86,
+    "endowmentTotal": 33,
+    "endowmentPerStudent": 13,
+    "fte": 2603,
+    "fiscalYear": "FY2022-23"
+  },
+  "214777": {
+    "sector": "private",
+    "totalRevenue": 8458,
+    "endowmentTotal": 4428,
+    "endowmentPerStudent": 90,
+    "fte": 48957,
+    "fiscalYear": "FY2022-23"
+  },
+  "215293": {
+    "sector": "private",
+    "totalRevenue": 2796,
+    "endowmentTotal": 5444,
+    "endowmentPerStudent": 185,
+    "fte": 29426,
+    "fiscalYear": "FY2022-23"
+  },
+  "216597": {
+    "sector": "private",
+    "totalRevenue": 613,
+    "endowmentTotal": 1195,
+    "endowmentPerStudent": 131,
+    "fte": 9096,
+    "fiscalYear": "FY2022-23"
+  },
+  "217156": {
+    "sector": "private",
+    "totalRevenue": 1491,
+    "endowmentTotal": 6201,
+    "endowmentPerStudent": 573,
+    "fte": 10821,
+    "fiscalYear": "FY2022-23"
+  },
+  "228723": {
+    "sector": "public",
+    "totalRevenue": 4317,
+    "endowmentTotal": 18129,
+    "endowmentPerStudent": 267,
+    "fte": 67787,
+    "fiscalYear": "FY2022-23"
+  },
+  "228778": {
+    "sector": "public",
+    "totalRevenue": 4794,
+    "endowmentTotal": 5741,
+    "endowmentPerStudent": 114,
+    "fte": 50389,
+    "fiscalYear": "FY2022-23"
+  },
+  "230764": {
+    "sector": "public",
+    "totalRevenue": 7770,
+    "endowmentTotal": 1589,
+    "endowmentPerStudent": 52,
+    "fte": 30692,
+    "fiscalYear": "FY2022-23"
+  },
+  "233277": {
+    "sector": "public",
+    "totalRevenue": 322,
+    "endowmentTotal": 67,
+    "endowmentPerStudent": 10,
+    "fte": 6765,
+    "fiscalYear": "FY2022-23"
+  },
+  "233921": {
+    "sector": "public",
+    "totalRevenue": 2224,
+    "endowmentTotal": 1890,
+    "endowmentPerStudent": 52,
+    "fte": 36363,
+    "fiscalYear": "FY2022-23"
+  },
+  "234076": {
+    "sector": "public",
+    "totalRevenue": 5280,
+    "endowmentTotal": 9644,
+    "endowmentPerStudent": 397,
+    "fte": 24312,
+    "fiscalYear": "FY2022-23"
+  },
+  "235316": {
+    "sector": "private",
+    "totalRevenue": 271,
+    "endowmentTotal": 434,
+    "endowmentPerStudent": 63,
+    "fte": 6873,
+    "fiscalYear": "FY2022-23"
+  },
+  "236948": {
+    "sector": "public",
+    "totalRevenue": 8973,
+    "endowmentTotal": 4919,
+    "endowmentPerStudent": 106,
+    "fte": 46300,
+    "fiscalYear": "FY2022-23"
+  },
+  "240444": {
+    "sector": "public",
+    "totalRevenue": 4061,
+    "endowmentTotal": 5530,
+    "endowmentPerStudent": 120,
+    "fte": 46063,
+    "fiscalYear": "FY2022-23"
+  },
+  "243780": {
+    "sector": "public",
+    "totalRevenue": 2640,
+    "endowmentTotal": 3676,
+    "endowmentPerStudent": 79,
+    "fte": 46398,
+    "fiscalYear": "FY2022-23"
+  },
   "_meta": {
-    "source": "Urban Institute Education Data Portal (https://educationdata.urban.org/)",
-    "endpoints": [
-      "/college-university/ipeds/finance/{year}/?unitid=...",
-      "/college-university/nacubo/endowments/{year}/?unitid=..."
+    "source": "IPEDS Data Center (https://nces.ed.gov/ipeds/datacenter/)",
+    "files": [
+      "F2223_F1A.zip",
+      "F2223_F2.zip",
+      "DRVEF2022.zip"
     ],
-    "license": "ODC Attribution License (ODC-By) v1.0",
-    "fetchedAt": null,
-    "financeYear": null,
-    "nacuboYear": null,
-    "note": "Run scripts/fetch-urban-finance.mjs to populate. US institutions only — international rows stay manual."
+    "license": "Public domain (U.S. Department of Education)",
+    "fetchedAt": "2026-04-30T20:41:17.124Z",
+    "fiscalYear": "FY2022-23",
+    "fields": {
+      "F1B25": "Total all revenues and other additions (public)",
+      "F1H02": "Endowment value, end of year (public)",
+      "F2D18": "Total revenues and investment return (private)",
+      "F2H02": "Endowment value, end of year (private)",
+      "FTE": "12-month FTE enrollment (DRVEF)"
+    },
+    "note": "US Title-IV institutions only — international rows stay manual."
   }
 }
