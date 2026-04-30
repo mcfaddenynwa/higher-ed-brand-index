@@ -1268,7 +1268,7 @@ export default function App() {
           </div>
 
           <div style={{ marginTop: 16, fontSize: 14, color: '#6B7585', lineHeight: 1.6, borderTop: '1px solid #F4F6F8', paddingTop: 14 }}>
-            Weightings calibrated per the 2025 Carnegie Institutional Classification (ACE / Carnegie Foundation). Data sources: IPEDS, NSF HERD, VSE survey, Form 990 / state reports, American Caldwell Visibility Index / QS / Times. Institution names are used for deduplication only and are never displayed in aggregate views. Aggregate overlays require a minimum of {MIN_N} submissions per classification.
+            Weightings calibrated per the 2025 Carnegie Institutional Classification (ACE / Carnegie Foundation). Data sources: IPEDS Finance (F1A/F2), DRVEF enrollment, NSF HERD, VSE survey, American Caldwell Visibility Index / QS / Times. Aggregate overlays require a minimum of {MIN_N} institutions per classification.
           </div>
         </div>
       )}
