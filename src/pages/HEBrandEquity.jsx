@@ -75,18 +75,22 @@ const INTL_DB = [
 
 const IPEDS_FIELDS = ["usNews","usNewsList","enrollTrend","yieldRate","acceptRate","pellPct","firstGen","rAndD","doctoralOutput","researchDesignation","caldwellListed","caldwellRank","retentionRate","gradRate4yr","gradRate6yr","theImpactListed","theImpactRank","nicheRank","nicheGrade","usNewsLaw","usNewsBiz","usNewsEng","theWorldRank","qsRank","socialIg","socialLi","socialX","socialFb","socialYt"];
 
+// 2025 Carnegie Classification — Research Activity Designations + Institutional Classification
+// (collapsed from the official 31-grouping spectrum into the working benchmarking cohorts)
 const CARNEGIE_CATEGORIES = [
-  { id: "r1", label: "R1 — Doctoral: Very High Research Activity", short: "R1 Doctoral", description: "Highest research activity, doctoral programs across many fields" },
-  { id: "r2", label: "R2 — Doctoral: High Research Activity", short: "R2 Doctoral", description: "High research activity, doctoral programs in multiple fields" },
-  { id: "r3", label: "R3 — Doctoral: Moderate Research Activity", short: "R3 Doctoral", description: "Moderate research activity with doctoral programs" },
-  { id: "masters_l", label: "M1 — Master's College or University: Larger Programs", short: "M1 Masters", description: "Large master's-level programs, limited doctoral" },
-  { id: "masters_m", label: "M2 — Master's College or University: Medium Programs", short: "M2 Masters", description: "Medium-sized master's programs" },
-  { id: "masters_s", label: "M3 — Master's College or University: Smaller Programs", short: "M3 Masters", description: "Smaller master's programs" },
-  { id: "bac_arts", label: "Bac/A&S — Baccalaureate: Arts & Sciences Focus", short: "Liberal Arts", description: "Arts & sciences emphasis, limited graduate programs" },
-  { id: "bac_diverse", label: "Bac/Diverse — Baccalaureate: Diverse Fields", short: "Bac/Diverse", description: "Broad mix of bachelor's programs across disciplines" },
-  { id: "associates", label: "Associate's College", short: "Associates", description: "Primarily associate degrees and certificates" },
-  { id: "special", label: "Special Focus Institution", short: "Special Focus", description: "Single field or narrow programs (medical, law, arts, theology)" },
-  { id: "tribal", label: "Tribal College or University", short: "Tribal College", description: "Tribal colleges and universities" },
+  { id: "r1", label: "Research 1 — Very High Research Spending and Doctorate Production", short: "R1 (Research 1)", description: "≥ $50M research spending AND ≥ 70 research doctorates awarded annually (2025 Research Activity Designation)" },
+  { id: "r2", label: "Research 2 — High Research Spending and Doctorate Production", short: "R2 (Research 2)", description: "≥ $5M research spending AND ≥ 20 research doctorates awarded annually (2025 Research Activity Designation)" },
+  { id: "rcu", label: "Research Colleges & Universities (RCU)", short: "RCU", description: "≥ $2.5M research spending; not classified as R1 or R2 (new in 2025)" },
+  { id: "mixed_doc", label: "Mixed Undergraduate/Graduate-Doctorate", short: "Mixed Doctoral", description: "Doctoral institutions with a balanced mix of academic and professional programs (no R1/R2/RCU designation)" },
+  { id: "prof_doc", label: "Professions-focused Undergraduate/Graduate-Doctorate", short: "Professions-focused Doctoral", description: "Doctoral institutions concentrated in professional fields (business, education, health, etc.)" },
+  { id: "mixed_masters", label: "Mixed Undergraduate/Graduate-Master's", short: "Mixed Master's", description: "Master's-dominant institutions with a balanced academic + professional mix (replaces M1/M2/M3)" },
+  { id: "prof_masters", label: "Professions-focused Undergraduate/Graduate-Master's", short: "Professions-focused Master's", description: "Master's-dominant institutions concentrated in professional fields" },
+  { id: "mixed_bac", label: "Mixed Baccalaureate", short: "Mixed Baccalaureate", description: "Baccalaureate institutions with a balanced academic + professional mix" },
+  { id: "prof_bac", label: "Professions-focused Baccalaureate", short: "Professions-focused Baccalaureate", description: "Baccalaureate institutions concentrated in professional fields (replaces Bac/Diverse)" },
+  { id: "bac_arts", label: "Special Focus: Arts and Sciences", short: "Arts & Sciences (Liberal Arts)", description: "Baccalaureate institutions with an arts & sciences emphasis (formerly Bac/A&S — Liberal Arts)" },
+  { id: "associates", label: "Associate's / Mixed Associate", short: "Associate's", description: "Primarily associate degrees and certificates" },
+  { id: "special", label: "Special Focus Institution", short: "Special Focus", description: "Single field or narrow programs (medicine, nursing, law, arts, theology, etc.)" },
+  { id: "tribal", label: "Tribal College or University", short: "Tribal College", description: "Designated TCU under the 2025 Population Served filter" },
 ];
 
 
