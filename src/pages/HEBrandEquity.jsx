@@ -134,11 +134,11 @@ const WEIGHTS = {
 // US News ranking list by Carnegie type
 // Used to auto-suggest which list an institution is on
 const USNEWS_LIST_MAP = {
-  r1: "natl_univ", r2: "natl_univ", r3: "natl_univ",
-  d_prof: "natl_univ",
-  masters_l: "regional", masters_m: "regional", masters_s: "regional",
+  r1: "natl_univ", r2: "natl_univ", rcu: "natl_univ",
+  mixed_doc: "natl_univ", prof_doc: "natl_univ",
+  mixed_masters: "regional", prof_masters: "regional",
   bac_arts: "lib_arts",
-  bac_diverse: "regional",
+  mixed_bac: "regional", prof_bac: "regional",
   associates: "best_colleges",
   special: null, tribal: null,
   intl_elite: null, intl_research: null, intl_comprehensive: null,
