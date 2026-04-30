@@ -318,12 +318,12 @@ function normalizeAxis(axis, values) {
 // QS World University Rankings bands — weight profiles
 // Higher bands emphasize visibility & research; lower/unranked shift to enrollment, diversity, brand
 const QS_BAND_WEIGHTS = {
-  top100:    { visibility: 0.26, enrollment: 0.12, financial: 0.13, profile: 0.10, research: 0.24, diversity: 0.09, alumni: 0.06 },
-  r101_200:  { visibility: 0.23, enrollment: 0.13, financial: 0.13, profile: 0.10, research: 0.22, diversity: 0.10, alumni: 0.09 },
-  r201_400:  { visibility: 0.20, enrollment: 0.14, financial: 0.14, profile: 0.10, research: 0.19, diversity: 0.12, alumni: 0.11 },
-  r401_600:  { visibility: 0.17, enrollment: 0.16, financial: 0.14, profile: 0.10, research: 0.15, diversity: 0.14, alumni: 0.14 },
-  r601plus:  { visibility: 0.14, enrollment: 0.17, financial: 0.14, profile: 0.09, research: 0.11, diversity: 0.17, alumni: 0.18 },
-  unranked:  { visibility: 0.11, enrollment: 0.19, financial: 0.14, profile: 0.08, research: 0.09, diversity: 0.20, alumni: 0.19 },
+  top100:    { visibility: 0.28, enrollment: 0.13, financial: 0.14, profile: 0.11, research: 0.26, diversity: 0.08 },
+  r101_200:  { visibility: 0.25, enrollment: 0.14, financial: 0.14, profile: 0.11, research: 0.24, diversity: 0.12 },
+  r201_400:  { visibility: 0.22, enrollment: 0.16, financial: 0.16, profile: 0.11, research: 0.21, diversity: 0.14 },
+  r401_600:  { visibility: 0.20, enrollment: 0.19, financial: 0.16, profile: 0.12, research: 0.17, diversity: 0.16 },
+  r601plus:  { visibility: 0.17, enrollment: 0.21, financial: 0.17, profile: 0.11, research: 0.13, diversity: 0.21 },
+  unranked:  { visibility: 0.14, enrollment: 0.23, financial: 0.17, profile: 0.10, research: 0.11, diversity: 0.25 },
 };
 
 const QS_BAND_LABELS = {
