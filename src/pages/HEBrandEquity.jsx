@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import InsightReport from "../components/InsightReport";
-import { scorePool } from "../lib/insightFramework";
+import { scorePool, buildCohort, cohortTopLine } from "../lib/insightFramework";
+import financeSnapshot from "../data/financeSnapshot.json";
 // LOVABLE SETUP: Add this to your index.html <head>:
 //
 
