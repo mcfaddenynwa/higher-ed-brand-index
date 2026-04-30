@@ -1107,13 +1107,13 @@ export default function App() {
                 ? <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                     <span style={{ width: 16, height: 0, border: '1px dashed #595959', display: 'inline-block' }} /> {selectedCarnegie?.short} avg (n={carnegieAvg.n})
                   </span>
-                : <span style={{ color: '#6B7585' }}>{selectedCarnegie?.short} avg: {Math.max(0, MIN_N - carnegieN)} more needed</span>
+                : <span style={{ color: '#6B7585' }}>{selectedCarnegie?.short} avg: insufficient cohort</span>
               }
               {globalAvg
                 ? <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                     <span style={{ width: 16, height: 0, border: '1px dotted rgba(106,164,200,0.5)', display: 'inline-block' }} /> All institutions avg (n={globalAvg.n})
                   </span>
-                : <span style={{ color: '#6B7585' }}>All avg: {Math.max(0, MIN_N - globalN)} more needed</span>
+                : <span style={{ color: '#6B7585' }}>All avg: insufficient cohort</span>
               }
             </div>
           </div>
@@ -1184,7 +1184,7 @@ export default function App() {
                       {selectedCarnegie?.short} average (n={carnegieAvg.n})
                     </span>
                   : <span style={{ fontSize: 14, color: '#6B7585', fontStyle: 'italic' }}>
-                      {selectedCarnegie?.short} avg unlocks at n={MIN_N} ({Math.max(0, MIN_N - carnegieN)} more needed)
+                      {selectedCarnegie?.short} avg requires n≥{MIN_N}
                     </span>
                 }
                 {globalAvg
@@ -1193,7 +1193,7 @@ export default function App() {
                       All institutions average (n={globalAvg.n})
                     </span>
                   : <span style={{ fontSize: 14, color: '#6B7585', fontStyle: 'italic' }}>
-                      Global avg unlocks at n={MIN_N} ({Math.max(0, MIN_N - globalN)} more needed)
+                      Global avg requires n≥{MIN_N}
                     </span>
                 }
               </div>
