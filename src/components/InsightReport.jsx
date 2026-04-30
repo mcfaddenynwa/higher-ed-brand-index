@@ -102,9 +102,9 @@ export default function InsightReport({
           A peer-relative view for {focalName}
         </div>
         <div style={{ fontSize: 14, color: '#595959', lineHeight: 1.55, maxWidth: 720 }}>
-          Strengths and gaps are measured as z-scores against your selected peer cohort, so a school
-          can be excellent in five categories while still showing a clear gap in two. Switch between
-          your full classification cohort and a hand-picked comparison set of up to {MAX_COMPARE} schools.
+          Each pillar is scored against your selected peer cohort, so a school can be excellent in
+          several categories while still showing a clear gap in others. Switch between your full
+          classification cohort and a hand-picked comparison set of up to {MAX_COMPARE} schools.
         </div>
       </div>
 
@@ -224,8 +224,8 @@ export default function InsightReport({
           lineHeight: 1.55,
         }}>
           {mode === 'compare'
-            ? <>Add at least one institution to begin the comparison. Z-scores stabilize with 3+ peers.</>
-            : <>Only {cohort.length} peer{cohort.length === 1 ? '' : 's'} match this classification. Z-scores need at least 3 peers to be meaningful.</>
+            ? <>Add at least one institution to begin the comparison. Comparisons are most reliable with 3+ peers.</>
+            : <>Only {cohort.length} peer{cohort.length === 1 ? '' : 's'} match this classification. Comparisons are most reliable with 3+ peers.</>
           }
         </div>
       ) : (
@@ -259,9 +259,10 @@ export default function InsightReport({
       )}
 
       <div style={{ marginTop: 22, fontSize: 11, color: '#8A93A1', lineHeight: 1.6, borderTop: '1px solid #EEF1F4', paddingTop: 14 }}>
-        Methodology: each pillar score is converted to a z-score against the selected peer cohort.
-        Tiers: <span style={{ color: tierColor('leader') }}>Leader (z ≥ +1.5)</span> · <span style={{ color: tierColor('strength') }}>Strength (+0.5)</span> · <span style={{ color: tierColor('on-par') }}>On par</span> · <span style={{ color: tierColor('gap') }}>Gap (−0.5)</span> · <span style={{ color: tierColor('critical-gap') }}>Critical gap (−1.5)</span>.
-        Cohorts of 3+ are recommended; pillars with peer dispersion below 1 point are suppressed to avoid spurious z-scores.
+        How we score: each pillar compares your institution to the peer cohort you selected. Tiers reflect
+        how far above or below the cohort average you sit:{' '}
+        <span style={{ color: tierColor('leader') }}>Leader</span> · <span style={{ color: tierColor('strength') }}>Strength</span> · <span style={{ color: tierColor('on-par') }}>On par</span> · <span style={{ color: tierColor('gap') }}>Gap</span> · <span style={{ color: tierColor('critical-gap') }}>Critical gap</span>.
+        Cohorts of 3+ schools give the most reliable read.
       </div>
     </div>
   );
@@ -297,8 +298,9 @@ function HeadlineCard({ title, tone, items, empty }) {
                   <div style={{ fontSize: 13, color: '#243551' }}>{p.axis.label}</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: "'Bitter', Georgia, serif", fontSize: 12 }}>
-                  <span style={{ color: '#6B7585' }}>{p.delta >= 0 ? '+' : ''}{p.delta}</span>
-                  <span style={{ color: tierColor(p.tier), fontWeight: 700 }}>z {p.z >= 0 ? '+' : ''}{p.z}</span>
+                  <span style={{ color: tierColor(p.tier), fontWeight: 700 }}>
+                    {p.delta >= 0 ? '+' : ''}{p.delta} vs peers
+                  </span>
                 </div>
               </div>
             ))}
@@ -331,23 +333,27 @@ function PillarRow({ p, focalName }) {
             {p.tierLabel}
           </span>
         </div>
-        <div style={{ display: 'flex', gap: 14, fontFamily: "'Bitter', Georgia, serif", fontSize: 12 }}>
-          <span style={{ color: '#6B7585' }}>You {p.userScore ?? '–'}</span>
-          <span style={{ color: '#6B7585' }}>Peer μ {p.peerMean ?? '–'}</span>
-          {p.z != null && <span style={{ color }}>z {p.z >= 0 ? '+' : ''}{p.z}</span>}
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, fontFamily: "'Bitter', Georgia, serif" }}>
+          <span style={{ fontSize: 18, color: '#243551', fontWeight: 700 }}>
+            {p.userScore ?? '–'}
+            <span style={{ fontSize: 11, color: '#8A93A1', fontWeight: 400, marginLeft: 4 }}>your score</span>
+          </span>
+          <span style={{ fontSize: 12, color: '#8A93A1' }}>
+            peer avg {p.peerMean ?? '–'}
+          </span>
         </div>
       </div>
 
       {userPct != null && meanPct != null && (
-        <div style={{ position: 'relative', height: 6, borderRadius: 3, background: '#EEF1F4', marginBottom: 10 }}>
+        <div style={{ position: 'relative', height: 8, borderRadius: 4, background: '#EEF1F4', marginBottom: 10 }}>
           <div style={{
             position: 'absolute', top: 0, left: 0, height: '100%', width: `${userPct}%`,
-            background: p.axis.color, opacity: 0.85, borderRadius: 3,
+            background: p.axis.color, opacity: 0.85, borderRadius: 4,
           }} />
           <div style={{
-            position: 'absolute', top: -3, left: `${meanPct}%`, width: 2, height: 12,
+            position: 'absolute', top: -3, left: `${meanPct}%`, width: 2, height: 14,
             background: '#243551', borderRadius: 1,
-          }} title={`Peer mean ${p.peerMean}`} />
+          }} title={`Peer average: ${p.peerMean}`} />
         </div>
       )}
 

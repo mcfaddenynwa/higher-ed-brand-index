@@ -1,44 +1,42 @@
-# Fix cohort averages + remove manual submit
+# Simplify the Strategic Insight Report
 
-## What's wrong now
-
-The header shows "Cohort Size: 24" because that number is computed from `scoredPool` — every institution in `IPEDS_DB` / `INTL_DB` auto-scored from public data.
-
-The spider chart's dashed/dotted overlays are computed from a totally different source: `submissions`, which is a localStorage list of users who clicked **Submit to Benchmark Pool**. That list is empty (or near-empty), so `computeAggregates()` returns `null` and no overlay renders.
-
-Two sources of truth for the same concept. Fix is to unify on the auto-scored pool and retire the manual submit step entirely, since every school is already in the pool from day one.
+Goal: keep the analytical rigor (cohort-based scoring, strength/gap classification, visual bars) but strip the technical jargon (z-scores, μ, "peer dispersion below 1 point") that adds cognitive load without insight value.
 
 ## Changes
 
-### 1. Rebuild `computeAggregates` from `scoredPool`
-- Change signature to `computeAggregates(scoredPool, carnegieId, focalName)`.
-- Filter out the focal institution from its own peer averages (so a school doesn't compare against itself).
-- Build the classification overlay from `scoredPool.filter(s => s.carnegieId === carnegieId)`.
-- Build the "all institutions" overlay from the rest of `scoredPool`.
-- Read pre-computed `s.scores[key]` (already on each scored row) instead of recomputing.
+### `src/components/InsightReport.jsx`
 
-### 2. Move the call site so it sees `scoredPool`
-- In the component, move the `computeAggregates(...)` call below the `scoredPool` `useMemo`.
-- Result: the `n=` shown in the spider legend will match the cohort size in the header card.
+**Intro paragraph (lines 104–108)** — replace z-score language with plain English:
+> "Each pillar is scored against your selected peer cohort, so a school can be excellent in several categories while still showing a clear gap in others."
 
-### 3. Remove the manual submit flow
-Strip from `src/pages/HEBrandEquity.jsx`:
-- State: `submissions`, `submitted`, `saving`, the `useEffect` that loads from localStorage.
-- Functions: `handleSubmit`, `loadSubmissions`, `saveSubmission`, the `STORAGE_KEY` constant.
-- UI: the entire "Submit to Benchmark Pool" card (lines ~1293–1312).
-- Derived values: `carnegieN`, `globalN` (no longer needed — we always have data now).
-- Legend fallback text "{N} more needed" — overlays will essentially always render, but keep a generic "insufficient data" fallback in case `MIN_N` isn't met for an exotic classification.
-- Footer note about deduplication / submissions can be trimmed to just cite data sources.
+**Headline cards (HeadlineCard, lines 299–302)** — replace the `+delta` and `z +1.2` row with a single clean delta chip:
+- Show only `+15 vs peers` (or `−8 vs peers`) in the tier color
+- Drop the raw z value entirely
 
-### 4. Keep the framework intact
-- `MIN_N` stays as a guard.
-- `InsightReport` and the cohort logic in `insightFramework.js` are unchanged — they already consume `scoredPool` correctly.
-- Header card "Cohort Size" / "Cohort Avg Index" stay as-is.
+**PillarRow stats (lines 334–338)** — replace the "You X · Peer μ Y · z Z" row with:
+- `Your score: 78` (prominent, navy)
+- `peer avg 63` (muted gray, smaller)
+- No z value displayed
 
-## Files touched
-- `src/pages/HEBrandEquity.jsx` — only file affected.
+**Bar visual (lines 342–352)** — minor polish:
+- Increase bar height from 6px to 8px for better legibility
+- Keep the navy tick marking the peer mean, add a subtle hover/title "Peer average: X"
 
-## Result
-- Spider chart overlays appear immediately for every school, matching the 24-school cohort already shown in the header.
-- No "submit" button — the app behaves as a read-only benchmarking tool driven entirely by IPEDS data.
-- One source of truth for "the cohort."
+**Methodology footer (lines 261–265)** — rewrite in plain language:
+> "How we score: each pillar compares your institution to the peer cohort you selected. Tiers reflect how far above or below the cohort average you sit. Cohorts of 3+ schools give the most reliable read."
+- Keep the colored tier legend (Leader / Strength / On par / Gap / Critical gap) but drop the `(z ≥ +1.5)` annotations.
+
+**Insufficient-cohort warnings (lines 226–229)** — replace "Z-scores need at least 3 peers" with "Comparisons are most reliable with 3+ peers."
+
+### `src/lib/insightFramework.js`
+
+**`pillarNarrative()` (lines ~210–235)** — strip `z = ±X.X` from every branch. Keep the "+X pts vs peer mean" delta phrasing (renamed to "vs peer average") and the cohort leader callout. Example rewrite:
+
+- Leader: "{name} is a category leader on {pillar} (+{delta} pts vs peer average). This is a defensible brand asset…"
+- Gap: "{name} trails the peer average on {pillar} by {delta} pts. Worth a focused investment plan…"
+
+The underlying `analyzePillars()` function and z-score math are untouched — they still drive tier classification and sort order. We're only hiding the raw numbers from the UI/copy.
+
+## Out of scope
+- No changes to scoring logic, cohort building, or the spider chart
+- No changes to the strength/gap classification thresholds
