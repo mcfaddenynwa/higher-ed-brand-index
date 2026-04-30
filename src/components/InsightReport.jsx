@@ -224,8 +224,8 @@ export default function InsightReport({
           lineHeight: 1.55,
         }}>
           {mode === 'compare'
-            ? <>Add at least one institution to begin the comparison. Z-scores stabilize with 3+ peers.</>
-            : <>Only {cohort.length} peer{cohort.length === 1 ? '' : 's'} match this classification. Z-scores need at least 3 peers to be meaningful.</>
+            ? <>Add at least one institution to begin the comparison. Comparisons are most reliable with 3+ peers.</>
+            : <>Only {cohort.length} peer{cohort.length === 1 ? '' : 's'} match this classification. Comparisons are most reliable with 3+ peers.</>
           }
         </div>
       ) : (
