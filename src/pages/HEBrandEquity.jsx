@@ -189,7 +189,7 @@ const AXES = [
   },
   {
     key: "financial", label: "Financial Strength", color: "#243551",
-    description: "Endowment per student, total operating revenue (Form 990 / state reports)",
+    description: "Endowment per student, total operating revenue. Auto-populated for US institutions from IPEDS Finance + NACUBO via the Urban Institute Education Data Portal (annual refresh). International institutions: manual entry, USD equivalent.",
     inputs: [
       { id: "endowmentPerStudent", label: "Endowment per student ($K)", labelIntl: "Endowment per student (USD equiv. $K)", placeholder: "e.g. 45", max: 600 },
       { id: "totalRevenue", label: "Total annual revenue ($M)", labelIntl: "Total annual revenue (USD equiv. $M)", placeholder: "e.g. 800", max: 5000 },
