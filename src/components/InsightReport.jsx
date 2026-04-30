@@ -333,23 +333,27 @@ function PillarRow({ p, focalName }) {
             {p.tierLabel}
           </span>
         </div>
-        <div style={{ display: 'flex', gap: 14, fontFamily: "'Bitter', Georgia, serif", fontSize: 12 }}>
-          <span style={{ color: '#6B7585' }}>You {p.userScore ?? '–'}</span>
-          <span style={{ color: '#6B7585' }}>Peer μ {p.peerMean ?? '–'}</span>
-          {p.z != null && <span style={{ color }}>z {p.z >= 0 ? '+' : ''}{p.z}</span>}
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, fontFamily: "'Bitter', Georgia, serif" }}>
+          <span style={{ fontSize: 18, color: '#243551', fontWeight: 700 }}>
+            {p.userScore ?? '–'}
+            <span style={{ fontSize: 11, color: '#8A93A1', fontWeight: 400, marginLeft: 4 }}>your score</span>
+          </span>
+          <span style={{ fontSize: 12, color: '#8A93A1' }}>
+            peer avg {p.peerMean ?? '–'}
+          </span>
         </div>
       </div>
 
       {userPct != null && meanPct != null && (
-        <div style={{ position: 'relative', height: 6, borderRadius: 3, background: '#EEF1F4', marginBottom: 10 }}>
+        <div style={{ position: 'relative', height: 8, borderRadius: 4, background: '#EEF1F4', marginBottom: 10 }}>
           <div style={{
             position: 'absolute', top: 0, left: 0, height: '100%', width: `${userPct}%`,
-            background: p.axis.color, opacity: 0.85, borderRadius: 3,
+            background: p.axis.color, opacity: 0.85, borderRadius: 4,
           }} />
           <div style={{
-            position: 'absolute', top: -3, left: `${meanPct}%`, width: 2, height: 12,
+            position: 'absolute', top: -3, left: `${meanPct}%`, width: 2, height: 14,
             background: '#243551', borderRadius: 1,
-          }} title={`Peer mean ${p.peerMean}`} />
+          }} title={`Peer average: ${p.peerMean}`} />
         </div>
       )}
 
