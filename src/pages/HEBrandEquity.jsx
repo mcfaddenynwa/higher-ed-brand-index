@@ -477,7 +477,7 @@ function SpiderChart({ scores, carnegieAvg, globalAvg, axes }) {
               >{word}</text>
             ))}
             {s != null && (
-              <text x={lx} y={ly + scoreOffset + 4}
+              <text x={lx} y={ly + scoreOffset + 12}
                 textAnchor="middle"
                 fontSize="12"
                 fontFamily="'Bitter', Georgia, serif"
