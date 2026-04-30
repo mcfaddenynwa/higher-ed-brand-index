@@ -1194,7 +1194,7 @@ export default function App() {
               <div style={{ background: 'rgba(235,86,0,0.08)', border: '1px solid #EB560033', borderRadius: 12, padding: '16px 22px', flexShrink: 0, minWidth: 280 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 11, letterSpacing: 2, color: '#243551', marginBottom: 3 }}>WEIGHTED BRAND INDEX</div>
+                    <div style={{ fontSize: 11, letterSpacing: 2, color: '#243551', marginBottom: 10 }}>WEIGHTED BRAND INDEX</div>
                     <div style={{ fontSize: 50, fontFamily: "'Bitter', Georgia, serif", color: '#EB5600', lineHeight: 1 }}>{overall}</div>
                     <div style={{ fontSize: 12, color: '#6B7585', marginTop: 2 }}>
                       /100 · {selectedCarnegie?.short}
@@ -1204,14 +1204,14 @@ export default function App() {
                   <div style={{ width: 1, alignSelf: 'stretch', background: '#EB560033' }} />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <div>
-                      <div style={{ fontSize: 9, letterSpacing: 1.5, color: '#6B7585', marginBottom: 2 }}>COHORT SIZE</div>
+                      <div style={{ fontSize: 9, letterSpacing: 1.5, color: '#6B7585', marginBottom: 6 }}>COHORT SIZE</div>
                       <div style={{ fontSize: 18, fontFamily: "'Bitter', Georgia, serif", color: '#243551', lineHeight: 1 }}>
                         {classificationCohortSize}
                         <span style={{ fontSize: 11, color: '#6B7585', marginLeft: 4 }}>schools</span>
                       </div>
                     </div>
                     <div>
-                      <div style={{ fontSize: 9, letterSpacing: 1.5, color: '#6B7585', marginBottom: 2 }}>COHORT AVG INDEX</div>
+                      <div style={{ fontSize: 9, letterSpacing: 1.5, color: '#6B7585', marginBottom: 6 }}>COHORT AVG INDEX</div>
                       <div style={{ fontSize: 18, fontFamily: "'Bitter', Georgia, serif", color: '#243551', lineHeight: 1 }}>
                         {classificationCohortAvg ?? '–'}
                         <span style={{ fontSize: 11, color: '#6B7585', marginLeft: 4 }}>/100</span>
