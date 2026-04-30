@@ -227,9 +227,8 @@ const AXES = [
   },
 ];
 
-// Minimum submissions to show aggregate overlay
+// Minimum cohort size to show aggregate overlay
 const MIN_N = 3;
-const STORAGE_KEY = "hei-submissions-v1";
 
 
 // Social reach: sum followers across platforms, normalize per 1000 enrolled students
@@ -368,27 +367,27 @@ function weightedOverall(scores, carnegieId, qsBand = "unranked") {
   return wSum > 0 ? Math.round(total / wSum) : null;
 }
 
-function computeAggregates(submissions, carnegieId) {
+function computeAggregates(scoredPool, carnegieId, focalName) {
   const allKeys = AXES.map(a => a.key);
-
   const avg = (arr) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
 
-  const carnegiePeers = submissions.filter(s => s.carnegieId === carnegieId);
-  const allSubs = submissions;
+  // Exclude the focal institution from its own peer averages
+  const others = scoredPool.filter(s => s.name !== focalName);
+  const carnegiePeers = others.filter(s => s.carnegieId === carnegieId);
 
   const buildOverlay = (subs) => {
     if (subs.length < MIN_N) return null;
     const result = {};
     allKeys.forEach(key => {
-      const vals = subs.map(s => s.scores[key]).filter(v => v != null);
-      result[key] = avg(vals);
+      const vals = subs.map(s => s.scores?.[key]).filter(v => v != null);
+      result[key] = vals.length ? avg(vals) : null;
     });
     return { scores: result, n: subs.length };
   };
 
   return {
     carnegieAvg: buildOverlay(carnegiePeers),
-    globalAvg: buildOverlay(allSubs),
+    globalAvg: buildOverlay(others),
   };
 }
 
@@ -491,24 +490,8 @@ function SpiderChart({ scores, carnegieAvg, globalAvg, axes }) {
   );
 }
 
-// Shared storage helpers
-async function loadSubmissions() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
-}
-
-async function saveSubmission(submission) {
-  try {
-    const existing = await loadSubmissions();
-    // Deduplicate by unitid or institution name
-    const filtered = existing.filter(s => s.unitid ? s.unitid !== submission.unitid : s.institution !== submission.institution);
-    filtered.push(submission);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
-    return filtered;
-  } catch (e) { console.error(e); return []; }
-}
+// Note: localStorage submission flow removed — every institution is auto-scored
+// from IPEDS and lives in scoredPool from the start.
 
 
 // ── Benchmark reference data (NACUBO, CASE, CUPA-HR, IPEDS aggregates) ─────────
@@ -648,14 +631,7 @@ export default function App() {
   const [isIntl, setIsIntl] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [submissions, setSubmissions] = useState([]);
-  const [submitted, setSubmitted] = useState(false);
-  const [saving, setSaving] = useState(false);
   const inputRef = useRef(null);
-
-  useEffect(() => {
-    loadSubmissions().then(setSubmissions);
-  }, []);
 
   const selectedCarnegie = CARNEGIE_CATEGORIES.find(c => c.id === carnegieId) ?? INTL_CATEGORIES.find(c => c.id === carnegieId);
   const activeAxes = AXES.filter(a => !a.hiddenFor || !a.hiddenFor.includes(carnegieId));
@@ -668,7 +644,6 @@ export default function App() {
 
   const qsBand = getQsBand(values.qsRank);
   const overall = carnegieId ? weightedOverall(scores, carnegieId, qsBand) : null;
-  const { carnegieAvg, globalAvg } = computeAggregates(submissions, carnegieId);
   const curAxis = activeAxes[Math.min(activeAxis, activeAxes.length - 1)];
 
   // Score the institutional database for the insight framework's peer cohort.
@@ -678,6 +653,13 @@ export default function App() {
     const combined = [...IPEDS_DB, ...INTL_DB];
     return scorePool(combined, AXES, normalizeAxis);
   }, [carnegieId]);
+
+  // Cohort overlays for the spider chart — derived from the same auto-scored pool
+  // that powers the cohort size in the header card.
+  const { carnegieAvg, globalAvg } = useMemo(
+    () => computeAggregates(scoredPool, carnegieId, institution),
+    [scoredPool, carnegieId, institution]
+  );
 
   // Classification cohort stats — surfaced in the Weighted Brand Index header card.
   const classificationCohort = useMemo(() => {
@@ -758,26 +740,6 @@ export default function App() {
     setSuggestions([]);
     setShowSuggestions(false);
   };
-
-  const handleSubmit = async () => {
-    if (!overall) return;
-    setSaving(true);
-    const submission = {
-      institution,
-      unitid,
-      carnegieId,
-      scores: { ...scores },
-      overall,
-      submittedAt: new Date().toISOString(),
-    };
-    const updated = await saveSubmission(submission);
-    setSubmissions(updated);
-    setSubmitted(true);
-    setSaving(false);
-  };
-
-  const carnegieN = submissions.filter(s => s.carnegieId === carnegieId).length;
-  const globalN = submissions.length;
 
   return (
     <div style={{ minHeight: '100vh', background: '#FFFFFF', fontFamily: "'Bitter', Georgia, serif", color: '#243551' }}>
@@ -930,22 +892,6 @@ export default function App() {
             : <div style={{ fontSize: 14, color: '#3D4F6B', fontStyle: 'italic' }}>Select a classification to continue</div>
           }
 
-          {/* Submission count */}
-          <div style={{ marginTop: 28, padding: '14px 16px', background: '#F4F6F8', borderRadius: 8, border: '1px solid #F4F6F8', display: 'flex', gap: 28 }}>
-            <div>
-              <div style={{ fontSize: 14, letterSpacing: 2, color: '#595959', marginBottom: 4 }}>TOTAL SUBMISSIONS</div>
-              <div style={{ fontSize: 22, fontFamily: "'Bitter', Georgia, serif", color: '#243551' }}>{globalN}</div>
-            </div>
-            {carnegieId && (
-              <div>
-                <div style={{ fontSize: 14, letterSpacing: 2, color: '#595959', marginBottom: 4 }}>IN YOUR CLASSIFICATION</div>
-                <div style={{ fontSize: 22, fontFamily: "'Bitter', Georgia, serif", color: carnegieN >= MIN_N ? '#1A9988' : '#243551' }}>
-                  {carnegieN}
-                  {carnegieN < MIN_N && <span style={{ fontSize: 14, color: '#595959', marginLeft: 8 }}>({MIN_N - carnegieN} more needed for avg)</span>}
-                </div>
-              </div>
-            )}
-          </div>
         </div>
       )}
 
@@ -1161,13 +1107,13 @@ export default function App() {
                 ? <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                     <span style={{ width: 16, height: 0, border: '1px dashed #595959', display: 'inline-block' }} /> {selectedCarnegie?.short} avg (n={carnegieAvg.n})
                   </span>
-                : <span style={{ color: '#6B7585' }}>{selectedCarnegie?.short} avg: {Math.max(0, MIN_N - carnegieN)} more needed</span>
+                : <span style={{ color: '#6B7585' }}>{selectedCarnegie?.short} avg: insufficient cohort</span>
               }
               {globalAvg
                 ? <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                     <span style={{ width: 16, height: 0, border: '1px dotted rgba(106,164,200,0.5)', display: 'inline-block' }} /> All institutions avg (n={globalAvg.n})
                   </span>
-                : <span style={{ color: '#6B7585' }}>All avg: {Math.max(0, MIN_N - globalN)} more needed</span>
+                : <span style={{ color: '#6B7585' }}>All avg: insufficient cohort</span>
               }
             </div>
           </div>
@@ -1238,7 +1184,7 @@ export default function App() {
                       {selectedCarnegie?.short} average (n={carnegieAvg.n})
                     </span>
                   : <span style={{ fontSize: 14, color: '#6B7585', fontStyle: 'italic' }}>
-                      {selectedCarnegie?.short} avg unlocks at n={MIN_N} ({Math.max(0, MIN_N - carnegieN)} more needed)
+                      {selectedCarnegie?.short} avg requires n≥{MIN_N}
                     </span>
                 }
                 {globalAvg
@@ -1247,7 +1193,7 @@ export default function App() {
                       All institutions average (n={globalAvg.n})
                     </span>
                   : <span style={{ fontSize: 14, color: '#6B7585', fontStyle: 'italic' }}>
-                      Global avg unlocks at n={MIN_N} ({Math.max(0, MIN_N - globalN)} more needed)
+                      Global avg requires n≥{MIN_N}
                     </span>
                 }
               </div>
@@ -1290,26 +1236,6 @@ export default function App() {
                 })}
               </div>
 
-              {/* Submit */}
-              <div style={{ marginTop: 20, padding: '16px', background: '#F4F6F8', border: '1px solid rgba(28,54,120,0.22)', borderRadius: 10 }}>
-                {submitted
-                  ? <div style={{ fontSize: 14, color: '#1A9988', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 16 }}>✓</span>
-                      Submitted. Your data contributes to aggregate benchmarks anonymously.
-                    </div>
-                  : <>
-                      <div style={{ fontSize: 14, color: '#243551', marginBottom: 10, lineHeight: 1.5 }}>
-                        <strong style={{ color: '#243551' }}>Contribute to benchmarks.</strong> Your institution's name is recorded for deduplication only — it is never displayed to other users. All aggregate data is anonymous.
-                      </div>
-                      <button onClick={handleSubmit} disabled={saving || overall === null} style={{
-                        background: '#EB5600', color: '#FFFFFF', border: 'none',
-                        borderRadius: 6, padding: '9px 20px', fontSize: 14,
-                        fontWeight: 700, letterSpacing: 1.5, cursor: 'pointer',
-                        fontFamily: "'Bitter', Georgia, serif", opacity: saving ? 0.6 : 1,
-                      }}>{saving ? 'SAVING...' : 'SUBMIT TO BENCHMARK POOL →'}</button>
-                    </>
-                }
-              </div>
             </div>
           </div>
 
@@ -1342,7 +1268,7 @@ export default function App() {
           </div>
 
           <div style={{ marginTop: 16, fontSize: 14, color: '#6B7585', lineHeight: 1.6, borderTop: '1px solid #F4F6F8', paddingTop: 14 }}>
-            Weightings calibrated per the 2025 Carnegie Institutional Classification (ACE / Carnegie Foundation). Data sources: IPEDS, NSF HERD, VSE survey, Form 990 / state reports, American Caldwell Visibility Index / QS / Times. Institution names are used for deduplication only and are never displayed in aggregate views. Aggregate overlays require a minimum of {MIN_N} submissions per classification.
+            Weightings calibrated per the 2025 Carnegie Institutional Classification (ACE / Carnegie Foundation). Data sources: IPEDS Finance (F1A/F2), DRVEF enrollment, NSF HERD, VSE survey, American Caldwell Visibility Index / QS / Times. Aggregate overlays require a minimum of {MIN_N} institutions per classification.
           </div>
         </div>
       )}

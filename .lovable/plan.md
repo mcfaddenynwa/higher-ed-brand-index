@@ -1,58 +1,44 @@
-## Plan: pull live financial data from Urban Institute Education Data Portal
+# Fix cohort averages + remove manual submit
 
-### What this gets us
+## What's wrong now
 
-The Urban Institute API is a free, no-auth JSON wrapper around IPEDS, NACUBO, EADA, and other federal data, all keyed by IPEDS `unitid` — which we already store on every US row in `IPEDS_DB`. Endpoints we'd use:
+The header shows "Cohort Size: 24" because that number is computed from `scoredPool` — every institution in `IPEDS_DB` / `INTL_DB` auto-scored from public data.
 
-| Field in our app | Endpoint | Source |
-|---|---|---|
-| `endowmentPerStudent` | `/college-university/ipeds/finance/{year}/` (gross endowment) ÷ FTE enrollment | IPEDS Finance |
-| `totalRevenue` | `/college-university/ipeds/finance/{year}/` (total revenue) | IPEDS Finance |
-| `endowmentPerStudent` (cross-check) | `/college-university/nacubo/endowments/{year}/` | NACUBO |
-| Athletics revenue (future, for "pride" signal) | `/college-university/equity-in-athletics/{year}/` | EADA |
+The spider chart's dashed/dotted overlays are computed from a totally different source: `submissions`, which is a localStorage list of users who clicked **Submit to Benchmark Pool**. That list is empty (or near-empty), so `computeAggregates()` returns `null` and no overlay renders.
 
-URL pattern: `https://educationdata.urban.org/api/v1/college-university/ipeds/finance/2022/?unitid=170976` returns Michigan's full finance row as JSON.
+Two sources of truth for the same concept. Fix is to unify on the auto-scored pool and retire the manual submit step entirely, since every school is already in the pool from day one.
 
-**Coverage caveat (important):** This is **US-only**. International institutions (`isIntl=true`, the INTL_DB rows) won't get auto-fill from this source. Their Financial Strength fields stay manual. I'll surface that in the UI ("Financial auto-pull available for US institutions only").
+## Changes
 
-### Architecture
+### 1. Rebuild `computeAggregates` from `scoredPool`
+- Change signature to `computeAggregates(scoredPool, carnegieId, focalName)`.
+- Filter out the focal institution from its own peer averages (so a school doesn't compare against itself).
+- Build the classification overlay from `scoredPool.filter(s => s.carnegieId === carnegieId)`.
+- Build the "all institutions" overlay from the rest of `scoredPool`.
+- Read pre-computed `s.scores[key]` (already on each scored row) instead of recomputing.
 
-Two layers:
+### 2. Move the call site so it sees `scoredPool`
+- In the component, move the `computeAggregates(...)` call below the `scoredPool` `useMemo`.
+- Result: the `n=` shown in the spider legend will match the cohort size in the header card.
 
-**1. Build-time snapshot (the right call for our use case)**
-- One-off script `scripts/fetch-urban-finance.mjs` that loops every `unitid` in `IPEDS_DB`, hits the IPEDS Finance + NACUBO endpoints for the latest available year (2022 finance, 2023 NACUBO based on docs), and writes `src/data/financeSnapshot.json`: `{ "170976": { endowmentPerStudent: 65, totalRevenue: 12100, year: 2022 }, ... }`.
-- Run once now, then annually (matches your "annual refresh" scope from earlier).
-- `selectInstitution()` merges the snapshot into auto-populated values, same `autoPopulated` flag pattern as IPEDS social/academic fields today.
-- No backend, no API keys, no runtime cost. Ships with the app.
+### 3. Remove the manual submit flow
+Strip from `src/pages/HEBrandEquity.jsx`:
+- State: `submissions`, `submitted`, `saving`, the `useEffect` that loads from localStorage.
+- Functions: `handleSubmit`, `loadSubmissions`, `saveSubmission`, the `STORAGE_KEY` constant.
+- UI: the entire "Submit to Benchmark Pool" card (lines ~1293–1312).
+- Derived values: `carnegieN`, `globalN` (no longer needed — we always have data now).
+- Legend fallback text "{N} more needed" — overlays will essentially always render, but keep a generic "insufficient data" fallback in case `MIN_N` isn't met for an exotic classification.
+- Footer note about deduplication / submissions can be trimmed to just cite data sources.
 
-**2. Live fetch (NOT building this round)**
-- Could later add an edge function that hits the API on-demand for any `unitid`, useful if/when we expand to all 6,500 universities and don't want to ship a giant JSON. Punt until that scope decision.
+### 4. Keep the framework intact
+- `MIN_N` stays as a guard.
+- `InsightReport` and the cohort logic in `insightFramework.js` are unchanged — they already consume `scoredPool` correctly.
+- Header card "Cohort Size" / "Cohort Avg Index" stay as-is.
 
-### Files touched
+## Files touched
+- `src/pages/HEBrandEquity.jsx` — only file affected.
 
-- New: `scripts/fetch-urban-finance.mjs` — one-time fetcher (Node, no deps).
-- New: `src/data/financeSnapshot.json` — generated output (~50 rows × ~6 fields = trivial size).
-- `src/pages/HEBrandEquity.jsx`:
-  - Import the snapshot.
-  - In `selectInstitution()`, if `school.unitid` and `financeSnapshot[unitid]` exist, merge `endowmentPerStudent` and `totalRevenue` into `populated` and push to `autoFields`.
-  - Update the Financial Strength axis description to say "auto-populated from IPEDS Finance via Urban Institute Education Data Portal (US institutions only)".
-  - For international flow, add a small inline note that financial fields are manual.
-- No changes to the scoring math, weights, or AXES structure — we're just feeding the existing inputs.
-
-### Sequencing with the round-1 changes
-
-Do round-1 first (alumni removal, law-school audit, results-screen redesign) since those touch the AXES + WEIGHTS + InsightReport — then layer the finance snapshot on top so the fetched values flow into a stable schema. Roughly:
-
-1. Round 1 changes (already approved).
-2. Run the fetcher locally, commit `financeSnapshot.json`.
-3. Wire snapshot into `selectInstitution()`.
-4. QA on a few schools (Michigan, Penn State, a small lib-arts).
-
-### Open questions
-
-1. **Year**: I'll target IPEDS Finance 2022 (latest per the version history) and NACUBO 2023. Confirm or override.
-2. **Endowment normalization**: Urban returns gross endowment (`f1d01` or similar code). To get "per student", I'll divide by 12-month FTE from the IPEDS enrollment endpoint. OK?
-3. **Conflict policy**: If an institution already has a hardcoded `endowmentPerStudent` in `IPEDS_DB` (currently only intl rows do), the snapshot wins for US rows. Sound right?
-4. **International institutions**: Confirm they stay manual for financial — I don't see a free global equivalent of IPEDS Finance.
-
-Approve and I'll execute round-1 + this finance snapshot in one pass.
+## Result
+- Spider chart overlays appear immediately for every school, matching the 24-school cohort already shown in the header.
+- No "submit" button — the app behaves as a read-only benchmarking tool driven entirely by IPEDS data.
+- One source of truth for "the cohort."
