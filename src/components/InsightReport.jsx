@@ -1,9 +1,7 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import {
-  LENSES,
   buildCohort,
   analyzePillars,
-  cohortTopLine,
   pillarNarrative,
   tierColor,
 } from "../lib/insightFramework";
@@ -11,37 +9,81 @@ import {
 // ─────────────────────────────────────────────────────────────────────────
 // InsightReport
 // Per-school strategic readout shown after the assessment is complete.
-// Lets the user toggle between peer lenses and surfaces strengths, gaps,
-// and cohort top-line context.
+// Two view modes:
+//   • "classification" — peers = same Carnegie / international classification
+//   • "compare"        — peers = up to 5 user-selected institutions
 // ─────────────────────────────────────────────────────────────────────────
 
+const MAX_COMPARE = 5;
+
 export default function InsightReport({
-  focal,            // { name, carnegieId, usNewsList, flags, intlGroup, scores, ...rawSocial }
+  focal,            // { name, carnegieId, scores, ... }
   scoredPool,       // [{ name, carnegieId, scores, ... }, ...]
   axes,             // active axes for this carnegieId
   carnegieLabel,    // human-readable
 }) {
-  const [lensId, setLensId] = useState("carnegie");
+  const [mode, setMode] = useState("classification"); // "classification" | "compare"
+  const [compareIds, setCompareIds] = useState([]);   // array of unitid/intlId
+  const [query, setQuery] = useState("");
+  const [showSuggest, setShowSuggest] = useState(false);
+  const inputRef = useRef(null);
 
-  const cohort = useMemo(
-    () => buildCohort({ focal, scoredPool, lensId }),
-    [focal, scoredPool, lensId]
-  );
+  // Build cohort based on mode
+  const cohort = useMemo(() => {
+    if (mode === "classification") {
+      return buildCohort({ focal, scoredPool, lensId: "carnegie" });
+    }
+    // compare mode — selected schools only, exclude focal
+    const idSet = new Set(compareIds);
+    return scoredPool.filter(p => {
+      const pid = p.unitid ?? p.intlId;
+      return idSet.has(pid) && p.name !== focal.name && p.scores;
+    });
+  }, [mode, compareIds, focal, scoredPool]);
 
   const pillarAnalysis = useMemo(
     () => analyzePillars({ focalScores: focal.scores, cohort, axes }),
     [focal.scores, cohort, axes]
   );
 
-  const topLine = useMemo(
-    () => cohortTopLine({ cohort, axes }),
-    [cohort, axes]
-  );
+  // Typeahead suggestions for compare mode
+  const suggestions = useMemo(() => {
+    if (mode !== "compare" || query.length < 2) return [];
+    const q = query.toLowerCase();
+    const idSet = new Set(compareIds);
+    return scoredPool
+      .filter(p => {
+        const pid = p.unitid ?? p.intlId;
+        return p.name !== focal.name &&
+          !idSet.has(pid) &&
+          p.name.toLowerCase().includes(q);
+      })
+      .slice(0, 8);
+  }, [mode, query, compareIds, scoredPool, focal.name]);
+
+  const compareSchools = useMemo(() => {
+    const idSet = new Set(compareIds);
+    return scoredPool.filter(p => idSet.has(p.unitid ?? p.intlId));
+  }, [compareIds, scoredPool]);
+
+  const addSchool = (school) => {
+    if (compareIds.length >= MAX_COMPARE) return;
+    const pid = school.unitid ?? school.intlId;
+    setCompareIds(ids => ids.includes(pid) ? ids : [...ids, pid]);
+    setQuery("");
+    setShowSuggest(false);
+    inputRef.current?.focus();
+  };
+
+  const removeSchool = (pid) => {
+    setCompareIds(ids => ids.filter(x => x !== pid));
+  };
 
   const strengths = pillarAnalysis.filter((p) => p.tier === "leader" || p.tier === "strength");
   const gaps      = pillarAnalysis.filter((p) => p.tier === "gap" || p.tier === "critical-gap");
 
   const focalName = focal.name || "Your institution";
+  const minPeers = mode === "classification" ? 3 : 1;
 
   return (
     <div style={{
@@ -61,91 +103,117 @@ export default function InsightReport({
         </div>
         <div style={{ fontSize: 14, color: '#595959', lineHeight: 1.55, maxWidth: 720 }}>
           Strengths and gaps are measured as z-scores against your selected peer cohort, so a school
-          can be excellent in five categories while still showing a clear gap in two. Toggle the lens
-          below to test the read against different peer definitions.
+          can be excellent in five categories while still showing a clear gap in two. Switch between
+          your full classification cohort and a hand-picked comparison set of up to {MAX_COMPARE} schools.
         </div>
       </div>
 
-      {/* Lens selector */}
-      <div style={{ marginBottom: 22 }}>
-        <div style={{ fontSize: 11, letterSpacing: 2, color: '#6B7585', marginBottom: 10 }}>
-          PEER LENS
-        </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {LENSES.map((l) => {
-            const active = l.id === lensId;
+      {/* Mode toggle */}
+      <div style={{ marginBottom: 18 }}>
+        <div style={{ display: 'flex', gap: 0, width: 'fit-content', border: '1px solid #E4E8EE', borderRadius: 8, overflow: 'hidden' }}>
+          {[
+            { id: 'classification', label: 'By Classification' },
+            { id: 'compare',        label: `Compare Schools (up to ${MAX_COMPARE})` },
+          ].map(m => {
+            const active = mode === m.id;
             return (
-              <button
-                key={l.id}
-                onClick={() => setLensId(l.id)}
-                style={{
-                  background: active ? 'rgba(235,86,0,0.16)' : 'transparent',
-                  border: `1px solid ${active ? '#EB5600' : '#E4E8EE'}`,
-                  color: active ? '#EB5600' : '#3D4F6B',
-                  borderRadius: 6,
-                  padding: '7px 13px',
-                  fontSize: 12,
-                  letterSpacing: 1,
-                  fontWeight: active ? 700 : 500,
-                  fontFamily: "'Bitter', Georgia, serif",
-                  cursor: 'pointer',
-                  textTransform: 'uppercase',
-                }}
-              >
-                {l.short}
+              <button key={m.id} onClick={() => setMode(m.id)} style={{
+                padding: '8px 18px', fontSize: 12, letterSpacing: 1, fontFamily: "'Bitter', Georgia, serif",
+                border: 'none', cursor: 'pointer', transition: 'all 0.15s',
+                background: active ? '#EB5600' : '#F8FAFB',
+                color: active ? '#FFFFFF' : '#6B7585',
+                fontWeight: active ? 700 : 400,
+                textTransform: 'uppercase',
+              }}>
+                {m.label}
               </button>
             );
           })}
         </div>
         <div style={{ fontSize: 12, color: '#6B7585', marginTop: 8, lineHeight: 1.5 }}>
-          {LENSES.find((l) => l.id === lensId)?.description} · <span style={{ color: '#3D4F6B' }}>{cohort.length} peer{cohort.length === 1 ? '' : 's'} matched</span>
+          {mode === 'classification'
+            ? <>Peers from your classification: <span style={{ color: '#3D4F6B' }}>{carnegieLabel} · {cohort.length} institution{cohort.length === 1 ? '' : 's'} matched</span></>
+            : <>Hand-picked comparison set: <span style={{ color: '#3D4F6B' }}>{cohort.length} of {MAX_COMPARE} selected</span></>
+          }
         </div>
       </div>
 
-      {/* Cohort top-line */}
-      {topLine && (
-        <div style={{
-          background: 'rgba(235,86,0,0.05)',
-          border: '1px solid rgba(235,86,0,0.18)',
-          borderRadius: 10,
-          padding: '16px 18px',
-          marginBottom: 22,
-        }}>
-          <div style={{ fontSize: 11, letterSpacing: 2, color: '#EB5600', marginBottom: 10 }}>
-            COHORT TOP-LINE · {carnegieLabel}
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
-            <Stat label="Cohort size" value={topLine.n} suffix="schools" />
-            <Stat label="Cohort avg index" value={topLine.cohortAvg} suffix="/100" />
-            {topLine.strongestPillar && (
-              <Stat
-                label="Cohort strongest"
-                value={topLine.strongestPillar.label}
-                suffix={`mean ${topLine.strongestPillar.mean}`}
-                small
+      {/* Compare typeahead + chips */}
+      {mode === 'compare' && (
+        <div style={{ marginBottom: 22 }}>
+          {compareSchools.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+              {compareSchools.map(s => {
+                const pid = s.unitid ?? s.intlId;
+                return (
+                  <span key={pid} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    background: 'rgba(28,54,120,0.08)', border: '1px solid rgba(28,54,120,0.25)',
+                    color: '#243551', padding: '4px 8px 4px 10px', borderRadius: 6,
+                    fontSize: 12, fontFamily: "'Bitter', Georgia, serif",
+                  }}>
+                    {s.name}
+                    <button onClick={() => removeSchool(pid)} style={{
+                      background: 'transparent', border: 'none', cursor: 'pointer',
+                      color: '#6B7585', fontSize: 14, lineHeight: 1, padding: 0,
+                    }} aria-label={`Remove ${s.name}`}>×</button>
+                  </span>
+                );
+              })}
+            </div>
+          )}
+          {compareIds.length < MAX_COMPARE && (
+            <div style={{ position: 'relative', maxWidth: 440 }}>
+              <input
+                ref={inputRef}
+                value={query}
+                onChange={e => { setQuery(e.target.value); setShowSuggest(true); }}
+                onFocus={() => setShowSuggest(true)}
+                onBlur={() => setTimeout(() => setShowSuggest(false), 150)}
+                placeholder="Add an institution to compare..."
+                style={{
+                  width: '100%', boxSizing: 'border-box',
+                  background: '#FFFFFF', border: '1px solid #D6DCE5',
+                  borderRadius: 6, padding: '8px 12px',
+                  color: '#243551', fontSize: 13,
+                  fontFamily: "'Bitter', Georgia, serif", outline: 'none',
+                }}
               />
-            )}
-            {topLine.weakestPillar && (
-              <Stat
-                label="Cohort weakest"
-                value={topLine.weakestPillar.label}
-                suffix={`mean ${topLine.weakestPillar.mean}`}
-                small
-              />
-            )}
-            {topLine.topInstitution && (
-              <Stat
-                label="Cohort leader (avg)"
-                value={topLine.topInstitution.name}
-                suffix={`${topLine.topInstitution.avg}/100`}
-                small
-              />
-            )}
-          </div>
+              {showSuggest && suggestions.length > 0 && (
+                <div style={{
+                  position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50,
+                  background: '#FFFFFF', border: '1px solid #E4E8EE',
+                  borderRadius: 8, marginTop: 4, overflow: 'hidden',
+                  boxShadow: '0 4px 12px rgba(28,54,120,0.08)',
+                }}>
+                  {suggestions.map(s => (
+                    <div key={s.unitid ?? s.intlId} onMouseDown={() => addSchool(s)} style={{
+                      padding: '9px 13px', cursor: 'pointer', fontSize: 13,
+                      borderBottom: '1px solid #F4F6F8',
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(235,86,0,0.08)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <span>{s.name}</span>
+                      <span style={{ fontSize: 10, color: '#6B7585', letterSpacing: 1 }}>
+                        {s.country || s.carnegieId}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          {compareIds.length === 0 && (
+            <div style={{ marginTop: 10, fontSize: 12, color: '#6B7585', fontStyle: 'italic' }}>
+              Select up to {MAX_COMPARE} institutions to build a custom peer set.
+            </div>
+          )}
         </div>
       )}
 
-      {cohort.length < 3 ? (
+      {cohort.length < minPeers ? (
         <div style={{
           padding: '16px 18px',
           background: 'rgba(235,86,0,0.08)',
@@ -155,9 +223,10 @@ export default function InsightReport({
           fontSize: 13,
           lineHeight: 1.55,
         }}>
-          Only {cohort.length} peer{cohort.length === 1 ? '' : 's'} match this lens. Z-scores need at
-          least 3 peers to be meaningful — try the <em style={{ color: '#EB5600' }}>Carnegie</em> lens
-          for the broadest read.
+          {mode === 'compare'
+            ? <>Add at least one institution to begin the comparison. Z-scores stabilize with 3+ peers.</>
+            : <>Only {cohort.length} peer{cohort.length === 1 ? '' : 's'} match this classification. Z-scores need at least 3 peers to be meaningful.</>
+          }
         </div>
       ) : (
         <>
@@ -192,29 +261,13 @@ export default function InsightReport({
       <div style={{ marginTop: 22, fontSize: 11, color: '#8A93A1', lineHeight: 1.6, borderTop: '1px solid #EEF1F4', paddingTop: 14 }}>
         Methodology: each pillar score is converted to a z-score against the selected peer cohort.
         Tiers: <span style={{ color: tierColor('leader') }}>Leader (z ≥ +1.5)</span> · <span style={{ color: tierColor('strength') }}>Strength (+0.5)</span> · <span style={{ color: tierColor('on-par') }}>On par</span> · <span style={{ color: tierColor('gap') }}>Gap (−0.5)</span> · <span style={{ color: tierColor('critical-gap') }}>Critical gap (−1.5)</span>.
-        Cohorts require at least 3 peers; pillars with peer dispersion below 1 point are suppressed to avoid spurious z-scores.
+        Cohorts of 3+ are recommended; pillars with peer dispersion below 1 point are suppressed to avoid spurious z-scores.
       </div>
     </div>
   );
 }
 
 // ── Subcomponents ─────────────────────────────────────────────────────────
-
-function Stat({ label, value, suffix, small }) {
-  return (
-    <div>
-      <div style={{ fontSize: 10, letterSpacing: 1.5, color: '#6B7585', marginBottom: 4 }}>
-        {label.toUpperCase()}
-      </div>
-      <div style={{ fontSize: small ? 14 : 22, color: '#243551', fontFamily: small ? "'Bitter', Georgia, serif" : "'Bitter', Georgia, serif", lineHeight: 1.2, fontWeight: small ? 600 : 400 }}>
-        {value}
-      </div>
-      {suffix && (
-        <div style={{ fontSize: 11, color: '#6B7585', marginTop: 2 }}>{suffix}</div>
-      )}
-    </div>
-  );
-}
 
 function HeadlineCard({ title, tone, items, empty }) {
   const accent = tone === 'strength' ? '#1A9988' : '#EB5600';
@@ -257,7 +310,6 @@ function HeadlineCard({ title, tone, items, empty }) {
 
 function PillarRow({ p, focalName }) {
   const color = tierColor(p.tier);
-  // Position markers on a 0–100 axis
   const userPct = p.userScore != null ? Math.max(0, Math.min(100, p.userScore)) : null;
   const meanPct = p.peerMean != null ? Math.max(0, Math.min(100, p.peerMean)) : null;
 
@@ -286,7 +338,6 @@ function PillarRow({ p, focalName }) {
         </div>
       </div>
 
-      {/* Comparison bar */}
       {userPct != null && meanPct != null && (
         <div style={{ position: 'relative', height: 6, borderRadius: 3, background: '#EEF1F4', marginBottom: 10 }}>
           <div style={{
