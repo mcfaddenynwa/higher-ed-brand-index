@@ -1236,26 +1236,6 @@ export default function App() {
                 })}
               </div>
 
-              {/* Submit */}
-              <div style={{ marginTop: 20, padding: '16px', background: '#F4F6F8', border: '1px solid rgba(28,54,120,0.22)', borderRadius: 10 }}>
-                {submitted
-                  ? <div style={{ fontSize: 14, color: '#1A9988', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 16 }}>✓</span>
-                      Submitted. Your data contributes to aggregate benchmarks anonymously.
-                    </div>
-                  : <>
-                      <div style={{ fontSize: 14, color: '#243551', marginBottom: 10, lineHeight: 1.5 }}>
-                        <strong style={{ color: '#243551' }}>Contribute to benchmarks.</strong> Your institution's name is recorded for deduplication only — it is never displayed to other users. All aggregate data is anonymous.
-                      </div>
-                      <button onClick={handleSubmit} disabled={saving || overall === null} style={{
-                        background: '#EB5600', color: '#FFFFFF', border: 'none',
-                        borderRadius: 6, padding: '9px 20px', fontSize: 14,
-                        fontWeight: 700, letterSpacing: 1.5, cursor: 'pointer',
-                        fontFamily: "'Bitter', Georgia, serif", opacity: saving ? 0.6 : 1,
-                      }}>{saving ? 'SAVING...' : 'SUBMIT TO BENCHMARK POOL →'}</button>
-                    </>
-                }
-              </div>
             </div>
           </div>
 
