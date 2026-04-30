@@ -741,26 +741,6 @@ export default function App() {
     setShowSuggestions(false);
   };
 
-  const handleSubmit = async () => {
-    if (!overall) return;
-    setSaving(true);
-    const submission = {
-      institution,
-      unitid,
-      carnegieId,
-      scores: { ...scores },
-      overall,
-      submittedAt: new Date().toISOString(),
-    };
-    const updated = await saveSubmission(submission);
-    setSubmissions(updated);
-    setSubmitted(true);
-    setSaving(false);
-  };
-
-  const carnegieN = submissions.filter(s => s.carnegieId === carnegieId).length;
-  const globalN = submissions.length;
-
   return (
     <div style={{ minHeight: '100vh', background: '#FFFFFF', fontFamily: "'Bitter', Georgia, serif", color: '#243551' }}>
 
