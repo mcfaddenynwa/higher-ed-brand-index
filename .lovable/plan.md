@@ -1,42 +1,51 @@
-# Simplify the Strategic Insight Report
+## What's wrong
 
-Goal: keep the analytical rigor (cohort-based scoring, strength/gap classification, visual bars) but strip the technical jargon (z-scores, μ, "peer dispersion below 1 point") that adds cognitive load without insight value.
+You're right — peers' financials are **not** being pulled in.
 
-## Changes
+`financeSnapshot.json` (48 institutions, FY2022-23) is currently used for **one thing only**: auto-filling the form when *you* pick your institution. The peer database rows in `IPEDS_DB` (`SCHOOL_LIST`) have no `endowmentPerStudent` or `totalRevenue` fields on them. So when `scorePool()` scores all peers on the two financial axes, every peer reads as `null` and contributes nothing to:
 
-### `src/components/InsightReport.jsx`
+- the cohort average on Endowment per student
+- the cohort average on Total revenue
+- z-scores / strength-gap ranking on those two axes
+- the spider chart's peer overlay for those axes
 
-**Intro paragraph (lines 104–108)** — replace z-score language with plain English:
-> "Each pillar is scored against your selected peer cohort, so a school can be excellent in several categories while still showing a clear gap in others."
+In other words: when you look at how you compare to peers on financial scale, the comparison is empty.
 
-**Headline cards (HeadlineCard, lines 299–302)** — replace the `+delta` and `z +1.2` row with a single clean delta chip:
-- Show only `+15 vs peers` (or `−8 vs peers`) in the tier color
-- Drop the raw z value entirely
+## Fix (light, one place)
 
-**PillarRow stats (lines 334–338)** — replace the "You X · Peer μ Y · z Z" row with:
-- `Your score: 78` (prominent, navy)
-- `peer avg 63` (muted gray, smaller)
-- No z value displayed
+Merge the snapshot into the peer pool at score time. No data entry, no schema changes — the snapshot is already keyed by `unitid`, which every US row already has.
 
-**Bar visual (lines 342–352)** — minor polish:
-- Increase bar height from 6px to 8px for better legibility
-- Keep the navy tick marking the peer mean, add a subtle hover/title "Peer average: X"
+In `src/pages/HEBrandEquity.jsx`, inside the `scoredPool` `useMemo` (~line 666), before calling `scorePool`:
 
-**Methodology footer (lines 261–265)** — rewrite in plain language:
-> "How we score: each pillar compares your institution to the peer cohort you selected. Tiers reflect how far above or below the cohort average you sit. Cohorts of 3+ schools give the most reliable read."
-- Keep the colored tier legend (Leader / Strength / On par / Gap / Critical gap) but drop the `(z ≥ +1.5)` annotations.
+```js
+const combined = [...IPEDS_DB, ...INTL_DB].map(s => {
+  if (!s.unitid) return s;                      // skip intl rows
+  const fin = financeSnapshot[s.unitid];
+  if (!fin) return s;
+  return {
+    ...s,
+    endowmentPerStudent: s.endowmentPerStudent ?? fin.endowmentPerStudent,
+    totalRevenue:        s.totalRevenue        ?? fin.totalRevenue,
+  };
+});
+```
 
-**Insufficient-cohort warnings (lines 226–229)** — replace "Z-scores need at least 3 peers" with "Comparisons are most reliable with 3+ peers."
+That's it. The two existing axes (`endowmentPerStudent`, `totalRevenue`) already know how to normalize these values — they just need the values present on each peer row.
 
-### `src/lib/insightFramework.js`
+## Coverage check
 
-**`pillarNarrative()` (lines ~210–235)** — strip `z = ±X.X` from every branch. Keep the "+X pts vs peer mean" delta phrasing (renamed to "vs peer average") and the cohort leader callout. Example rewrite:
+- 48 of the ~60 US peers in `IPEDS_DB` have a finance snapshot row → they'll now contribute to peer averages.
+- US peers without a snapshot row stay `null` (excluded from that axis's average — correct behavior).
+- International peers in `INTL_DB` already carry their own `endowmentPerStudent` / `totalRevenue` USD-equivalent values inline → unchanged.
 
-- Leader: "{name} is a category leader on {pillar} (+{delta} pts vs peer average). This is a defensible brand asset…"
-- Gap: "{name} trails the peer average on {pillar} by {delta} pts. Worth a focused investment plan…"
+## Expected impact
 
-The underlying `analyzePillars()` function and z-score math are untouched — they still drive tier classification and sort order. We're only hiding the raw numbers from the UI/copy.
+- Endowment-per-student and Total-revenue axes will now show real peer means and bars.
+- Strength/Gap cards may shuffle once the financial axes have a real cohort to compare against.
+- "Cohort size" stays the same — we're enriching existing rows, not adding any.
 
 ## Out of scope
-- No changes to scoring logic, cohort building, or the spider chart
-- No changes to the strength/gap classification thresholds
+
+- No change to scoring weights, axes, or the InsightReport UI.
+- No re-fetch of IPEDS — snapshot is already current (FY2022-23, fetched today).
+- No change to the user's auto-fill behavior — that path still works exactly as before.
