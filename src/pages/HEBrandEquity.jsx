@@ -665,7 +665,18 @@ export default function App() {
   // Memoized — only recomputes when the active axes change (i.e. on classification change).
   const scoredPool = useMemo(() => {
     if (!carnegieId) return [];
-    const combined = [...IPEDS_DB, ...INTL_DB];
+    // Enrich US peer rows with IPEDS finance snapshot (endowment/revenue) so
+    // those two axes have real cohort comparisons, not a sea of nulls.
+    const combined = [...IPEDS_DB, ...INTL_DB].map(s => {
+      if (!s.unitid) return s;
+      const fin = financeSnapshot[s.unitid];
+      if (!fin) return s;
+      return {
+        ...s,
+        endowmentPerStudent: s.endowmentPerStudent ?? fin.endowmentPerStudent,
+        totalRevenue:        s.totalRevenue        ?? fin.totalRevenue,
+      };
+    });
     return scorePool(combined, AXES, normalizeAxis);
   }, [carnegieId]);
 
