@@ -340,9 +340,16 @@ function PillarRow({ p, focalName }) {
           </span>
           <span style={{ fontSize: 12, color: '#8A93A1' }}>
             peer avg {p.peerMean ?? '–'}
+            {p.n != null && <span style={{ marginLeft: 4, color: '#A6ADBA' }}>(n={p.n})</span>}
           </span>
         </div>
       </div>
+
+      {p.userScore != null && p.peerMean == null && (
+        <div style={{ fontSize: 11, color: '#EB5600', marginBottom: 8 }}>
+          No peer data for {p.axis.label.toLowerCase()} in this cohort.
+        </div>
+      )}
 
       {userPct != null && meanPct != null && (
         <div style={{ position: 'relative', height: 8, borderRadius: 4, background: '#EEF1F4', marginBottom: 10 }}>
