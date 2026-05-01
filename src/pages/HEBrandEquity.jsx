@@ -385,11 +385,13 @@ function computeAggregates(scoredPool, carnegieId, focalName) {
   const buildOverlay = (subs) => {
     if (subs.length < MIN_N) return null;
     const result = {};
+    const counts = {};
     allKeys.forEach(key => {
       const vals = subs.map(s => s.scores?.[key]).filter(v => v != null);
       result[key] = vals.length ? avg(vals) : null;
+      counts[key] = vals.length;
     });
-    return { scores: result, n: subs.length };
+    return { scores: result, counts, n: subs.length };
   };
 
   return {
