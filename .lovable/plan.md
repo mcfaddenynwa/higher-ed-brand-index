@@ -1,39 +1,39 @@
-No, I do not need specifics from you for the institutions already in the app. I can read the current institution database and the finance snapshot.
+## Goal
 
-Current finding:
-- Peer finance data is present for most U.S. rows: 48 of 52 U.S. institutions match the finance snapshot.
-- The app is merging that data into the peer pool, but the visuals are not making it visible enough.
-- The spider chart and the bar/readout can still look like peer finance is missing because they do not show per-axis peer coverage, and missing peer values can be visually treated like zero or hidden.
+Produce a single, brand-styled PDF document that explains the Higher Ed Brand Index weighting system in plain language — something you can read offline, share with colleagues, or reference without opening the app. No changes to the app itself.
 
-Plan:
+## Format
 
-1. Make peer financial data visible in the spider chart
-- Update the spider chart overlay logic so Financial Strength uses real peer averages when available.
-- Add an explicit small label for the Financial Strength axis showing peer coverage, for example: `peer data n=26`.
-- Prevent missing peer values from rendering as zero-point dips in the cohort polygon.
-- Keep the orange user institution shape, dashed Carnegie average, and dotted all-institution average.
+- **PDF**, US Letter, mcfadden+co brand styling (navy headings, Young Serif display, Bitter body, 4px brand color bar at top, 56×3px Steel Blue rules before each section).
+- ~6–8 pages.
+- Saved to `/mnt/documents/HE_Brand_Index_Weighting.pdf` and offered as an artifact.
 
-2. Make peer financial data visible in the bar chart / dimension breakdown
-- In the Dimension Breakdown bars, show the Carnegie peer average marker for Financial Strength when peer financial data exists.
-- Add a small peer-data note under the Financial Strength row, for example: `Financial peer data included: 26 Carnegie peers / 48 all institutions`.
-- If no peer financial data is available for a selected cohort, show a clear note rather than implying the peer info is simply missing.
+## Contents
 
-3. Fix the Strategic Insight Report bar chart message
-- Update the `PillarRow` logic in `InsightReport.jsx` so Financial Strength shows the same peer average and n-count when available.
-- Replace “insufficient peer data” style messaging with a more specific financial coverage message when the issue is only financial-field coverage.
-- Ensure the Financial Strength bar renders when both the user score and peer average exist.
+1. **Cover page** — title, subtitle ("How the Higher Ed Brand Index weights its six dimensions"), date, mcfadden+co wordmark.
 
-4. Add axis-level peer counts to the scoring objects
-- Extend the aggregate calculation to return both `scores` and `counts` by axis.
-- Example structure: `carnegieAvg.scores.financial = 42`, `carnegieAvg.counts.financial = 26`.
-- Reuse those counts in the spider chart, dimension breakdown, and report bars.
+2. **A note on methodology (1 short page)** — Frames the document honestly: weighting is judgment, not science. There is no single "correct" formula. The weights below reflect a defensible point of view about what matters most for different kinds of institutions, calibrated against publicly available signals (IPEDS, US News, QS, THE, Niche, Caldwell, NACUBO).
 
-5. Keep unmatched institutions excluded, not blocking
-- Leave unmatched finance rows out of financial averages rather than forcing placeholder values.
-- Current missing finance rows are Drexel, Fordham, Valencia, and Thomas Jefferson; Colorado Boulder has revenue but no endowment-per-student.
-- These should not prevent the rest of the peer finance data from appearing.
+3. **The six dimensions** — One short paragraph each explaining what's being measured and why it matters (Visibility & Reach, Enrollment & Retention, Financial Strength, Institutional Profile, Research, Diversity & Access).
 
-Files to update after approval:
-- `src/pages/HEBrandEquity.jsx`
-- `src/components/InsightReport.jsx`
-- Possibly `src/lib/insightFramework.js` if the report needs axis-level peer counts passed through its analysis model.
+4. **Weight tables** — Clean, readable tables showing the weight assigned to each dimension by:
+   - **US Carnegie classification** (13 cohorts: R1, R2, RCU, Mixed Doctoral, Professions Doctoral, Mixed Master's, Professions Master's, Mixed Bac, Professions Bac, Liberal Arts, Associate's, Special Focus, Tribal).
+   - **International classification** (5 cohorts: Research Elite, Research Univ., Comprehensive, Teaching-Focused, Specialist).
+   - **QS band overlay** (Top 100, 101–200, 201–400, 401–600, 601+, Unranked) — explains how QS standing nudges the base weights for international schools.
+
+5. **How blending works (½ page)** — Plain-English explanation: for international schools, the base classification weight is averaged with the QS-band weight, then normalized to sum to 100%. US schools use only their Carnegie weight.
+
+6. **What the weights are NOT** — One-pager addressing the obvious critiques head-on: not a ranking, not predictive, not absolute, not equally applicable to every institution. Encourages reading dimensions individually.
+
+## Technical approach
+
+- Use the `pdf` skill with **reportlab** (Python) to generate the PDF — gives precise control over brand layout, tables, and the Steel Blue rule device.
+- Pull weight values directly from `src/pages/HEBrandEquity.jsx` (`WEIGHTS`, `INTL_WEIGHTS`, `QS_BAND_WEIGHTS`) so numbers exactly match the app.
+- Use Helvetica/Times as font fallbacks (Young Serif and Bitter aren't installed in the sandbox; the PDF will use a serif/sans pair styled to feel close to brand). If you want exact brand fonts embedded, that's a follow-up.
+- After generation: convert each page to JPG and visually QA for overflow, alignment, and contrast issues before delivering.
+
+## Deliverable
+
+A `<lov-artifact>` link to the PDF so you can download and read it.
+
+No code changes to the app. No new routes, no new UI.
