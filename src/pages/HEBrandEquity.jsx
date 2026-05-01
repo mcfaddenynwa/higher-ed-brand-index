@@ -1271,6 +1271,8 @@ export default function App() {
                   const s = scores[a.key];
                   const ca = carnegieAvg?.scores[a.key];
                   const ga = globalAvg?.scores[a.key];
+                  const caN = carnegieAvg?.counts?.[a.key];
+                  const gaN = globalAvg?.counts?.[a.key];
                   const delta = (s != null && ca != null) ? Math.round(s - ca) : null;
                   const w = WEIGHTS[carnegieId]?.[a.key] ?? 0;
                   return (
@@ -1292,10 +1294,15 @@ export default function App() {
                       {s != null && (
                         <div style={{ position: 'relative', height: 4, borderRadius: 2, background: '#F4F6F8' }}>
                           <div style={{ width: `${s}%`, height: '100%', background: a.color, borderRadius: 2, position: 'absolute', top: 0, left: 0 }} />
-                          {ca != null && <div style={{ width: 2, height: 8, background: '#243551', position: 'absolute', top: -2, left: `${ca}%`, borderRadius: 1 }} />}
-                          {ga != null && <div style={{ width: 2, height: 8, background: 'rgba(106,164,200,0.5)', position: 'absolute', top: -2, left: `${ga}%`, borderRadius: 1 }} />}
+                          {ca != null && <div style={{ width: 2, height: 8, background: '#243551', position: 'absolute', top: -2, left: `${ca}%`, borderRadius: 1 }} title={`${selectedCarnegie?.short} avg: ${Math.round(ca)} (n=${caN})`} />}
+                          {ga != null && <div style={{ width: 2, height: 8, background: 'rgba(106,164,200,0.5)', position: 'absolute', top: -2, left: `${ga}%`, borderRadius: 1 }} title={`All institutions avg: ${Math.round(ga)} (n=${gaN})`} />}
                         </div>
                       )}
+                      <div style={{ marginTop: 6, fontSize: 10, color: '#8A93A1', letterSpacing: 0.3 }}>
+                        {ca != null
+                          ? <>Peer data: {caN} {selectedCarnegie?.short} {caN === 1 ? 'school' : 'schools'}{gaN != null ? ` · ${gaN} all institutions` : ''}</>
+                          : <span style={{ color: '#EB5600' }}>No peer data available for this pillar in the current cohort.</span>}
+                      </div>
                     </div>
                   );
                 })}
