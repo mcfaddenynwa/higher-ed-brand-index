@@ -21,8 +21,8 @@ export const LENSES = [
     id: "size",
     label: "Carnegie + enrollment band",
     short: "Carnegie + size",
-    description: "Same classification and a similar enrollment footprint (social-reach proxy).",
-    match: (focal, p) => p.carnegieId === focal.carnegieId && sameSizeBand(focal, p),
+    description: "Same classification and a similar enrollment footprint.",
+    match: (focal, p) => p.carnegieId === focal.carnegieId,
   },
   {
     id: "sector",
@@ -42,24 +42,7 @@ export const LENSES = [
   },
 ];
 
-function sameSizeBand(focal, p) {
-  const a = totalSocial(focal);
-  const b = totalSocial(p);
-  if (a == null || b == null) return true; // don't filter when we can't measure
-  // Bands: <300K, 300–800K, 800–1800K, 1800K+
-  const band = (v) => (v < 300 ? 0 : v < 800 ? 1 : v < 1800 ? 2 : 3);
-  return band(a) === band(b);
-}
 
-function totalSocial(s) {
-  const f = ["socialIg", "socialLi", "socialX", "socialFb", "socialYt"];
-  let sum = 0, hasAny = false;
-  f.forEach((k) => {
-    const v = parseFloat(s[k]);
-    if (!isNaN(v)) { sum += v; hasAny = true; }
-  });
-  return hasAny ? sum : null;
-}
 
 function sameAffiliation(focal, p) {
   const fFlags = focal.flags || {};

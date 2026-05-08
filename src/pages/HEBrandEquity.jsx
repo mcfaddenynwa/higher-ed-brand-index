@@ -197,7 +197,6 @@ const AXES = [
       { id: "theImpactRank", label: "THE Impact Rank (blank if not listed)", placeholder: "e.g. 401", max: 2526, invert: true, emptyScore: null },
       { id: "nicheRank", label: "Niche Best Colleges Rank (blank if unranked)", placeholder: "e.g. 180", max: 1500, invert: true, emptyScore: 5 },
       { id: "nicheGrade", label: "Niche Overall Grade (A+=100, A=91, A-=83, B+=75, B=67, B-=58, C+=50, C=42 or below)", placeholder: "e.g. 91", max: 100, nicheGrade: true },
-      { id: "socialReach", label: "Social reach score (auto-calculated)", placeholder: "auto", max: 100, readOnly: true, emptyScore: null },
     ]
   },
   {
@@ -256,34 +255,8 @@ const AXES = [
 const MIN_N = 3;
 
 
-// Social reach: sum followers across platforms, normalize per 1000 enrolled students
-// Benchmarks: R1 flagship ~200K+ total followers per 1K students = elite
-// Composite capped at max ~5000 followers per enrolled student total
-function computeSocialReach(values) {
-  const ig = parseFloat(values.socialIg) || 0;   // thousands
-  const li = parseFloat(values.socialLi) || 0;
-  const x  = parseFloat(values.socialX)  || 0;
-  const fb = parseFloat(values.socialFb) || 0;
-  const yt = parseFloat(values.socialYt) || 0;
-  const totalK = ig + li + x + fb + yt;           // total followers in thousands
-  if (totalK === 0) return null;
-  // Normalize by enrollment if available, else use raw composite
-  const enrollment = parseFloat(values.enrollTrend) ? null : null; // enrollment not directly stored
-  // Use absolute follower composite normalized to 0-100 scale
-  // Top schools (Michigan, ASU) ~3400K total — score 100
-  // Median R1 ~1500K — score ~50
-  // Small liberal arts ~150K — score ~10
-  const score = Math.min(100, (totalK / 3400) * 100);
-  return Math.round(score);
-}
-
 function normalizeAxis(axis, values) {
   const inputScores = axis.inputs.map(input => {
-    // Social reach computed from raw followers, not direct input
-    if (input.id === 'socialReach') {
-      const sr = computeSocialReach(values);
-      return sr !== null ? sr * 0.10 : null;
-    }
     if (input.id === 'usNewsList') return null; // selector only, not scored
     const raw = parseFloat(values[input.id]);
     if (isNaN(raw)) return input.emptyScore ?? null;
@@ -1128,11 +1101,6 @@ export default function App() {
                             </div>
                           )}
                         </div>
-                      ) : input.id === 'socialReach' ? (
-                        <div style={{ ...iStyle, fontFamily: "'Bitter', Georgia, serif", background: 'rgba(235,86,0,0.08)', borderColor: 'rgba(235,86,0,0.30)', color: '#EB5600', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <span>{computeSocialReach(values) !== null ? `${computeSocialReach(values)} / 100` : 'No social data in database'}</span>
-                          <span style={{ fontSize: 9, letterSpacing: 1, opacity: 0.6 }}>AUTO</span>
-                        </div>
                       ) : isAutoPop ? (
                         <div style={{ ...iStyle, fontFamily: "'Bitter', Georgia, serif", background: 'rgba(26,153,136,0.06)', borderColor: 'rgba(26,153,136,0.30)', color: '#243551', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'not-allowed' }}>
                           <span>{input.nicheGrade ? (['A+','A','A-','B+','B','B-','C+','C','C-','D','F'][['100','91','83','75','67','58','50','42','33','25','0'].indexOf(String(values[input.id]))] ?? values[input.id]) : (values[input.id] ?? '—')}</span>
@@ -1411,9 +1379,6 @@ export default function App() {
                   d1:      values.chk_d1athletics ? 1 : 0,
                 },
                 intlGroup: scoredPool.find(p => p.name === institution)?.intlGroup,
-                socialIg: values.socialIg, socialLi: values.socialLi,
-                socialX:  values.socialX,  socialFb: values.socialFb,
-                socialYt: values.socialYt,
                 scores,
               }}
               scoredPool={scoredPool}
