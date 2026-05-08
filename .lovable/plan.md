@@ -1,39 +1,91 @@
 ## Goal
 
-Produce a single, brand-styled PDF document that explains the Higher Ed Brand Index weighting system in plain language — something you can read offline, share with colleagues, or reference without opening the app. No changes to the app itself.
+Replace the hardcoded 48-school `IPEDS_DB` array in `src/pages/HEBrandEquity.jsx` with a real database of every US 4-year, degree-granting university (~2,500), seeded from IPEDS, with a searchable picker so a user can choose any US school instead of being limited to the curated list.
 
-## Format
+International (`INTL_DB`) stays as-is for now — we'll do that as a separate pass.
 
-- **PDF**, US Letter, mcfadden+co brand styling (navy headings, Young Serif display, Bitter body, 4px brand color bar at top, 56×3px Steel Blue rules before each section).
-- ~6–8 pages.
-- Saved to `/mnt/documents/HE_Brand_Index_Weighting.pdf` and offered as an artifact.
+## What's actually achievable from public data
 
-## Contents
+The current `IPEDS_DB` row has ~30 fields per school. They split into three buckets:
 
-1. **Cover page** — title, subtitle ("How the Higher Ed Brand Index weights its six dimensions"), date, mcfadden+co wordmark.
+**Bucket 1 — Auto-fillable from IPEDS (free, official, already wired in via `financeSnapshot.json` pattern):**
+- name, unitid, city, state, sector (public/private), Carnegie classification → `carnegieId`
+- enrollment, FTE, enrollment trend (multi-year delta)
+- retention rate, 4-yr grad rate, 6-yr grad rate
+- yield rate, accept rate, Pell %, first-gen %
+- R&D expenditures (HERD), doctoral output
+- Total revenue, endowment, endowment per FTE (already in `financeSnapshot.json`)
+- Flags: health system, law school, engineering, AACSB-adjacent (derived from CIP program offerings)
 
-2. **A note on methodology (1 short page)** — Frames the document honestly: weighting is judgment, not science. There is no single "correct" formula. The weights below reflect a defensible point of view about what matters most for different kinds of institutions, calibrated against publicly available signals (IPEDS, US News, QS, THE, Niche, Caldwell, NACUBO).
+**Bucket 2 — Auto-fillable from other free sources:**
+- US News national-univ vs regional list bucket (`usNewsList`) — scrapeable from US News public rankings pages
+- US News overall rank, Law rank, Business rank, Engineering rank — same source, but rate-limited; we'd cache annually
+- THE Impact listed/rank, QS rank, THE World rank — public ranking tables
+- D1 athletics flag — NCAA member directory
+- Big-Four conference flag — derived from conference field
 
-3. **The six dimensions** — One short paragraph each explaining what's being measured and why it matters (Visibility & Reach, Enrollment & Retention, Financial Strength, Institutional Profile, Research, Diversity & Access).
+**Bucket 3 — Stays manual or gets dropped:**
+- Niche rank / Niche grade — Niche.com is paywalled/ToS-restricted; leave as user-entered or drop
+- Caldwell listed/rank — proprietary list, manual entry
+- Social media follower counts (IG/LI/X/FB/YT) — no clean free API at scale; either user-entered per assessment, or we drop them and rely on the visibility pillar's other signals
 
-4. **Weight tables** — Clean, readable tables showing the weight assigned to each dimension by:
-   - **US Carnegie classification** (13 cohorts: R1, R2, RCU, Mixed Doctoral, Professions Doctoral, Mixed Master's, Professions Master's, Mixed Bac, Professions Bac, Liberal Arts, Associate's, Special Focus, Tribal).
-   - **International classification** (5 cohorts: Research Elite, Research Univ., Comprehensive, Teaching-Focused, Specialist).
-   - **QS band overlay** (Top 100, 101–200, 201–400, 401–600, 601+, Unranked) — explains how QS standing nudges the base weights for international schools.
+**Recommendation:** Phase 1 = Bucket 1 only (everything IPEDS gives us, ~2,500 schools). The other buckets become follow-on work. This is the same pattern you already have working for finance.
 
-5. **How blending works (½ page)** — Plain-English explanation: for international schools, the base classification weight is averaged with the QS-band weight, then normalized to sum to 100%. US schools use only their Carnegie weight.
+## Architecture
 
-6. **What the weights are NOT** — One-pager addressing the obvious critiques head-on: not a ranking, not predictive, not absolute, not equally applicable to every institution. Encourages reading dimensions individually.
+**One Postgres table on Lovable Cloud: `institutions`**
 
-## Technical approach
+```text
+id              uuid (pk)
+unitid          text (unique, IPEDS identifier)
+name            text
+state           text
+city            text
+sector          text          -- public | private_nonprofit | private_for_profit
+carnegie_id     text          -- r1, r2, m1, bac_as, etc. (mapped from IPEDS BASIC2021)
+us_news_list    text          -- natl_univ | regional | liberal_arts | null (Phase 2)
+flags           jsonb         -- { bigFour, d1, health, law, aacsb, eng }
+enrollment      integer
+fte             integer
+metrics         jsonb         -- { retentionRate, gradRate4yr, gradRate6yr, yieldRate, acceptRate, pellPct, firstGen, rAndD, doctoralOutput, researchDesignation, enrollTrend }
+finance         jsonb         -- { totalRevenue, endowmentTotal, endowmentPerStudent, fiscalYear }
+rankings        jsonb         -- { usNews, usNewsLaw, usNewsBiz, usNewsEng, qsRank, theWorldRank, theImpactRank, theImpactListed }  (Phase 2, mostly null at start)
+fiscal_year     text
+updated_at      timestamptz
+```
 
-- Use the `pdf` skill with **reportlab** (Python) to generate the PDF — gives precise control over brand layout, tables, and the Steel Blue rule device.
-- Pull weight values directly from `src/pages/HEBrandEquity.jsx` (`WEIGHTS`, `INTL_WEIGHTS`, `QS_BAND_WEIGHTS`) so numbers exactly match the app.
-- Use Helvetica/Times as font fallbacks (Young Serif and Bitter aren't installed in the sandbox; the PDF will use a serif/sans pair styled to feel close to brand). If you want exact brand fonts embedded, that's a follow-up.
-- After generation: convert each page to JPG and visually QA for overflow, alignment, and contrast issues before delivering.
+Trigram index on `name` for fast typeahead (`"ohio st..."` → matches).
 
-## Deliverable
+**Seeding:** Extend the existing `scripts/fetch-ipeds-finance.mjs` pattern. Add IPEDS files for HD (directory), EFFY (enrollment), DRVGR (grad rates), ADM (admissions), SFA (Pell), HERD (R&D). Output a single `institutionsSeed.json` and a one-shot edge function that upserts it into the table by `unitid`.
 
-A `<lov-artifact>` link to the PDF so you can download and read it.
+**Annual refresh:** Same script re-run when new IPEDS releases land (~once a year). Edge function is idempotent.
 
-No code changes to the app. No new routes, no new UI.
+**App integration:**
+1. Replace `IPEDS_DB` array with a query against the `institutions` table.
+2. Add a typeahead picker on the data-entry screen (replaces the current dropdown of 48).
+3. When a school is selected, fetch its row and pre-populate every field we have. Fields in Bucket 2/3 that aren't in the DB stay as editable inputs (current behavior).
+4. The 48 hand-curated schools currently in `IPEDS_DB` keep their richer Bucket 2/3 values — we migrate them as a one-time seed *overlay* so we don't lose the work.
+
+## Phase 1 scope (this build)
+
+1. Enable Lovable Cloud (if not already) and create the `institutions` table + trigram index.
+2. Write `scripts/fetch-ipeds-seed.mjs` — pulls HD, EFFY, DRVGR, ADM, SFA, HERD, F1A, F2, DRVEF; emits `src/data/institutionsSeed.json` (~2,500 rows).
+3. Write a one-shot edge function `seed-institutions` that reads the JSON and upserts.
+4. Migrate the 48 existing hand-curated rows as an overlay (preserves their `usNews`, social, niche, caldwell values).
+5. Replace the dropdown in `HEBrandEquity.jsx` with a typeahead component backed by the table.
+6. Wire the data-entry form to pre-populate from the selected row, leaving Bucket 2/3 fields editable.
+
+## Out of scope for Phase 1
+
+- US News / QS / THE rank scraping (Phase 2)
+- Niche, Caldwell, social follower auto-fill (likely stays manual forever)
+- International schools (separate pass — UK/Canada later)
+- Admin UI for editing institution rows (DB-only for now)
+
+## Open questions
+
+1. **48 curated schools' extra fields** (US News rank, social, Niche, Caldwell): keep as overlay seed, or wipe and rely only on IPEDS + manual entry going forward?
+2. **Carnegie scope:** include only doctoral + master's + bac (the ones with `WEIGHTS` entries in your code), or include associate's/special-focus too with a fallback weighting? Recommend: doctoral + master's + bac only (~1,800 schools), matches your existing weight tables.
+3. **Picker UX:** keep current Carnegie-class dropdown as a *filter* on the typeahead, or just let users search by name freely?
+
+Once you approve, I'll implement Phase 1 end-to-end.
