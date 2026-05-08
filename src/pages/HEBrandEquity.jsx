@@ -2,6 +2,24 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import InsightReport from "../components/InsightReport";
 import { scorePool, buildCohort, cohortTopLine } from "../lib/insightFramework";
 import financeSnapshot from "../data/financeSnapshot.json";
+import { supabase } from "@/integrations/supabase/client";
+
+// Flatten a row from the `institutions` table into the legacy IPEDS_DB shape
+// so the rest of the form / scoring code can stay untouched.
+function flattenInstitutionRow(r) {
+  return {
+    name: r.name,
+    unitid: r.unitid,
+    carnegieId: r.carnegie_id,
+    usNewsList: r.us_news_list,
+    flags: r.flags || {},
+    fte: r.fte,
+    enrollment: r.enrollment,
+    ...(r.metrics || {}),
+    ...(r.rankings || {}),
+    ...(r.finance || {}),
+  };
+}
 // LOVABLE SETUP: Add this to your index.html <head>:
 //
 
