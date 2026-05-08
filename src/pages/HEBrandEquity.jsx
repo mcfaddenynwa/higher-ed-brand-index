@@ -1101,11 +1101,6 @@ export default function App() {
                             </div>
                           )}
                         </div>
-                      ) : input.id === 'socialReach' ? (
-                        <div style={{ ...iStyle, fontFamily: "'Bitter', Georgia, serif", background: 'rgba(235,86,0,0.08)', borderColor: 'rgba(235,86,0,0.30)', color: '#EB5600', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <span>{computeSocialReach(values) !== null ? `${computeSocialReach(values)} / 100` : 'No social data in database'}</span>
-                          <span style={{ fontSize: 9, letterSpacing: 1, opacity: 0.6 }}>AUTO</span>
-                        </div>
                       ) : isAutoPop ? (
                         <div style={{ ...iStyle, fontFamily: "'Bitter', Georgia, serif", background: 'rgba(26,153,136,0.06)', borderColor: 'rgba(26,153,136,0.30)', color: '#243551', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'not-allowed' }}>
                           <span>{input.nicheGrade ? (['A+','A','A-','B+','B','B-','C+','C','C-','D','F'][['100','91','83','75','67','58','50','42','33','25','0'].indexOf(String(values[input.id]))] ?? values[input.id]) : (values[input.id] ?? '—')}</span>
