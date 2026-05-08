@@ -718,13 +718,35 @@ export default function App() {
   const overall = carnegieId ? weightedOverall(scores, carnegieId, qsBand) : null;
   const curAxis = activeAxes[Math.min(activeAxis, activeAxes.length - 1)];
 
+  // Load the full US institution catalogue (~1,800 rows) once on mount.
+  // Falls back to the hardcoded IPEDS_DB if the network call fails so the
+  // form keeps working offline / during a deploy blip.
+  const [usDb, setUsDb] = useState(IPEDS_DB);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("institutions")
+        .select("unitid,name,carnegie_id,us_news_list,flags,enrollment,fte,metrics,rankings,finance")
+        .order("name", { ascending: true })
+        .range(0, 2499);
+      if (cancelled) return;
+      if (error || !data?.length) {
+        console.warn("institutions fetch failed, using bundled IPEDS_DB", error);
+        return;
+      }
+      setUsDb(data.map(flattenInstitutionRow));
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   // Score the institutional database for the insight framework's peer cohort.
   // Memoized — only recomputes when the active axes change (i.e. on classification change).
   const scoredPool = useMemo(() => {
     if (!carnegieId) return [];
     // Enrich US peer rows with IPEDS finance snapshot (endowment/revenue) so
     // those two axes have real cohort comparisons, not a sea of nulls.
-    const combined = [...IPEDS_DB, ...INTL_DB].map(s => {
+    const combined = [...usDb, ...INTL_DB].map(s => {
       if (!s.unitid) return s;
       const fin = financeSnapshot[s.unitid];
       if (!fin) return s;
@@ -735,7 +757,7 @@ export default function App() {
       };
     });
     return scorePool(combined, AXES, normalizeAxis);
-  }, [carnegieId]);
+  }, [carnegieId, usDb]);
 
   // Cohort overlays for the spider chart — derived from the same auto-scored pool
   // that powers the cohort size in the header card.
