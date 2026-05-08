@@ -2,6 +2,24 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import InsightReport from "../components/InsightReport";
 import { scorePool, buildCohort, cohortTopLine } from "../lib/insightFramework";
 import financeSnapshot from "../data/financeSnapshot.json";
+import { supabase } from "@/integrations/supabase/client";
+
+// Flatten a row from the `institutions` table into the legacy IPEDS_DB shape
+// so the rest of the form / scoring code can stay untouched.
+function flattenInstitutionRow(r) {
+  return {
+    name: r.name,
+    unitid: r.unitid,
+    carnegieId: r.carnegie_id,
+    usNewsList: r.us_news_list,
+    flags: r.flags || {},
+    fte: r.fte,
+    enrollment: r.enrollment,
+    ...(r.metrics || {}),
+    ...(r.rankings || {}),
+    ...(r.finance || {}),
+  };
+}
 // LOVABLE SETUP: Add this to your index.html <head>:
 //
 
@@ -700,13 +718,35 @@ export default function App() {
   const overall = carnegieId ? weightedOverall(scores, carnegieId, qsBand) : null;
   const curAxis = activeAxes[Math.min(activeAxis, activeAxes.length - 1)];
 
+  // Load the full US institution catalogue (~1,800 rows) once on mount.
+  // Falls back to the hardcoded IPEDS_DB if the network call fails so the
+  // form keeps working offline / during a deploy blip.
+  const [usDb, setUsDb] = useState(IPEDS_DB);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("institutions")
+        .select("unitid,name,carnegie_id,us_news_list,flags,enrollment,fte,metrics,rankings,finance")
+        .order("name", { ascending: true })
+        .range(0, 2499);
+      if (cancelled) return;
+      if (error || !data?.length) {
+        console.warn("institutions fetch failed, using bundled IPEDS_DB", error);
+        return;
+      }
+      setUsDb(data.map(flattenInstitutionRow));
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   // Score the institutional database for the insight framework's peer cohort.
   // Memoized — only recomputes when the active axes change (i.e. on classification change).
   const scoredPool = useMemo(() => {
     if (!carnegieId) return [];
     // Enrich US peer rows with IPEDS finance snapshot (endowment/revenue) so
     // those two axes have real cohort comparisons, not a sea of nulls.
-    const combined = [...IPEDS_DB, ...INTL_DB].map(s => {
+    const combined = [...usDb, ...INTL_DB].map(s => {
       if (!s.unitid) return s;
       const fin = financeSnapshot[s.unitid];
       if (!fin) return s;
@@ -717,7 +757,7 @@ export default function App() {
       };
     });
     return scorePool(combined, AXES, normalizeAxis);
-  }, [carnegieId]);
+  }, [carnegieId, usDb]);
 
   // Cohort overlays for the spider chart — derived from the same auto-scored pool
   // that powers the cohort size in the header card.
@@ -744,7 +784,7 @@ export default function App() {
   const handleInstitutionInput = (val) => {
     setInstitution(val);
     if (val.length < 2) { setSuggestions([]); setShowSuggestions(false); return; }
-    const db = isIntl ? INTL_DB : IPEDS_DB;
+    const db = isIntl ? INTL_DB : usDb;
     const matches = db.filter(s => s.name.toLowerCase().includes(val.toLowerCase())).slice(0, 6);
     setSuggestions(matches);
     setShowSuggestions(true);
