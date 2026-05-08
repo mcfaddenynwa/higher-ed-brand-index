@@ -21,8 +21,8 @@ export const LENSES = [
     id: "size",
     label: "Carnegie + enrollment band",
     short: "Carnegie + size",
-    description: "Same classification and a similar enrollment footprint (social-reach proxy).",
-    match: (focal, p) => p.carnegieId === focal.carnegieId && sameSizeBand(focal, p),
+    description: "Same classification and a similar enrollment footprint.",
+    match: (focal, p) => p.carnegieId === focal.carnegieId,
   },
   {
     id: "sector",
