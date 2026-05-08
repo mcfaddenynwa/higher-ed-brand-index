@@ -781,30 +781,61 @@ export default function App() {
   const classificationCohortAvg = classificationTopLine?.cohortAvg ?? null;
 
   // Institution typeahead
-  const handleInstitutionInput = (val) => {
+  // For US schools we query the backend directly because PostgREST caps the
+  // initial bulk load at ~1000 alphabetical rows — schools like "University of
+  // Vermont" never land in the local cache. International list is small enough
+  // to filter in-memory.
+  const rankMatches = (rows, q) => rows
+    .map(s => {
+      const n = (s.name || '').toLowerCase();
+      if (!n.includes(q)) return null;
+      let rank = 3;
+      if (n.startsWith(q)) rank = 0;
+      else if (n.includes(' ' + q)) rank = 1;
+      else if (n.includes('-' + q)) rank = 2;
+      return { s, rank };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.rank - b.rank || a.s.name.localeCompare(b.s.name))
+    .slice(0, 10)
+    .map(x => x.s);
+
+  const searchSeqRef = useRef(0);
+  const handleInstitutionInput = async (val) => {
     setInstitution(val);
     if (val.length < 2) { setSuggestions([]); setShowSuggestions(false); return; }
-    const db = isIntl ? INTL_DB : usDb;
     const q = val.toLowerCase();
-    // Rank: name starts with query → word starts with query → contains query.
-    // Without this ranking "univ" returns 6 alphabetical A-schools and never
-    // surfaces "University of Vermont" etc.
-    const scored = db
-      .map(s => {
-        const n = s.name.toLowerCase();
-        if (!n.includes(q)) return null;
-        let rank = 3;
-        if (n.startsWith(q)) rank = 0;
-        else if (n.includes(' ' + q)) rank = 1;
-        else if (n.includes('-' + q)) rank = 2;
-        return { s, rank };
-      })
-      .filter(Boolean)
-      .sort((a, b) => a.rank - b.rank || a.s.name.localeCompare(b.s.name))
-      .slice(0, 10)
-      .map(x => x.s);
-    setSuggestions(scored);
-    setShowSuggestions(true);
+
+    if (isIntl) {
+      setSuggestions(rankMatches(INTL_DB, q));
+      setShowSuggestions(true);
+      return;
+    }
+
+    // Show local cache immediately for snappy UX
+    const localHits = rankMatches(usDb, q);
+    if (localHits.length) {
+      setSuggestions(localHits);
+      setShowSuggestions(true);
+    }
+
+    // Then query the backend for the authoritative match set
+    const seq = ++searchSeqRef.current;
+    const escaped = val.replace(/[%_,]/g, ' ').trim();
+    const { data, error } = await supabase
+      .from("institutions")
+      .select("unitid,name,carnegie_id,us_news_list,flags,enrollment,fte,metrics,rankings,finance")
+      .ilike("name", `%${escaped}%`)
+      .order("name", { ascending: true })
+      .limit(25);
+    if (seq !== searchSeqRef.current) return; // stale response
+    if (error || !data) {
+      if (!localHits.length) { setSuggestions([]); setShowSuggestions(false); }
+      return;
+    }
+    const ranked = rankMatches(data.map(flattenInstitutionRow), q);
+    setSuggestions(ranked);
+    setShowSuggestions(ranked.length > 0);
   };
 
   const selectInstitution = (school) => {
