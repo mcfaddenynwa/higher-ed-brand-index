@@ -784,7 +784,7 @@ export default function App() {
   const handleInstitutionInput = (val) => {
     setInstitution(val);
     if (val.length < 2) { setSuggestions([]); setShowSuggestions(false); return; }
-    const db = isIntl ? INTL_DB : IPEDS_DB;
+    const db = isIntl ? INTL_DB : usDb;
     const matches = db.filter(s => s.name.toLowerCase().includes(val.toLowerCase())).slice(0, 6);
     setSuggestions(matches);
     setShowSuggestions(true);
