@@ -1379,9 +1379,6 @@ export default function App() {
                   d1:      values.chk_d1athletics ? 1 : 0,
                 },
                 intlGroup: scoredPool.find(p => p.name === institution)?.intlGroup,
-                socialIg: values.socialIg, socialLi: values.socialLi,
-                socialX:  values.socialX,  socialFb: values.socialFb,
-                socialYt: values.socialYt,
                 scores,
               }}
               scoredPool={scoredPool}
