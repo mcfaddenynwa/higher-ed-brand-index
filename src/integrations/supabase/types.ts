@@ -14,13 +14,70 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      institutions: {
+        Row: {
+          carnegie_id: string | null
+          city: string | null
+          enrollment: number | null
+          finance: Json
+          fiscal_year: string | null
+          flags: Json
+          fte: number | null
+          id: string
+          metrics: Json
+          name: string
+          rankings: Json
+          sector: string | null
+          state: string | null
+          unitid: string
+          updated_at: string
+          us_news_list: string | null
+        }
+        Insert: {
+          carnegie_id?: string | null
+          city?: string | null
+          enrollment?: number | null
+          finance?: Json
+          fiscal_year?: string | null
+          flags?: Json
+          fte?: number | null
+          id?: string
+          metrics?: Json
+          name: string
+          rankings?: Json
+          sector?: string | null
+          state?: string | null
+          unitid: string
+          updated_at?: string
+          us_news_list?: string | null
+        }
+        Update: {
+          carnegie_id?: string | null
+          city?: string | null
+          enrollment?: number | null
+          finance?: Json
+          fiscal_year?: string | null
+          flags?: Json
+          fte?: number | null
+          id?: string
+          metrics?: Json
+          name?: string
+          rankings?: Json
+          sector?: string | null
+          state?: string | null
+          unitid?: string
+          updated_at?: string
+          us_news_list?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       [_ in never]: never
