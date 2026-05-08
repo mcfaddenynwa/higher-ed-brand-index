@@ -255,34 +255,8 @@ const AXES = [
 const MIN_N = 3;
 
 
-// Social reach: sum followers across platforms, normalize per 1000 enrolled students
-// Benchmarks: R1 flagship ~200K+ total followers per 1K students = elite
-// Composite capped at max ~5000 followers per enrolled student total
-function computeSocialReach(values) {
-  const ig = parseFloat(values.socialIg) || 0;   // thousands
-  const li = parseFloat(values.socialLi) || 0;
-  const x  = parseFloat(values.socialX)  || 0;
-  const fb = parseFloat(values.socialFb) || 0;
-  const yt = parseFloat(values.socialYt) || 0;
-  const totalK = ig + li + x + fb + yt;           // total followers in thousands
-  if (totalK === 0) return null;
-  // Normalize by enrollment if available, else use raw composite
-  const enrollment = parseFloat(values.enrollTrend) ? null : null; // enrollment not directly stored
-  // Use absolute follower composite normalized to 0-100 scale
-  // Top schools (Michigan, ASU) ~3400K total — score 100
-  // Median R1 ~1500K — score ~50
-  // Small liberal arts ~150K — score ~10
-  const score = Math.min(100, (totalK / 3400) * 100);
-  return Math.round(score);
-}
-
 function normalizeAxis(axis, values) {
   const inputScores = axis.inputs.map(input => {
-    // Social reach computed from raw followers, not direct input
-    if (input.id === 'socialReach') {
-      const sr = computeSocialReach(values);
-      return sr !== null ? sr * 0.10 : null;
-    }
     if (input.id === 'usNewsList') return null; // selector only, not scored
     const raw = parseFloat(values[input.id]);
     if (isNaN(raw)) return input.emptyScore ?? null;
