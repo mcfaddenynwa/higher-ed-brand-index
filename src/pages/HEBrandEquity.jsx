@@ -785,8 +785,25 @@ export default function App() {
     setInstitution(val);
     if (val.length < 2) { setSuggestions([]); setShowSuggestions(false); return; }
     const db = isIntl ? INTL_DB : usDb;
-    const matches = db.filter(s => s.name.toLowerCase().includes(val.toLowerCase())).slice(0, 6);
-    setSuggestions(matches);
+    const q = val.toLowerCase();
+    // Rank: name starts with query → word starts with query → contains query.
+    // Without this ranking "univ" returns 6 alphabetical A-schools and never
+    // surfaces "University of Vermont" etc.
+    const scored = db
+      .map(s => {
+        const n = s.name.toLowerCase();
+        if (!n.includes(q)) return null;
+        let rank = 3;
+        if (n.startsWith(q)) rank = 0;
+        else if (n.includes(' ' + q)) rank = 1;
+        else if (n.includes('-' + q)) rank = 2;
+        return { s, rank };
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.rank - b.rank || a.s.name.localeCompare(b.s.name))
+      .slice(0, 10)
+      .map(x => x.s);
+    setSuggestions(scored);
     setShowSuggestions(true);
   };
 
