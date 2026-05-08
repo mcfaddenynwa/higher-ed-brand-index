@@ -197,7 +197,6 @@ const AXES = [
       { id: "theImpactRank", label: "THE Impact Rank (blank if not listed)", placeholder: "e.g. 401", max: 2526, invert: true, emptyScore: null },
       { id: "nicheRank", label: "Niche Best Colleges Rank (blank if unranked)", placeholder: "e.g. 180", max: 1500, invert: true, emptyScore: 5 },
       { id: "nicheGrade", label: "Niche Overall Grade (A+=100, A=91, A-=83, B+=75, B=67, B-=58, C+=50, C=42 or below)", placeholder: "e.g. 91", max: 100, nicheGrade: true },
-      { id: "socialReach", label: "Social reach score (auto-calculated)", placeholder: "auto", max: 100, readOnly: true, emptyScore: null },
     ]
   },
   {
