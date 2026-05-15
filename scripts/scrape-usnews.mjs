@@ -384,44 +384,33 @@ async function main() {
 }
 
 async function updateSupabase(allResults) {
-  const { createClient } = await import('@supabase/supabase-js');
-  const supabase = createClient(
-    process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY
-  );
-
-  const entries = Object.entries(allResults);
-  let updated = 0, failed = 0;
-
-  for (let i = 0; i < entries.length; i += 50) {
-    const batch = entries.slice(i, i + 50);
-
-    for (const [unitid, data] of batch) {
-      const { data: current } = await supabase
-        .from('institutions')
-        .select('rankings, us_news_list')
-        .eq('unitid', unitid)
-        .single();
-
-      if (current) {
-        const merged = { ...(current.rankings || {}), ...data };
-        const updates = { rankings: merged };
-        if (data.usNewsList) updates.us_news_list = data.usNewsList;
-
-        const { error } = await supabase
-          .from('institutions')
-          .update(updates)
-          .eq('unitid', unitid);
-
-        if (error) failed++;
-        else updated++;
-      }
-    }
-
-    process.stdout.write(`  ${Math.min(i + 50, entries.length)}/${entries.length} processed\r`);
+  const url = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  const anon = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
+  const token = process.env.INGEST_RANKINGS_TOKEN;
+  if (!url || !anon || !token) {
+    console.error('  ✗ Missing env: VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY, INGEST_RANKINGS_TOKEN');
+    return;
   }
 
-  console.log(`\n  ✓ Supabase updated: ${updated} institutions (${failed} failed)`);
+  const endpoint = `${url}/functions/v1/ingest-rankings`;
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: anon,
+      Authorization: `Bearer ${anon}`,
+      'x-ingest-token': token,
+    },
+    body: JSON.stringify({ source: 'usnews', rankings: allResults }),
+  });
+
+  const result = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    console.error(`  ✗ ingest-rankings failed (${res.status}):`, result);
+    return;
+  }
+  console.log(`  ✓ Supabase updated via ingest-rankings: ${result.updated} updated, ${result.failed} failed, ${result.skipped?.length || 0} skipped`);
+  if (result.errors?.length) console.log('    sample errors:', result.errors);
 }
 
 main().catch(e => { console.error(e); process.exit(1); });
