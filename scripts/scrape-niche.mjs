@@ -46,12 +46,6 @@ const PAGE_SIZE = 10; // Niche shows 10 results per page
 const DELAY_MS = 2000;
 const MAX_PAGES = 400; // ~4,000 schools / 10 per page
 
-const USER_AGENTS = [
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15',
-];
-
 // Grade to numeric mapping
 const GRADE_MAP = {
   'A+': 100, 'A': 91, 'A-': 83,
