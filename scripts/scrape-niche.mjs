@@ -84,8 +84,8 @@ async function fetchNichePage(browser, pageNum) {
     });
 
     const response = await page.goto(url, {
-      waitUntil: 'networkidle',
-      timeout: 30000,
+      waitUntil: 'domcontentloaded',
+      timeout: 60000,
     });
 
     if (response && response.status() === 404) return null;
@@ -93,8 +93,8 @@ async function fetchNichePage(browser, pageNum) {
       throw new Error(`HTTP ${response.status()} on page ${pageNum}`);
     }
 
-    // Human-like settle delay
-    await sleep(1500);
+    // Give the page time to render before extracting data
+    await page.waitForTimeout(3000);
 
     // Try __NEXT_DATA__ extraction first
     const nextData = await page.evaluate(() => {
