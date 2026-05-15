@@ -21,24 +21,32 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Whitelist columns to avoid surprises
+    // Whitelist columns. 2025 Carnegie fields are first-class columns now.
     const cleaned = rows.map((r: any) => ({
-      unitid:       String(r.unitid),
-      name:         r.name,
-      city:         r.city ?? null,
-      state:        r.state ?? null,
-      sector:       r.sector ?? null,
-      carnegie_id:  r.carnegie_id ?? null,
-      us_news_list: r.us_news_list ?? null,
-      flags:        r.flags ?? {},
-      enrollment:   r.enrollment ?? null,
-      fte:          r.fte ?? null,
-      metrics:      r.metrics ?? {},
-      finance:      r.finance ?? {},
-      rankings:     r.rankings ?? {},
-      carnegie2025: r.carnegie2025 ?? null,
-      fiscal_year:  r.fiscal_year ?? null,
-      updated_at:   new Date().toISOString(),
+      unitid:           String(r.unitid),
+      name:             r.name,
+      city:             r.city ?? null,
+      state:            r.state ?? null,
+      sector:           r.sector ?? null,
+      us_news_list:     r.us_news_list ?? null,
+      flags:            r.flags ?? {},
+      enrollment:       r.enrollment ?? null,
+      fte:              r.fte ?? null,
+      metrics:          r.metrics ?? {},
+      finance:          r.finance ?? {},
+      rankings:         r.rankings ?? {},
+      fiscal_year:      r.fiscal_year ?? null,
+      ic2025:           r.ic2025 ?? null,
+      ic2025name:       r.ic2025name ?? null,
+      ic2025group:      r.ic2025group ?? null,
+      research2025:     r.research2025 ?? null,
+      research2025name: r.research2025name ?? null,
+      saec2025:         r.saec2025 ?? null,
+      saec2025name:     r.saec2025name ?? null,
+      access_ratio:     r.access_ratio ?? null,
+      earnings_ratio:   r.earnings_ratio ?? null,
+      pell_2023:        r.pell_2023 ?? null,
+      updated_at:       new Date().toISOString(),
     }));
 
     const CHUNK = 250;
