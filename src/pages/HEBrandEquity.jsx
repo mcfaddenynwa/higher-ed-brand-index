@@ -3,17 +3,55 @@ import InsightReport from "../components/InsightReport";
 import { scorePool, buildCohort, cohortTopLine } from "../lib/insightFramework";
 import financeSnapshot from "../data/financeSnapshot.json";
 import { supabase } from "@/integrations/supabase/client";
-import { get2025Data } from "@/lib/carnegie2025";
 
-// Flatten a row from the `institutions` table into the legacy IPEDS_DB shape
+// Map a 2025 IC + Research Activity Designation to the legacy 12-bucket
+// `carnegieId` used internally for weights, benchmarks and peer cohort lenses.
+// Research 1/2/RCU dominates IC when present.
+function deriveCarnegieId(ic2025, research2025) {
+  if (research2025 === 1) return "r1";
+  if (research2025 === 2) return "r2";
+  if (research2025 === 3) return "rcu";
+  if (ic2025 == null) return "";
+  if ([6, 7, 8].includes(ic2025)) return "mixed_doc";
+  if ([16, 17, 18].includes(ic2025)) return "prof_doc";
+  if ([9, 10].includes(ic2025)) return "mixed_masters";
+  if ([19, 20].includes(ic2025)) return "prof_masters";
+  if (ic2025 === 22) return "bac_arts";
+  if ([4, 5].includes(ic2025)) return "mixed_bac";
+  if ([13, 14, 15].includes(ic2025)) return "prof_bac";
+  if (ic2025 >= 21 && ic2025 <= 31) return "special";
+  return "";
+}
+
+// 2025 Research Activity Designation (1=R1, 2=R2, 3=RCU) → legacy
+// researchDesignation field (3=High, 2=Moderate, 1=Low, 0=None) used by scoring.
+function research2025ToScoreVal(r) {
+  if (r === 1) return 3;
+  if (r === 2) return 2;
+  if (r === 3) return 1;
+  return 0;
+}
+
+// Flatten a row from the `institutions` table into the IPEDS_DB shape
 // so the rest of the form / scoring code can stay untouched.
 function flattenInstitutionRow(r) {
+  const carnegieId = deriveCarnegieId(r.ic2025, r.research2025);
   return {
     name: r.name,
     unitid: r.unitid,
     city: r.city,
     state: r.state,
-    carnegieId: r.carnegie_id,
+    carnegieId,
+    ic2025: r.ic2025,
+    ic2025name: r.ic2025name,
+    ic2025group: r.ic2025group,
+    research2025: r.research2025,
+    research2025name: r.research2025name,
+    saec2025: r.saec2025,
+    saec2025name: r.saec2025name,
+    accessRatio: r.access_ratio,
+    earningsRatio: r.earnings_ratio,
+    pellPct: r.pell_2023 != null ? Math.round(r.pell_2023 * 100) : undefined,
     usNewsList: r.us_news_list,
     flags: r.flags || {},
     fte: r.fte,
@@ -21,9 +59,76 @@ function flattenInstitutionRow(r) {
     ...(r.metrics || {}),
     ...(r.rankings || {}),
     ...(r.finance || {}),
-    carnegie2025: r.carnegie2025 || null,
   };
 }
+
+// 26 four-year IC2025 cohorts grouped for the Classify dropdown.
+// Excludes ic 1, 2, 3, 11, 12 (Associate-only).
+const IC2025_COHORTS = [
+  // Associate / Baccalaureate
+  { id: 4,  group: "Associate/Baccalaureate", label: "Mixed Associate/Baccalaureate" },
+  { id: 13, group: "Associate/Baccalaureate", label: "Professions-focused Associate/Baccalaureate" },
+  // Baccalaureate
+  { id: 5,  group: "Baccalaureate", label: "Mixed Baccalaureate" },
+  { id: 14, group: "Baccalaureate", label: "Professions-focused Baccalaureate Medium" },
+  { id: 15, group: "Baccalaureate", label: "Professions-focused Baccalaureate Small" },
+  // Master's
+  { id: 9,  group: "Master's", label: "Mixed Undergraduate/Graduate-Master's Large/Medium" },
+  { id: 10, group: "Master's", label: "Mixed Undergraduate/Graduate-Master's Small" },
+  { id: 19, group: "Master's", label: "Professions-focused Undergraduate/Graduate-Master's Large/Medium" },
+  { id: 20, group: "Master's", label: "Professions-focused Undergraduate/Graduate-Master's Small" },
+  // Doctorate
+  { id: 6,  group: "Doctorate", label: "Mixed Undergraduate/Graduate-Doctorate Large" },
+  { id: 7,  group: "Doctorate", label: "Mixed Undergraduate/Graduate-Doctorate Medium" },
+  { id: 8,  group: "Doctorate", label: "Mixed Undergraduate/Graduate-Doctorate Small" },
+  { id: 16, group: "Doctorate", label: "Professions-focused Undergraduate/Graduate-Doctorate Large" },
+  { id: 17, group: "Doctorate", label: "Professions-focused Undergraduate/Graduate-Doctorate Medium" },
+  { id: 18, group: "Doctorate", label: "Professions-focused Undergraduate/Graduate-Doctorate Small" },
+  // Special Focus
+  { id: 21, group: "Special Focus", label: "Special Focus: Applied and Career Studies" },
+  { id: 22, group: "Special Focus", label: "Special Focus: Arts and Sciences" },
+  { id: 23, group: "Special Focus", label: "Special Focus: Arts, Music, and Design" },
+  { id: 24, group: "Special Focus", label: "Special Focus: Business" },
+  { id: 25, group: "Special Focus", label: "Special Focus: Graduate Studies" },
+  { id: 26, group: "Special Focus", label: "Special Focus: Law" },
+  { id: 27, group: "Special Focus", label: "Special Focus: Medical Schools and Centers" },
+  { id: 28, group: "Special Focus", label: "Special Focus: Nursing" },
+  { id: 29, group: "Special Focus", label: "Special Focus: Other Health Professions" },
+  { id: 30, group: "Special Focus", label: "Special Focus: Technology, Engineering, and Sciences" },
+  { id: 31, group: "Special Focus", label: "Special Focus: Theological Studies" },
+];
+
+const IC2025_GROUP_ORDER = ["Doctorate", "Master's", "Baccalaureate", "Associate/Baccalaureate", "Special Focus"];
+
+// Short blurbs surfaced under the auto-detected classification.
+const IC2025_DESCRIPTIONS = {
+  4:  "Mix of associate and bachelor's programs across multiple fields.",
+  5:  "Bachelor's-dominant institution with a balanced academic and professional mix.",
+  6:  "Large doctoral institution with a balanced academic and professional mix.",
+  7:  "Medium doctoral institution with a balanced academic and professional mix.",
+  8:  "Small doctoral institution with a balanced academic and professional mix.",
+  9:  "Master's-dominant institution (large/medium) with a balanced academic and professional mix.",
+  10: "Master's-dominant institution (small) with a balanced academic and professional mix.",
+  13: "Mix of associate and bachelor's programs concentrated in professional fields.",
+  14: "Bachelor's-dominant institution (medium) concentrated in professional fields.",
+  15: "Bachelor's-dominant institution (small) concentrated in professional fields.",
+  16: "Large doctoral institution concentrated in professional fields.",
+  17: "Medium doctoral institution concentrated in professional fields.",
+  18: "Small doctoral institution concentrated in professional fields.",
+  19: "Master's-dominant institution (large/medium) concentrated in professional fields.",
+  20: "Master's-dominant institution (small) concentrated in professional fields.",
+  21: "Special Focus institution centered on applied and career studies programs.",
+  22: "Special Focus institution centered on the arts and sciences (liberal arts).",
+  23: "Special Focus institution centered on arts, music, and design.",
+  24: "Special Focus institution centered on business and management.",
+  25: "Special Focus institution centered on graduate-only studies.",
+  26: "Special Focus institution centered on law.",
+  27: "Special Focus institution centered on medical schools and centers.",
+  28: "Special Focus institution centered on nursing.",
+  29: "Special Focus institution centered on other health professions.",
+  30: "Special Focus institution centered on technology, engineering, and sciences.",
+  31: "Special Focus institution centered on theological studies.",
+};
 // LOVABLE SETUP: Add this to your index.html <head>:
 //
 
@@ -674,7 +779,7 @@ export default function App() {
   const [carnegieId, setCarnegieId] = useState("");
   const [institution, setInstitution] = useState("");
   const [unitid, setUnitid] = useState("");
-  const [institution2025IC, setInstitution2025IC] = useState(null);
+  const [selectedIc2025, setSelectedIc2025] = useState(null);
   const [institutionSAEC, setInstitutionSAEC] = useState(null);
   const [institutionResearch, setInstitutionResearch] = useState(null);
   const [values, setValues] = useState({});
@@ -707,7 +812,7 @@ export default function App() {
     (async () => {
       const { data, error } = await supabase
         .from("institutions")
-        .select("unitid,name,city,state,carnegie_id,us_news_list,flags,enrollment,fte,metrics,rankings,finance,carnegie2025")
+        .select("unitid,name,city,state,us_news_list,flags,enrollment,fte,metrics,rankings,finance,ic2025,ic2025name,ic2025group,research2025,research2025name,saec2025,saec2025name,access_ratio,earnings_ratio,pell_2023")
         .order("name", { ascending: true })
         .range(0, 2499);
       if (cancelled) return;
@@ -804,7 +909,7 @@ export default function App() {
     const escaped = val.replace(/[%_,]/g, ' ').trim();
     const { data, error } = await supabase
       .from("institutions")
-      .select("unitid,name,city,state,carnegie_id,us_news_list,flags,enrollment,fte,metrics,rankings,finance,carnegie2025")
+      .select("unitid,name,city,state,us_news_list,flags,enrollment,fte,metrics,rankings,finance,ic2025,ic2025name,ic2025group,research2025,research2025name,saec2025,saec2025name,access_ratio,earnings_ratio,pell_2023")
       .ilike("name", `%${escaped}%`)
       .order("name", { ascending: true })
       .limit(25);
@@ -868,26 +973,25 @@ export default function App() {
         autoFields.push('totalRevenue');
       }
     }
-    // 2025 Carnegie data: prefer row column, fall back to bundled 52-school sample
-    const c2025 = school.carnegie2025 || get2025Data(school.unitid);
-    if (c2025) {
-      if (c2025.researchDesignation != null) {
-        populated.researchDesignation = String(c2025.researchDesignation);
+    // 2025 Carnegie data — straight from the institutions row.
+    if (!isIntl) {
+      if (school.research2025 != null) {
+        populated.researchDesignation = String(research2025ToScoreVal(school.research2025));
         autoFields.push('researchDesignation');
       }
-      if (c2025.saecScore != null) {
-        populated.saecScore = String(c2025.saecScore);
+      if (school.saec2025 != null) {
+        populated.saecScore = String(school.saec2025);
         autoFields.push('saecScore');
       }
-      if (c2025.accessRatio != null) {
-        populated.accessRatio = String(c2025.accessRatio);
+      if (school.accessRatio != null) {
+        populated.accessRatio = String(school.accessRatio);
         autoFields.push('accessRatio');
       }
-      setInstitution2025IC(c2025.ic2025name ?? null);
-      setInstitutionSAEC(c2025.saec2025name ?? null);
-      setInstitutionResearch(c2025.research2025name ?? null);
+      setSelectedIc2025(school.ic2025 ?? null);
+      setInstitutionSAEC(school.saec2025name ?? null);
+      setInstitutionResearch(school.research2025name ?? null);
     } else {
-      setInstitution2025IC(null);
+      setSelectedIc2025(null);
       setInstitutionSAEC(null);
       setInstitutionResearch(null);
     }
@@ -1015,32 +1119,120 @@ export default function App() {
             )}
           </div>
 
-          {/* Manual Carnegie selection */}
-          <div style={{ fontSize: 14, color: '#243551', marginBottom: 14 }}>
-            {isIntl
-              ? (autoPopulated.length > 0 ? "Confirm or change your international classification:" : "Select your international classification:")
-              : (autoPopulated.length > 0 ? "Confirm or change your Carnegie classification:" : "Or select your Carnegie classification manually:")}
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 28 }}>
-{(isIntl ? INTL_CATEGORIES : CARNEGIE_CATEGORIES).map(cat => (
-              <button key={cat.id} onClick={() => { setCarnegieId(cat.id); if (USNEWS_LIST_MAP[cat.id]) setValues(p => ({ ...p, usNewsList: USNEWS_LIST_MAP[cat.id] })); }} style={{
-                textAlign: 'left', padding: '14px 16px',
-                background: carnegieId === cat.id ? '#FFFFFF' : '#F4F6F8',
-                border: carnegieId === cat.id ? '2px solid #1C3678' : '1px solid #E9EDEE',
-                borderRadius: 0, cursor: 'pointer', transition: 'all 0.12s',
-                boxShadow: carnegieId === cat.id ? 'inset 4px 0 0 0 #EB5600' : 'none',
+          {/* International keeps the legacy card grid */}
+          {isIntl && (
+            <>
+              <div style={{ fontSize: 14, color: '#243551', marginBottom: 14 }}>
+                {autoPopulated.length > 0 ? "Confirm or change your international classification:" : "Select your international classification:"}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 28 }}>
+                {INTL_CATEGORIES.map(cat => (
+                  <button key={cat.id} onClick={() => { setCarnegieId(cat.id); if (USNEWS_LIST_MAP[cat.id]) setValues(p => ({ ...p, usNewsList: USNEWS_LIST_MAP[cat.id] })); }} style={{
+                    textAlign: 'left', padding: '14px 16px',
+                    background: carnegieId === cat.id ? '#FFFFFF' : '#F4F6F8',
+                    border: carnegieId === cat.id ? '2px solid #1C3678' : '1px solid #E9EDEE',
+                    borderRadius: 0, cursor: 'pointer', transition: 'all 0.12s',
+                    boxShadow: carnegieId === cat.id ? 'inset 4px 0 0 0 #EB5600' : 'none',
+                  }}>
+                    <div style={{ fontSize: 14, fontFamily: "'Young Serif', Georgia, serif", color: '#243551', marginBottom: 4 }}>{cat.short}</div>
+                    <div style={{ fontSize: 13, color: '#595959', lineHeight: 1.5 }}>{cat.description}</div>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* US: single auto-detected 2025 classification card with override dropdown */}
+          {!isIntl && (() => {
+            const matched = IC2025_COHORTS.find(c => c.id === selectedIc2025);
+            const matchedName = matched?.label ?? null;
+            const description = matched ? IC2025_DESCRIPTIONS[matched.id] : null;
+            const groups = IC2025_GROUP_ORDER.map(g => ({
+              group: g,
+              items: IC2025_COHORTS.filter(c => c.group === g),
+            }));
+            const handlePick = (icId) => {
+              const cohort = IC2025_COHORTS.find(c => c.id === icId);
+              if (!cohort) return;
+              setSelectedIc2025(icId);
+              // Re-derive the legacy carnegieId, preferring the existing
+              // research2025 designation if the institution had one.
+              const r = parseFloat(values.researchDesignation);
+              // researchDesignation field is 3=R1, 2=R2, 1=RCU, 0=None — invert
+              const research2025 = r === 3 ? 1 : r === 2 ? 2 : r === 1 ? 3 : null;
+              const newCid = deriveCarnegieId(icId, research2025);
+              setCarnegieId(newCid);
+              if (USNEWS_LIST_MAP[newCid]) setValues(p => ({ ...p, usNewsList: USNEWS_LIST_MAP[newCid] }));
+            };
+            return (
+              <div style={{
+                background: '#FFFFFF',
+                border: '2px solid #1C3678',
+                boxShadow: 'inset 4px 0 0 0 #EB5600',
+                padding: '20px 22px',
+                marginBottom: 28,
               }}>
-                <div style={{ fontSize: 14, fontFamily: "'Young Serif', Georgia, serif", color: '#243551', marginBottom: 4 }}>{cat.short}</div>
-                <div style={{ fontSize: 13, color: '#595959', lineHeight: 1.5 }}>{cat.description}</div>
-              </button>
-            ))}
-          </div>
+                <div style={{ fontSize: 11, letterSpacing: 2, color: '#1C3678', fontWeight: 600, marginBottom: 8, textTransform: 'uppercase' }}>
+                  2025 Carnegie Classification
+                </div>
+                {matched ? (
+                  <>
+                    <div style={{ fontSize: 18, fontFamily: "'Young Serif', Georgia, serif", color: '#243551', lineHeight: 1.25, marginBottom: 4 }}>
+                      {matchedName}
+                    </div>
+                    {institutionResearch && (
+                      <div style={{ fontSize: 13, color: '#EB5600', fontWeight: 600, marginBottom: 10 }}>
+                        {institutionResearch}
+                      </div>
+                    )}
+                    {description && (
+                      <div style={{ fontSize: 13, color: '#595959', lineHeight: 1.55, marginBottom: 14 }}>
+                        {description}
+                      </div>
+                    )}
+                    {institutionSAEC && (
+                      <div style={{ fontSize: 12, color: '#595959', marginBottom: 14 }}>
+                        <span style={{ color: '#1C3678', fontWeight: 600 }}>2025 SAEC:</span> {institutionSAEC}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div style={{ fontSize: 14, color: '#595959', marginBottom: 14, lineHeight: 1.55 }}>
+                    Search for your institution above, or pick a 2025 classification below.
+                  </div>
+                )}
+
+                <div style={{ borderTop: '1px solid #E9EDEE', paddingTop: 14 }}>
+                  <div style={{ fontSize: 11, letterSpacing: 1.5, color: '#595959', textTransform: 'uppercase', marginBottom: 8 }}>
+                    {matched ? 'Classification incorrect? Change it:' : 'Choose a classification:'}
+                  </div>
+                  <select
+                    value={selectedIc2025 ?? ''}
+                    onChange={e => handlePick(parseInt(e.target.value, 10))}
+                    style={{
+                      ...iStyle,
+                      fontFamily: "'Bitter', Georgia, serif",
+                      fontSize: 14,
+                      cursor: 'pointer',
+                      background: '#FFFFFF',
+                    }}
+                  >
+                    <option value="" disabled>Select a 2025 IC classification…</option>
+                    {groups.map(g => (
+                      <optgroup key={g.group} label={g.group}>
+                        {g.items.map(c => (
+                          <option key={c.id} value={c.id}>{c.label}</option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            );
+          })()}
 
           {carnegieId
             ? <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <div style={{ fontSize: 14, color: '#243551' }}>
-                  Selected: <span style={{ color: '#EB5600', fontWeight: 600 }}>{selectedCarnegie?.label}</span>
-                </div>
                 <button onClick={() => setStep("data")} style={{
                   background: '#EB5600', color: '#FFFFFF', border: 'none',
                   borderRadius: 6, padding: '9px 22px', fontSize: 14, fontWeight: 700,
@@ -1057,22 +1249,25 @@ export default function App() {
       {step === "data" && (
         <div style={{ display: 'flex', minHeight: 'calc(100vh - 73px)' }}>
           <div style={{ width: 370, borderRight: '1px solid #F4F6F8', padding: '22px 24px', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
-              <div>
-                <div style={{ fontSize: 11, letterSpacing: 2, color: '#EB5600', marginBottom: 2 }}>2021 BASIC</div>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>{selectedCarnegie?.short}</div>
-                {institution && <div style={{ fontSize: 14, color: '#243551', marginTop: 1 }}>{institution}</div>}
-                {institution2025IC && (
-                  <div style={{ fontSize: 11, color: '#595959', marginTop: 4, lineHeight: 1.35 }}>
-                    <div><span style={{ color: '#1C3678', fontWeight: 600 }}>2025 IC:</span> {institution2025IC}</div>
-                    {institutionResearch && <div><span style={{ color: '#1C3678', fontWeight: 600 }}>2025 Research:</span> {institutionResearch}</div>}
-                    {institutionSAEC && <div><span style={{ color: '#1C3678', fontWeight: 600 }}>2025 SAEC:</span> {institutionSAEC}</div>}
+            {(() => {
+              const ic = IC2025_COHORTS.find(c => c.id === selectedIc2025);
+              return (
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, gap: 12 }}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: 11, letterSpacing: 2, color: '#1C3678', fontWeight: 600, marginBottom: 4, textTransform: 'uppercase' }}>2025 Carnegie</div>
+                    {ic && <div style={{ fontSize: 14, fontFamily: "'Young Serif', Georgia, serif", color: '#243551', lineHeight: 1.3 }}>{ic.label}</div>}
+                    {institutionResearch && <div style={{ fontSize: 12, color: '#EB5600', fontWeight: 600, marginTop: 2 }}>{institutionResearch}</div>}
+                    {institution && <div style={{ fontSize: 14, color: '#243551', marginTop: 6 }}>{institution}</div>}
+                    {institutionSAEC && (
+                      <div style={{ fontSize: 11, color: '#595959', marginTop: 4 }}>
+                        <span style={{ color: '#1C3678', fontWeight: 600 }}>SAEC:</span> {institutionSAEC}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <button onClick={() => setStep("carnegie")} style={{ fontSize: 11, letterSpacing: 1.5, color: '#595959', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginTop: 2 }}>← BACK</button>
-            </div>
-
+                  <button onClick={() => setStep("carnegie")} style={{ fontSize: 11, letterSpacing: 1.5, color: '#595959', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginTop: 2, flexShrink: 0 }}>← BACK</button>
+                </div>
+              );
+            })()}
             {autoPopulated.length > 0 && (
               <div style={{ marginBottom: 16, padding: '10px 12px', background: 'rgba(26,153,136,0.08)', border: '1px solid rgba(26,153,136,0.25)', borderRadius: 8, fontSize: 14, color: '#1A9988', lineHeight: 1.5 }}>
                 ✓ {autoPopulated.length} fields pre-filled from IPEDS. Review and complete remaining inputs.
