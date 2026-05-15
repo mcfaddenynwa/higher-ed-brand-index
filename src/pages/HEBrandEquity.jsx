@@ -1256,7 +1256,7 @@ export default function App() {
           </div>
 
           {/* Live chart */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px', gap: 16 }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', padding: '20px 32px', gap: 14 }}>
             {institution && <div style={{ fontSize: 16, fontFamily: "'Young Serif', Georgia, serif" }}>{institution}</div>}
             <SpiderChart scores={scores} carnegieAvg={carnegieAvg} globalAvg={globalAvg} axes={activeAxes} />
             <div style={{ display: 'flex', gap: 18, fontSize: 14, color: '#243551', flexWrap: 'wrap', justifyContent: 'center' }}>
