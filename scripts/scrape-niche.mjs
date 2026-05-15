@@ -276,6 +276,15 @@ async function main() {
   console.log(`\nNiche Best Colleges Scraper`);
   console.log(`Max pages: ${maxPages} | Dry run: ${dryRun}\n`);
 
+  // Check playwright is available
+  let playwright;
+  try {
+    playwright = await import('playwright');
+  } catch {
+    console.error('Playwright not installed. Run: npm install playwright && npx playwright install chromium');
+    process.exit(1);
+  }
+
   // Load existing seed data for name matching
   let seedData = {};
   try {
@@ -291,49 +300,58 @@ async function main() {
   const allSchools = [];
   let emptyPages = 0;
 
-  for (let page = 1; page <= maxPages; page++) {
-    process.stdout.write(`  Page ${page}/${maxPages}... `);
+  const browser = await playwright.chromium.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  });
 
-    try {
-      const schools = await fetchNichePage(page);
+  try {
+    for (let page = 1; page <= maxPages; page++) {
+      process.stdout.write(`  Page ${page}/${maxPages}... `);
 
-      if (!schools || schools.length === 0) {
-        emptyPages++;
-        console.log(`empty (${emptyPages} in a row)`);
-        if (emptyPages >= 3) {
-          console.log('  3 empty pages in a row — assuming end of rankings');
-          break;
-        }
-        await sleep(DELAY_MS);
-        continue;
-      }
+      try {
+        const schools = await fetchNichePage(browser, page);
 
-      emptyPages = 0;
-
-      // Resolve unitids for schools that don't have them
-      for (const school of schools) {
-        if (!school.unitid) {
-          // Try name matching first (fast)
-          school.unitid = matchByName(school.name, nameIndex);
-
-          // If still no match and we have a slug, fetch profile page (slow)
-          if (!school.unitid && school.slug && page <= 50) {
-            school.unitid = await fetchUnitidFromProfile(school.slug);
+        if (!schools || schools.length === 0) {
+          emptyPages++;
+          console.log(`empty (${emptyPages} in a row)`);
+          if (emptyPages >= 3) {
+            console.log('  3 empty pages in a row — assuming end of rankings');
+            break;
           }
+          await sleep(DELAY_MS);
+          continue;
         }
-        allSchools.push(school);
+
+        emptyPages = 0;
+
+        // Resolve unitids for schools that don't have them
+        for (const school of schools) {
+          if (!school.unitid) {
+            // Try name matching first (fast)
+            school.unitid = matchByName(school.name, nameIndex);
+
+            // If still no match and we have a slug, fetch profile page (slow)
+            if (!school.unitid && school.slug && page <= 50) {
+              school.unitid = await fetchUnitidFromProfile(browser, school.slug);
+            }
+          }
+          allSchools.push(school);
+        }
+
+        console.log(`${schools.length} schools (total: ${allSchools.length})`);
+      } catch (err) {
+        console.log(`ERROR: ${err.message}`);
+        if (err.message.includes('429')) {
+          console.log('  Rate limited — waiting 30 seconds');
+          await sleep(30000);
+        }
       }
 
-      console.log(`${schools.length} schools (total: ${allSchools.length})`);
-    } catch (err) {
-      console.log(`ERROR: ${err.message}`);
-      if (err.message.includes('429')) {
-        console.log('  Rate limited — waiting 30 seconds');
-        await sleep(30000);
-      }
+      await sleep(DELAY_MS);
     }
-
-    await sleep(DELAY_MS);
+  } finally {
+    await browser.close().catch(() => {});
   }
 
   // Build output keyed by unitid where available
