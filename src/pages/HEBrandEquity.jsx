@@ -1062,6 +1062,13 @@ export default function App() {
                 <div style={{ fontSize: 14, letterSpacing: 2, color: '#EB5600', marginBottom: 2 }}>CLASSIFICATION</div>
                 <div style={{ fontSize: 14, fontWeight: 600 }}>{selectedCarnegie?.short}</div>
                 {institution && <div style={{ fontSize: 14, color: '#243551', marginTop: 1 }}>{institution}</div>}
+                {institution2025IC && (
+                  <div style={{ fontSize: 11, color: '#595959', marginTop: 6, lineHeight: 1.4 }}>
+                    <div><span style={{ color: '#1C3678', fontWeight: 600 }}>2025 IC:</span> {institution2025IC}</div>
+                    {institutionResearch && <div><span style={{ color: '#1C3678', fontWeight: 600 }}>Research:</span> {institutionResearch}</div>}
+                    {institutionSAEC && <div><span style={{ color: '#1C3678', fontWeight: 600 }}>SAEC:</span> {institutionSAEC}</div>}
+                  </div>
+                )}
               </div>
               <button onClick={() => setStep("carnegie")} style={{ fontSize: 14, color: '#595959', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: 1 }}>← BACK</button>
             </div>
