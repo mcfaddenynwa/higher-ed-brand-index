@@ -1057,20 +1057,20 @@ export default function App() {
       {step === "data" && (
         <div style={{ display: 'flex', minHeight: 'calc(100vh - 73px)' }}>
           <div style={{ width: 370, borderRight: '1px solid #F4F6F8', padding: '22px 24px', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
-                <div style={{ fontSize: 14, letterSpacing: 2, color: '#EB5600', marginBottom: 2 }}>CLASSIFICATION</div>
+                <div style={{ fontSize: 11, letterSpacing: 2, color: '#EB5600', marginBottom: 2 }}>2021 BASIC</div>
                 <div style={{ fontSize: 14, fontWeight: 600 }}>{selectedCarnegie?.short}</div>
                 {institution && <div style={{ fontSize: 14, color: '#243551', marginTop: 1 }}>{institution}</div>}
                 {institution2025IC && (
-                  <div style={{ fontSize: 11, color: '#595959', marginTop: 6, lineHeight: 1.4 }}>
+                  <div style={{ fontSize: 11, color: '#595959', marginTop: 4, lineHeight: 1.35 }}>
                     <div><span style={{ color: '#1C3678', fontWeight: 600 }}>2025 IC:</span> {institution2025IC}</div>
-                    {institutionResearch && <div><span style={{ color: '#1C3678', fontWeight: 600 }}>Research:</span> {institutionResearch}</div>}
-                    {institutionSAEC && <div><span style={{ color: '#1C3678', fontWeight: 600 }}>SAEC:</span> {institutionSAEC}</div>}
+                    {institutionResearch && <div><span style={{ color: '#1C3678', fontWeight: 600 }}>2025 Research:</span> {institutionResearch}</div>}
+                    {institutionSAEC && <div><span style={{ color: '#1C3678', fontWeight: 600 }}>2025 SAEC:</span> {institutionSAEC}</div>}
                   </div>
                 )}
               </div>
-              <button onClick={() => setStep("carnegie")} style={{ fontSize: 14, color: '#595959', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: 1 }}>← BACK</button>
+              <button onClick={() => setStep("carnegie")} style={{ fontSize: 11, letterSpacing: 1.5, color: '#595959', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginTop: 2 }}>← BACK</button>
             </div>
 
             {autoPopulated.length > 0 && (
