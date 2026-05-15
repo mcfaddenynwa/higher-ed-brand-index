@@ -10,6 +10,8 @@ function flattenInstitutionRow(r) {
   return {
     name: r.name,
     unitid: r.unitid,
+    city: r.city,
+    state: r.state,
     carnegieId: r.carnegie_id,
     usNewsList: r.us_news_list,
     flags: r.flags || {},
@@ -18,6 +20,7 @@ function flattenInstitutionRow(r) {
     ...(r.metrics || {}),
     ...(r.rankings || {}),
     ...(r.finance || {}),
+    carnegie2025: r.carnegie2025 || null,
   };
 }
 // LOVABLE SETUP: Add this to your index.html <head>:
