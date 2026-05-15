@@ -703,7 +703,7 @@ export default function App() {
     (async () => {
       const { data, error } = await supabase
         .from("institutions")
-        .select("unitid,name,carnegie_id,us_news_list,flags,enrollment,fte,metrics,rankings,finance")
+        .select("unitid,name,city,state,carnegie_id,us_news_list,flags,enrollment,fte,metrics,rankings,finance,carnegie2025")
         .order("name", { ascending: true })
         .range(0, 2499);
       if (cancelled) return;
