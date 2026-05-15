@@ -674,6 +674,9 @@ export default function App() {
   const [carnegieId, setCarnegieId] = useState("");
   const [institution, setInstitution] = useState("");
   const [unitid, setUnitid] = useState("");
+  const [institution2025IC, setInstitution2025IC] = useState(null);
+  const [institutionSAEC, setInstitutionSAEC] = useState(null);
+  const [institutionResearch, setInstitutionResearch] = useState(null);
   const [values, setValues] = useState({});
   const [activeAxis, setActiveAxis] = useState(0);
   const [autoPopulated, setAutoPopulated] = useState([]);
