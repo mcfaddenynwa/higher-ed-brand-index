@@ -203,8 +203,10 @@ async function fetchUnitidFromProfile(browser, slug) {
     });
 
     const url = `${NICHE_BASE}/colleges/${slug}/`;
-    const response = await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+    const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
     if (!response || !response.ok()) return null;
+
+    await page.waitForTimeout(3000);
 
     // Try __NEXT_DATA__ for entity.unitid / ipeds
     const fromNext = await page.evaluate(() => {
