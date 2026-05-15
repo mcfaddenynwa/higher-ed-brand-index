@@ -3,6 +3,15 @@ import InsightReport from "../components/InsightReport";
 import { scorePool, buildCohort, cohortTopLine } from "../lib/insightFramework";
 import financeSnapshot from "../data/financeSnapshot.json";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectGroup,
+  SelectLabel,
+  SelectItem,
+} from "@/components/ui/select";
 
 // Map a 2025 IC + Research Activity Designation to the legacy 12-bucket
 // `carnegieId` used internally for weights, benchmarks and peer cohort lenses.
