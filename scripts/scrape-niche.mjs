@@ -65,10 +65,6 @@ function sleep(ms) {
   return new Promise(r => setTimeout(r, ms + Math.floor(Math.random() * 500)));
 }
 
-function randomUA() {
-  return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
-}
-
 /**
  * Fetch a Niche rankings page and extract school data from __NEXT_DATA__
  * Falls back to HTML parsing if JSON extraction fails
