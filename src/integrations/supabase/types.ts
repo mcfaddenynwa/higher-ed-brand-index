@@ -17,6 +17,7 @@ export type Database = {
       institutions: {
         Row: {
           carnegie_id: string | null
+          carnegie2025: Json | null
           city: string | null
           enrollment: number | null
           finance: Json
@@ -35,6 +36,7 @@ export type Database = {
         }
         Insert: {
           carnegie_id?: string | null
+          carnegie2025?: Json | null
           city?: string | null
           enrollment?: number | null
           finance?: Json
@@ -53,6 +55,7 @@ export type Database = {
         }
         Update: {
           carnegie_id?: string | null
+          carnegie2025?: Json | null
           city?: string | null
           enrollment?: number | null
           finance?: Json
