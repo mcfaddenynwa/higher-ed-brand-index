@@ -21,33 +21,31 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Whitelist columns to avoid surprises
+    // Normalize incoming rows to the 2025 columns.
     const cleaned = rows.map((r: any) => ({
-      unitid:       String(r.unitid),
-      name:         r.name,
-      city:         r.city ?? null,
-      state:        r.state ?? null,
-      sector:       r.sector ?? null,
-      carnegie_id:  r.carnegie_id ?? null,
-      us_news_list: r.us_news_list ?? null,
-      flags:        r.flags ?? {},
-      enrollment:   r.enrollment ?? null,
-      fte:          r.fte ?? null,
-      metrics:      r.metrics ?? {},
-      finance:      r.finance ?? {},
-      rankings:     r.rankings ?? {},
-      carnegie2025: r.carnegie2025 ?? null,
-      fiscal_year:  r.fiscal_year ?? null,
-      updated_at:   new Date().toISOString(),
+      unitid:           String(r.unitid),
+      name:             r.name,
+      city:             r.city ?? null,
+      state:            r.state ?? null,
+      ic2025:           r.ic2025 ?? null,
+      ic2025name:       r.ic2025name ?? null,
+      ic2025group:      r.ic2025group ?? null,
+      research2025:     r.research2025 ?? null,
+      research2025name: r.research2025name ?? null,
+      saec2025:         r.saec2025 ?? null,
+      saec2025name:     r.saec2025name ?? null,
+      access_ratio:     r.access_ratio ?? null,
+      earnings_ratio:   r.earnings_ratio ?? null,
+      pell_2023:        r.pell_2023 ?? null,
     }));
 
-    const CHUNK = 250;
+    // Push through the SECURITY DEFINER RPC so PostgREST doesn't filter
+    // out the new columns via its schema cache.
+    const CHUNK = 500;
     let inserted = 0;
     for (let i = 0; i < cleaned.length; i += CHUNK) {
       const slice = cleaned.slice(i, i + CHUNK);
-      const { error } = await supabase
-        .from("institutions")
-        .upsert(slice, { onConflict: "unitid" });
+      const { error } = await supabase.rpc("upsert_institutions_2025", { payload: slice });
       if (error) throw new Error(`Chunk ${i}: ${error.message}`);
       inserted += slice.length;
     }
