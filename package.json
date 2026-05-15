@@ -10,7 +10,11 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "scrape:niche": "node scripts/scrape-niche.mjs",
+    "scrape:usnews": "node scripts/scrape-usnews.mjs",
+    "scrape:usnews:dry": "node scripts/scrape-usnews.mjs --dry-run",
+    "scrape:niche:dry": "node scripts/scrape-niche.mjs --dry-run"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
