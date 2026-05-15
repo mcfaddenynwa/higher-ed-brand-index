@@ -109,7 +109,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      upsert_institutions_2025: { Args: { payload: Json }; Returns: number }
     }
     Enums: {
       [_ in never]: never
