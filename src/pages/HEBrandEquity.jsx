@@ -3,6 +3,7 @@ import InsightReport from "../components/InsightReport";
 import { scorePool, buildCohort, cohortTopLine } from "../lib/insightFramework";
 import financeSnapshot from "../data/financeSnapshot.json";
 import { supabase } from "@/integrations/supabase/client";
+import { get2025Data } from "@/lib/carnegie2025";
 
 // Flatten a row from the `institutions` table into the legacy IPEDS_DB shape
 // so the rest of the form / scoring code can stay untouched.
@@ -673,6 +674,9 @@ export default function App() {
   const [carnegieId, setCarnegieId] = useState("");
   const [institution, setInstitution] = useState("");
   const [unitid, setUnitid] = useState("");
+  const [institution2025IC, setInstitution2025IC] = useState(null);
+  const [institutionSAEC, setInstitutionSAEC] = useState(null);
+  const [institutionResearch, setInstitutionResearch] = useState(null);
   const [values, setValues] = useState({});
   const [activeAxis, setActiveAxis] = useState(0);
   const [autoPopulated, setAutoPopulated] = useState([]);
@@ -864,6 +868,29 @@ export default function App() {
         autoFields.push('totalRevenue');
       }
     }
+    // 2025 Carnegie data: prefer row column, fall back to bundled 52-school sample
+    const c2025 = school.carnegie2025 || get2025Data(school.unitid);
+    if (c2025) {
+      if (c2025.researchDesignation != null) {
+        populated.researchDesignation = String(c2025.researchDesignation);
+        autoFields.push('researchDesignation');
+      }
+      if (c2025.saecScore != null) {
+        populated.saecScore = String(c2025.saecScore);
+        autoFields.push('saecScore');
+      }
+      if (c2025.accessRatio != null) {
+        populated.accessRatio = String(c2025.accessRatio);
+        autoFields.push('accessRatio');
+      }
+      setInstitution2025IC(c2025.ic2025name ?? null);
+      setInstitutionSAEC(c2025.saec2025name ?? null);
+      setInstitutionResearch(c2025.research2025name ?? null);
+    } else {
+      setInstitution2025IC(null);
+      setInstitutionSAEC(null);
+      setInstitutionResearch(null);
+    }
     setValues(prev => ({ ...prev, ...populated }));
     setAutoPopulated(autoFields);
     setSuggestions([]);
@@ -1035,6 +1062,13 @@ export default function App() {
                 <div style={{ fontSize: 14, letterSpacing: 2, color: '#EB5600', marginBottom: 2 }}>CLASSIFICATION</div>
                 <div style={{ fontSize: 14, fontWeight: 600 }}>{selectedCarnegie?.short}</div>
                 {institution && <div style={{ fontSize: 14, color: '#243551', marginTop: 1 }}>{institution}</div>}
+                {institution2025IC && (
+                  <div style={{ fontSize: 11, color: '#595959', marginTop: 6, lineHeight: 1.4 }}>
+                    <div><span style={{ color: '#1C3678', fontWeight: 600 }}>2025 IC:</span> {institution2025IC}</div>
+                    {institutionResearch && <div><span style={{ color: '#1C3678', fontWeight: 600 }}>Research:</span> {institutionResearch}</div>}
+                    {institutionSAEC && <div><span style={{ color: '#1C3678', fontWeight: 600 }}>SAEC:</span> {institutionSAEC}</div>}
+                  </div>
+                )}
               </div>
               <button onClick={() => setStep("carnegie")} style={{ fontSize: 14, color: '#595959', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: 1 }}>← BACK</button>
             </div>
