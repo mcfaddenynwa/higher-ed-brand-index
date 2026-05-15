@@ -1225,7 +1225,13 @@ export default function App() {
                       <SelectValue placeholder="Select a 2025 IC classification…" />
                     </SelectTrigger>
                     <SelectContent
-                      className="max-h-[360px] rounded-none border-2 border-[#1C3678] bg-white font-['Bitter',Georgia,serif] shadow-[0_12px_32px_-12px_rgba(28,54,120,0.35)]"
+                      position="popper"
+                      side="bottom"
+                      align="start"
+                      sideOffset={4}
+                      avoidCollisions={false}
+                      style={{ backgroundColor: '#FFFFFF' }}
+                      className="z-[100] max-h-[360px] rounded-none border-2 border-[#1C3678] bg-white font-['Bitter',Georgia,serif] shadow-[0_12px_32px_-12px_rgba(28,54,120,0.35)]"
                     >
                       {groups.map((g, gi) => (
                         <SelectGroup key={g.group}>
