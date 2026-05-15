@@ -962,18 +962,20 @@ export default function App() {
               }}>
                 {suggestions.map(s => (
                   <div key={s.unitid ?? s.intlId} onMouseDown={() => selectInstitution(s)} style={{
-                    padding: '10px 14px', cursor: 'pointer', fontSize: 14,
+                    padding: '10px 14px', cursor: 'pointer',
                     borderBottom: '1px solid #F4F6F8',
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     transition: 'background 0.1s',
                   }}
                     onMouseEnter={e => e.currentTarget.style.background = 'rgba(235,86,0,0.1)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
-                    <span>{s.name}</span>
-                    <span style={{ fontSize: 11, color: '#EB5600', letterSpacing: 1 }}>
-                      {s.country ? `${s.country}${s.intlGroup ? ' · ' + s.intlGroup : ''}` : CARNEGIE_CATEGORIES.find(c => c.id === s.carnegieId)?.short}
-                    </span>
+                    <div style={{ fontSize: 14, color: '#243551', fontWeight: 500 }}>{s.name}</div>
+                    <div style={{ fontSize: 11, color: '#595959', marginTop: 2 }}>
+                      {s.city && s.state ? `${s.city}, ${s.state} · ` : ''}
+                      {s.country
+                        ? `${s.country}${s.intlGroup ? ' · ' + s.intlGroup : ''}`
+                        : (CARNEGIE_CATEGORIES.find(c => c.id === s.carnegieId)?.short ?? s.carnegieId ?? '')}
+                    </div>
                   </div>
                 ))}
               </div>
