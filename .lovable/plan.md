@@ -1,30 +1,39 @@
-## Goal
+## Remove social follower data
 
-Replace `fetch()`-based page requests in `scripts/scrape-niche.mjs` with a Playwright-driven Chromium browser, mirroring the pattern already in `scripts/scrape-usnews.mjs`. Niche blocks the native fetch user-agent; a real headless browser bypasses that.
+Goal: purge `socialIg`, `socialLi`, `socialX`, `socialFb`, `socialYt` (and any `socialReach` references) from the app. Scoring math, weights, UI layout, and all other fields stay as-is.
 
-## Changes (scripts/scrape-niche.mjs only)
+### Note before starting
+Two items in the request don't currently exist in the codebase — flagging so you know nothing was missed:
+- **No `computeSocialReach` function exists** in `HEBrandEquity.jsx` (or anywhere in the project).
+- **No `socialReach` input** is present in the Visibility & Reach axis `inputs` array. The only trace is the word "social reach" inside the axis `description` string (line 301).
+- **`normalizeAxis` has no social-specific branch** — it's a generic loop over `axis.inputs`. Once `socialReach` is gone from inputs (already gone) there's nothing to remove inside the function.
 
-1. **main()** — before scraping, dynamically import `playwright` (with the same install-error fallback as `scrape-usnews.mjs`) and launch a single Chromium browser instance with `--no-sandbox` args. Close it at the end of the run (and on error).
+So those three bullets reduce to: delete the phrase "social reach (normalized by enrollment)" from the visibility axis description.
 
-2. **fetchNichePage(browser, pageNum)** — rewrite to:
-   - Open a new `browser.newPage()`.
-   - `setViewportSize({ width: 1440, height: 900 })` and set `Accept-Language` / `Accept` headers (random UA via `setExtraHTTPHeaders` is fine, but Playwright sets a realistic Chromium UA by default — keep `randomUA()` only if we override via context; simplest is to drop it for page fetches and rely on Playwright's default UA).
-   - `page.goto(url, { waitUntil: 'networkidle', timeout: 30000 })`.
-   - Small randomized human delay after load.
-   - Read `__NEXT_DATA__` via `page.evaluate(() => JSON.parse(document.getElementById('__NEXT_DATA__')?.textContent || 'null'))`.
-   - If present and yields schools via existing `extractFromNextData`, return them.
-   - Otherwise fall back to DOM extraction inside `page.evaluate(...)` that mirrors today's `extractFromHTML` selectors (search-result cards, name, grade, slug, unitid hints), returning the same shape.
-   - Always `page.close()` in a `finally`.
-   - If `page.goto` returns a 404 response, return `null` so the existing "end of pages" logic still works.
+### Changes
 
-3. **fetchUnitidFromProfile(browser, slug)** — same treatment: take the shared `browser`, open a page, navigate to the profile URL, extract `__NEXT_DATA__` for `entity.unitid`/`ipeds` and the regex fallbacks, close the page.
+**1. `src/pages/HEBrandEquity.jsx`**
+- **IPEDS_DB entries (lines ~147–200ish)**: remove `socialIg`, `socialLi`, `socialX`, `socialFb`, `socialYt` keys from every row. Use a regex sweep:
+  ```
+  ,?\s*social(Ig|Li|X|Fb|Yt):\s*-?\d+,?
+  ```
+  applied per-line so commas stay clean.
+- **INTL_DB entries**: same sweep across the international block.
+- **`INTL_FIELDS` (line 205)**: drop the trailing `"socialIg","socialLi","socialX","socialFb","socialYt"`.
+- **`IPEDS_FIELDS` (line 212)**: drop the trailing `"socialIg","socialLi","socialX","socialFb","socialYt"`.
+- **Visibility axis description (line 301)**: change
+  `"…THE Impact, athletics conference, social reach (normalized by enrollment)"` → `"…THE Impact, athletics conference"`.
 
-4. **Loop wiring** — `main()` passes `browser` into both `fetchNichePage` and `fetchUnitidFromProfile`. Existing `--dry-run`, `--pages`, delays, output JSON shape, name-matching, and `updateSupabase()` flow are unchanged.
+**2. `src/data/curatedOverlay.json`**
+- Strip the five `socialIg/Li/X/Fb/Yt` keys from every institution entry. Easiest path: small node script that loads JSON, deletes those keys per entry, writes back with the existing 2-space pretty-print + trailing newline.
 
-5. **Cleanup** — remove the now-unused `USER_AGENTS` array and `randomUA()` helper (Playwright provides a realistic UA), or keep them only if used to randomize the browser context UA. Recommendation: drop them for simplicity, matching `scrape-usnews.mjs`.
+**3. `flattenInstitutionRow` rankings JSONB expectation**
+- The function currently spreads `r.rankings` wholesale (line 69). It does not enumerate social fields, so no code edit is required there. The "expectation" is documentary: nothing in the app reads social keys anymore, so any social keys still sitting in the `rankings` JSONB column will be harmlessly spread and ignored. Out-of-scope but worth knowing: a future seed/ingest run would need to stop writing them.
 
-## Out of scope
+### Out of scope (not touched)
+- `scripts/fetch-ipeds-seed.mjs` and `scripts/extract-curated-overlay.mjs` still reference social fields. Per the request, scoring logic and UI are the only targets. If you want these scripts cleaned up too, say the word and I'll add it.
+- No changes to `normalizeAxis`, weights, AXES order, charts, or insight framework.
 
-- No changes to `extractFromNextData`, `extractFromHTML` logic semantics, grade map, name-matching, output JSON, or the `ingest-rankings` POST.
-- No changes to `scrape-usnews.mjs` or the edge function.
-- No new dependencies — `playwright` is already required by `scrape-usnews.mjs`.
+### Verification
+- `rg "social(Ig|Li|X|Fb|Yt|Reach)" src/pages/HEBrandEquity.jsx src/data/curatedOverlay.json` → no matches.
+- App still renders; Visibility & Reach axis still scores from the remaining 9 inputs.
