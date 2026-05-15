@@ -21,21 +21,12 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Whitelist columns. 2025 Carnegie fields are first-class columns now.
+    // Normalize incoming rows to the 2025 columns.
     const cleaned = rows.map((r: any) => ({
       unitid:           String(r.unitid),
       name:             r.name,
       city:             r.city ?? null,
       state:            r.state ?? null,
-      sector:           r.sector ?? null,
-      us_news_list:     r.us_news_list ?? null,
-      flags:            r.flags ?? {},
-      enrollment:       r.enrollment ?? null,
-      fte:              r.fte ?? null,
-      metrics:          r.metrics ?? {},
-      finance:          r.finance ?? {},
-      rankings:         r.rankings ?? {},
-      fiscal_year:      r.fiscal_year ?? null,
       ic2025:           r.ic2025 ?? null,
       ic2025name:       r.ic2025name ?? null,
       ic2025group:      r.ic2025group ?? null,
@@ -46,16 +37,15 @@ Deno.serve(async (req) => {
       access_ratio:     r.access_ratio ?? null,
       earnings_ratio:   r.earnings_ratio ?? null,
       pell_2023:        r.pell_2023 ?? null,
-      updated_at:       new Date().toISOString(),
     }));
 
-    const CHUNK = 250;
+    // Push through the SECURITY DEFINER RPC so PostgREST doesn't filter
+    // out the new columns via its schema cache.
+    const CHUNK = 500;
     let inserted = 0;
     for (let i = 0; i < cleaned.length; i += CHUNK) {
       const slice = cleaned.slice(i, i + CHUNK);
-      const { error } = await supabase
-        .from("institutions")
-        .upsert(slice, { onConflict: "unitid" });
+      const { error } = await supabase.rpc("upsert_institutions_2025", { payload: slice });
       if (error) throw new Error(`Chunk ${i}: ${error.message}`);
       inserted += slice.length;
     }
