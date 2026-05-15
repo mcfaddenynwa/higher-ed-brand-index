@@ -1215,26 +1215,40 @@ export default function App() {
                   <div style={{ fontSize: 11, letterSpacing: 1.5, color: '#595959', textTransform: 'uppercase', marginBottom: 8 }}>
                     {matched ? 'Classification incorrect? Change it:' : 'Choose a classification:'}
                   </div>
-                  <select
-                    value={selectedIc2025 ?? ''}
-                    onChange={e => handlePick(parseInt(e.target.value, 10))}
-                    style={{
-                      ...iStyle,
-                      fontFamily: "'Bitter', Georgia, serif",
-                      fontSize: 14,
-                      cursor: 'pointer',
-                      background: '#FFFFFF',
-                    }}
+                  <Select
+                    value={selectedIc2025 != null ? String(selectedIc2025) : undefined}
+                    onValueChange={v => handlePick(parseInt(v, 10))}
                   >
-                    <option value="" disabled>Select a 2025 IC classification…</option>
-                    {groups.map(g => (
-                      <optgroup key={g.group} label={g.group}>
-                        {g.items.map(c => (
-                          <option key={c.id} value={c.id}>{c.label}</option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
+                    <SelectTrigger
+                      className="h-11 w-full rounded-none border-2 border-[#1C3678] bg-white px-3 text-[14px] text-[#243551] font-['Bitter',Georgia,serif] shadow-none hover:bg-[#F5F7FA] focus:ring-2 focus:ring-[#1C3678] focus:ring-offset-0 [&>svg]:text-[#EB5600] [&>svg]:opacity-100"
+                    >
+                      <SelectValue placeholder="Select a 2025 IC classification…" />
+                    </SelectTrigger>
+                    <SelectContent
+                      className="max-h-[360px] rounded-none border-2 border-[#1C3678] bg-white font-['Bitter',Georgia,serif] shadow-[0_12px_32px_-12px_rgba(28,54,120,0.35)]"
+                    >
+                      {groups.map((g, gi) => (
+                        <SelectGroup key={g.group}>
+                          <SelectLabel
+                            className="px-3 pb-1 pt-3 pl-3 font-['Young_Serif',Georgia,serif] text-[11px] uppercase tracking-[2px] text-[#1C3678] font-normal flex items-center gap-2"
+                          >
+                            <span className="inline-block h-[2px] w-6 bg-[#6AA4C8]" />
+                            {g.group}
+                          </SelectLabel>
+                          {g.items.map(c => (
+                            <SelectItem
+                              key={c.id}
+                              value={String(c.id)}
+                              className="rounded-none px-3 py-2 pl-8 text-[14px] text-[#243551] focus:bg-[#E9EDEE] focus:text-[#1C3678] data-[state=checked]:text-[#1C3678] [&>span:first-child>span>svg]:text-[#EB5600]"
+                            >
+                              {c.label}
+                            </SelectItem>
+                          ))}
+                          {gi < groups.length - 1 && <div className="my-1 h-px bg-[#E9EDEE]" />}
+                        </SelectGroup>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             );
