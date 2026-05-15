@@ -202,14 +202,14 @@ const IPEDS_DB = [
 
 // ── International Institution Database ────────────────────────────────────────
 // Fields mirror IPEDS where universal; pellPct replaced with accessPct (low-income/access %)
-const INTL_FIELDS = ["qsRank","theWorldRank","theImpactListed","theImpactRank","retentionRate","gradRate4yr","gradRate6yr","enrollTrend","acceptRate","accessPct","rAndD","doctoralOutput","researchDesignation","caldwellListed","caldwellRank","endowmentPerStudent","totalRevenue","socialIg","socialLi","socialX","socialFb","socialYt"];
+const INTL_FIELDS = ["qsRank","theWorldRank","theImpactListed","theImpactRank","retentionRate","gradRate4yr","gradRate6yr","enrollTrend","acceptRate","accessPct","rAndD","doctoralOutput","researchDesignation","caldwellListed","caldwellRank","endowmentPerStudent","totalRevenue"];
 
 const INTL_DB = [
   { name: "University of Liverpool", country: "UK", intlId: "liverpool-uk", checkboxDefaults: ["chk_healthSystem","chk_lawSchool","chk_engineering"], qsRank: 165, theWorldRank: 160, theImpactListed: 1, theImpactRank: 201, retentionRate: 90, gradRate4yr: 85, gradRate6yr: 90, carnegieId: "special", intlGroup: "Russell Group", enrollTrend: 2.1, acceptRate: 14, accessPct: null, rAndD: 123, doctoralOutput: 520, researchDesignation: 3, caldwellListed: 1, caldwellRank: 312, endowmentPerStudent: 8, totalRevenue: 890 },
   { name: "Queen's University (Ontario)", country: "Canada", intlId: "queens-ca", checkboxDefaults: ["chk_lawSchool","chk_aacsb","chk_engineering"], qsRank: 193, theWorldRank: 275, theImpactListed: 1, theImpactRank: 8, retentionRate: 93, gradRate4yr: 89, gradRate6yr: 92, carnegieId: "intl_elite", intlGroup: "U15 Canada", enrollTrend: 1.8, acceptRate: 42, accessPct: null, rAndD: 85, doctoralOutput: 380, researchDesignation: 2, caldwellListed: 1, caldwellRank: 428, endowmentPerStudent: 33, totalRevenue: 800 },
 ];
 
-const IPEDS_FIELDS = ["usNews","usNewsList","enrollTrend","yieldRate","acceptRate","pellPct","firstGen","rAndD","doctoralOutput","researchDesignation","caldwellListed","caldwellRank","retentionRate","gradRate4yr","gradRate6yr","theImpactListed","theImpactRank","nicheRank","nicheGrade","usNewsLaw","usNewsBiz","usNewsEng","theWorldRank","qsRank","socialIg","socialLi","socialX","socialFb","socialYt"];
+const IPEDS_FIELDS = ["usNews","usNewsList","enrollTrend","yieldRate","acceptRate","pellPct","firstGen","rAndD","doctoralOutput","researchDesignation","caldwellListed","caldwellRank","retentionRate","gradRate4yr","gradRate6yr","theImpactListed","theImpactRank","nicheRank","nicheGrade","usNewsLaw","usNewsBiz","usNewsEng","theWorldRank","qsRank"];
 
 // 2025 Carnegie Classification — Research Activity Designations + Institutional Classification
 // (collapsed from the official 31-grouping spectrum into the working benchmarking cohorts)
@@ -298,7 +298,7 @@ const USNEWS_LIST_MAX = {
 const AXES = [
   {
     key: "visibility", label: "Visibility & Reach", color: "#EB5600",
-    description: "Rankings, Caldwell, QS/THE/Niche footprint, THE Impact, athletics conference, social reach (normalized by enrollment)",
+    description: "Rankings, Caldwell, QS/THE/Niche footprint, THE Impact, athletics conference",
     hiddenFor: ["associates", "tribal"],
     checkboxes: [
       { id: "chk_bigFour", label: "Big Four athletic conference (ACC, Big Ten, Big 12, SEC)" },
