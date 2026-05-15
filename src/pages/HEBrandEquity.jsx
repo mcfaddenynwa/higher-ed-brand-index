@@ -1249,22 +1249,25 @@ export default function App() {
       {step === "data" && (
         <div style={{ display: 'flex', minHeight: 'calc(100vh - 73px)' }}>
           <div style={{ width: 370, borderRight: '1px solid #F4F6F8', padding: '22px 24px', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
-              <div>
-                <div style={{ fontSize: 11, letterSpacing: 2, color: '#EB5600', marginBottom: 2 }}>2021 BASIC</div>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>{selectedCarnegie?.short}</div>
-                {institution && <div style={{ fontSize: 14, color: '#243551', marginTop: 1 }}>{institution}</div>}
-                {institution2025IC && (
-                  <div style={{ fontSize: 11, color: '#595959', marginTop: 4, lineHeight: 1.35 }}>
-                    <div><span style={{ color: '#1C3678', fontWeight: 600 }}>2025 IC:</span> {institution2025IC}</div>
-                    {institutionResearch && <div><span style={{ color: '#1C3678', fontWeight: 600 }}>2025 Research:</span> {institutionResearch}</div>}
-                    {institutionSAEC && <div><span style={{ color: '#1C3678', fontWeight: 600 }}>2025 SAEC:</span> {institutionSAEC}</div>}
+            {(() => {
+              const ic = IC2025_COHORTS.find(c => c.id === selectedIc2025);
+              return (
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, gap: 12 }}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: 11, letterSpacing: 2, color: '#1C3678', fontWeight: 600, marginBottom: 4, textTransform: 'uppercase' }}>2025 Carnegie</div>
+                    {ic && <div style={{ fontSize: 14, fontFamily: "'Young Serif', Georgia, serif", color: '#243551', lineHeight: 1.3 }}>{ic.label}</div>}
+                    {institutionResearch && <div style={{ fontSize: 12, color: '#EB5600', fontWeight: 600, marginTop: 2 }}>{institutionResearch}</div>}
+                    {institution && <div style={{ fontSize: 14, color: '#243551', marginTop: 6 }}>{institution}</div>}
+                    {institutionSAEC && (
+                      <div style={{ fontSize: 11, color: '#595959', marginTop: 4 }}>
+                        <span style={{ color: '#1C3678', fontWeight: 600 }}>SAEC:</span> {institutionSAEC}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <button onClick={() => setStep("carnegie")} style={{ fontSize: 11, letterSpacing: 1.5, color: '#595959', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginTop: 2 }}>← BACK</button>
-            </div>
-
+                  <button onClick={() => setStep("carnegie")} style={{ fontSize: 11, letterSpacing: 1.5, color: '#595959', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginTop: 2, flexShrink: 0 }}>← BACK</button>
+                </div>
+              );
+            })()}
             {autoPopulated.length > 0 && (
               <div style={{ marginBottom: 16, padding: '10px 12px', background: 'rgba(26,153,136,0.08)', border: '1px solid rgba(26,153,136,0.25)', borderRadius: 8, fontSize: 14, color: '#1A9988', lineHeight: 1.5 }}>
                 ✓ {autoPopulated.length} fields pre-filled from IPEDS. Review and complete remaining inputs.
