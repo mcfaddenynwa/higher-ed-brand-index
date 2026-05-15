@@ -16,18 +16,28 @@ export type Database = {
     Tables: {
       institutions: {
         Row: {
+          access_ratio: number | null
           carnegie_id: string | null
           carnegie2025: Json | null
           city: string | null
+          earnings_ratio: number | null
           enrollment: number | null
           finance: Json
           fiscal_year: string | null
           flags: Json
           fte: number | null
+          ic2025: number | null
+          ic2025group: string | null
+          ic2025name: string | null
           id: string
           metrics: Json
           name: string
+          pell_2023: number | null
           rankings: Json
+          research2025: number | null
+          research2025name: string | null
+          saec2025: number | null
+          saec2025name: string | null
           sector: string | null
           state: string | null
           unitid: string
@@ -35,18 +45,28 @@ export type Database = {
           us_news_list: string | null
         }
         Insert: {
+          access_ratio?: number | null
           carnegie_id?: string | null
           carnegie2025?: Json | null
           city?: string | null
+          earnings_ratio?: number | null
           enrollment?: number | null
           finance?: Json
           fiscal_year?: string | null
           flags?: Json
           fte?: number | null
+          ic2025?: number | null
+          ic2025group?: string | null
+          ic2025name?: string | null
           id?: string
           metrics?: Json
           name: string
+          pell_2023?: number | null
           rankings?: Json
+          research2025?: number | null
+          research2025name?: string | null
+          saec2025?: number | null
+          saec2025name?: string | null
           sector?: string | null
           state?: string | null
           unitid: string
@@ -54,18 +74,28 @@ export type Database = {
           us_news_list?: string | null
         }
         Update: {
+          access_ratio?: number | null
           carnegie_id?: string | null
           carnegie2025?: Json | null
           city?: string | null
+          earnings_ratio?: number | null
           enrollment?: number | null
           finance?: Json
           fiscal_year?: string | null
           flags?: Json
           fte?: number | null
+          ic2025?: number | null
+          ic2025group?: string | null
+          ic2025name?: string | null
           id?: string
           metrics?: Json
           name?: string
+          pell_2023?: number | null
           rankings?: Json
+          research2025?: number | null
+          research2025name?: string | null
+          saec2025?: number | null
+          saec2025name?: string | null
           sector?: string | null
           state?: string | null
           unitid?: string
