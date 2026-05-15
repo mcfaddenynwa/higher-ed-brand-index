@@ -66,47 +66,92 @@ function sleep(ms) {
 }
 
 /**
- * Fetch a Niche rankings page and extract school data from __NEXT_DATA__
- * Falls back to HTML parsing if JSON extraction fails
+ * Fetch a Niche rankings page using a Playwright browser and extract school
+ * data from __NEXT_DATA__. Falls back to in-page DOM extraction if the JSON
+ * shape doesn't yield results.
  */
-async function fetchNichePage(pageNum) {
+async function fetchNichePage(browser, pageNum) {
   const url = pageNum === 1
     ? RANKINGS_URL
     : `${RANKINGS_URL}?page=${pageNum}`;
 
-  const res = await fetch(url, {
-    headers: {
-      'User-Agent': randomUA(),
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      'Accept-Language': 'en-US,en;q=0.5',
-      'Accept-Encoding': 'gzip, deflate, br',
-      'DNT': '1',
-      'Connection': 'keep-alive',
-      'Upgrade-Insecure-Requests': '1',
-    },
-  });
+  const page = await browser.newPage();
+  try {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.setExtraHTTPHeaders({
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+    });
 
-  if (!res.ok) {
-    if (res.status === 404) return null; // End of pages
-    throw new Error(`HTTP ${res.status} on page ${pageNum}`);
-  }
+    const response = await page.goto(url, {
+      waitUntil: 'networkidle',
+      timeout: 30000,
+    });
 
-  const html = await res.text();
+    if (response && response.status() === 404) return null;
+    if (response && !response.ok()) {
+      throw new Error(`HTTP ${response.status()} on page ${pageNum}`);
+    }
 
-  // Try __NEXT_DATA__ extraction first
-  const nextDataMatch = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
-  if (nextDataMatch) {
-    try {
-      const nextData = JSON.parse(nextDataMatch[1]);
+    // Human-like settle delay
+    await sleep(1500);
+
+    // Try __NEXT_DATA__ extraction first
+    const nextData = await page.evaluate(() => {
+      const el = document.getElementById('__NEXT_DATA__');
+      if (!el) return null;
+      try { return JSON.parse(el.textContent); } catch { return null; }
+    });
+
+    if (nextData) {
       const schools = extractFromNextData(nextData, pageNum);
       if (schools.length > 0) return schools;
-    } catch (e) {
-      console.warn(`  ⚠ JSON parse failed page ${pageNum}, falling back to HTML`);
     }
-  }
 
-  // HTML fallback — parse ranking cards
-  return extractFromHTML(html, pageNum);
+    // DOM fallback — same shape as extractFromHTML, but evaluated in-page
+    const domSchools = await page.evaluate((pageSize) => {
+      const out = [];
+      const cards = document.querySelectorAll(
+        'li[class*="search-result"], [class*="SearchResult"], article[class*="card"]'
+      );
+      cards.forEach((card) => {
+        const nameEl = card.querySelector(
+          'h2[class*="search-result__title"], h2, h3, [class*="title"]'
+        );
+        if (!nameEl) return;
+        const name = nameEl.textContent?.trim();
+        if (!name) return;
+
+        const gradeEl = card.querySelector(
+          '[class*="overall-grade"], [class*="OverallGrade"], [class*="niche-grade"]'
+        );
+        const gradeRaw = gradeEl?.textContent?.trim().match(/[A-F][+-]?/)?.[0] || null;
+
+        const slugEl = card.querySelector('a[href*="/colleges/"]');
+        const slugMatch = slugEl?.getAttribute('href')?.match(/\/colleges\/([^/]+)\//);
+        const slug = slugMatch ? slugMatch[1] : null;
+
+        const unitidAttr = card.getAttribute('data-id')
+          || card.getAttribute('data-college-id')
+          || null;
+
+        out.push({ name, slug, unitid: unitidAttr, gradeRaw });
+      });
+      return out;
+    }, PAGE_SIZE);
+
+    let rankOffset = (pageNum - 1) * PAGE_SIZE + 1;
+    return domSchools.map((s) => ({
+      name: s.name,
+      slug: s.slug,
+      unitid: s.unitid,
+      nicheRank: rankOffset++,
+      nicheGrade: gradeToNum(s.gradeRaw),
+      nicheGradeRaw: s.gradeRaw,
+    }));
+  } finally {
+    await page.close().catch(() => {});
+  }
 }
 
 function extractFromNextData(nextData, pageNum) {
