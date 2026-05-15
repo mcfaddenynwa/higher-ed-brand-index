@@ -36,6 +36,7 @@ Deno.serve(async (req) => {
       metrics:      r.metrics ?? {},
       finance:      r.finance ?? {},
       rankings:     r.rankings ?? {},
+      carnegie2025: r.carnegie2025 ?? null,
       fiscal_year:  r.fiscal_year ?? null,
       updated_at:   new Date().toISOString(),
     }));
