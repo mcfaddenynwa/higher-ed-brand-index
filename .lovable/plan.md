@@ -1,62 +1,30 @@
 ## Goal
 
-Create an edge function `ingest-rankings` that lets the local scrapers (`scrape:niche`, `scrape:usnews`) push results to Supabase without ever holding the service role key on the client. The function merges per-institution ranking fields into the existing `rankings` JSONB column without clobbering other source's data.
+Replace `fetch()`-based page requests in `scripts/scrape-niche.mjs` with a Playwright-driven Chromium browser, mirroring the pattern already in `scripts/scrape-usnews.mjs`. Niche blocks the native fetch user-agent; a real headless browser bypasses that.
 
-## What to build
+## Changes (scripts/scrape-niche.mjs only)
 
-### 1. Edge function: `supabase/functions/ingest-rankings/index.ts`
+1. **main()** — before scraping, dynamically import `playwright` (with the same install-error fallback as `scrape-usnews.mjs`) and launch a single Chromium browser instance with `--no-sandbox` args. Close it at the end of the run (and on error).
 
-- Accepts `POST` with JSON body:
-  ```json
-  {
-    "source": "niche" | "usnews",
-    "rankings": {
-      "<unitid>": { "nicheRank": 45, "nicheGrade": 91 },
-      ...
-    }
-  }
-  ```
-- Validates with Zod:
-  - `source` ∈ `"niche" | "usnews"`
-  - `rankings` is a non-empty object keyed by string unitids, each value an object of scalar fields
-- Auth: requires a shared secret header `x-ingest-token` checked against env var `INGEST_RANKINGS_TOKEN` (so the public anon key alone can't write). Returns 401 on mismatch.
-- Uses `SUPABASE_SERVICE_ROLE_KEY` server-side via `createClient`.
-- For each unitid: reads current `rankings`, shallow-merges the new fields, writes back. Also updates `us_news_list` column when `source === "usnews"` and `usNewsList` is present in the payload (mirrors what `scrape-usnews.mjs` already does).
-- Batches in groups of ~50 with a small concurrency limit; returns `{ ok, updated, failed, skipped: [...unitids not found] }`.
-- Full CORS headers; returns CORS on errors too.
-- Deploys with `verify_jwt = false` (default) — auth is via the shared token instead.
+2. **fetchNichePage(browser, pageNum)** — rewrite to:
+   - Open a new `browser.newPage()`.
+   - `setViewportSize({ width: 1440, height: 900 })` and set `Accept-Language` / `Accept` headers (random UA via `setExtraHTTPHeaders` is fine, but Playwright sets a realistic Chromium UA by default — keep `randomUA()` only if we override via context; simplest is to drop it for page fetches and rely on Playwright's default UA).
+   - `page.goto(url, { waitUntil: 'networkidle', timeout: 30000 })`.
+   - Small randomized human delay after load.
+   - Read `__NEXT_DATA__` via `page.evaluate(() => JSON.parse(document.getElementById('__NEXT_DATA__')?.textContent || 'null'))`.
+   - If present and yields schools via existing `extractFromNextData`, return them.
+   - Otherwise fall back to DOM extraction inside `page.evaluate(...)` that mirrors today's `extractFromHTML` selectors (search-result cards, name, grade, slug, unitid hints), returning the same shape.
+   - Always `page.close()` in a `finally`.
+   - If `page.goto` returns a 404 response, return `null` so the existing "end of pages" logic still works.
 
-### 2. New secret: `INGEST_RANKINGS_TOKEN`
+3. **fetchUnitidFromProfile(browser, slug)** — same treatment: take the shared `browser`, open a page, navigate to the profile URL, extract `__NEXT_DATA__` for `entity.unitid`/`ipeds` and the regex fallbacks, close the page.
 
-Requested via the secrets tool. The local scraper sends it in `x-ingest-token`.
+4. **Loop wiring** — `main()` passes `browser` into both `fetchNichePage` and `fetchUnitidFromProfile`. Existing `--dry-run`, `--pages`, delays, output JSON shape, name-matching, and `updateSupabase()` flow are unchanged.
 
-### 3. Update local scrapers' write step
-
-Replace the current `updateSupabase()` body in both `scrape-niche.mjs` and `scrape-usnews.mjs` with a single `POST` to:
-
-```
-${VITE_SUPABASE_URL}/functions/v1/ingest-rankings
-```
-
-Headers:
-- `Content-Type: application/json`
-- `apikey: <anon key>`
-- `Authorization: Bearer <anon key>`
-- `x-ingest-token: <INGEST_RANKINGS_TOKEN from local env>`
-
-Body: `{ source, rankings: allResults }`.
-
-Local `.env` for scrapers needs `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, and `INGEST_RANKINGS_TOKEN`. The service role key is no longer required locally.
+5. **Cleanup** — remove the now-unused `USER_AGENTS` array and `randomUA()` helper (Playwright provides a realistic UA), or keep them only if used to randomize the browser context UA. Recommendation: drop them for simplicity, matching `scrape-usnews.mjs`.
 
 ## Out of scope
 
-- No schema changes (the `rankings` JSONB and `us_news_list` columns already exist).
-- No UI changes.
-- No changes to scraping logic itself, only the write path.
-
-## Order of operations
-
-1. Add secret `INGEST_RANKINGS_TOKEN` (you'll set the value).
-2. Create + deploy the edge function.
-3. Update both scraper scripts' `updateSupabase()` to call the function.
-4. You run `npm run scrape:niche` / `scrape:usnews` locally; data flows through the function into `institutions.rankings`.
+- No changes to `extractFromNextData`, `extractFromHTML` logic semantics, grade map, name-matching, output JSON, or the `ingest-rankings` POST.
+- No changes to `scrape-usnews.mjs` or the edge function.
+- No new dependencies — `playwright` is already required by `scrape-usnews.mjs`.

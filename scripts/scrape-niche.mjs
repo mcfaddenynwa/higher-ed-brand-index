@@ -46,12 +46,6 @@ const PAGE_SIZE = 10; // Niche shows 10 results per page
 const DELAY_MS = 2000;
 const MAX_PAGES = 400; // ~4,000 schools / 10 per page
 
-const USER_AGENTS = [
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15',
-];
-
 // Grade to numeric mapping
 const GRADE_MAP = {
   'A+': 100, 'A': 91, 'A-': 83,
@@ -71,52 +65,93 @@ function sleep(ms) {
   return new Promise(r => setTimeout(r, ms + Math.floor(Math.random() * 500)));
 }
 
-function randomUA() {
-  return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
-}
-
 /**
- * Fetch a Niche rankings page and extract school data from __NEXT_DATA__
- * Falls back to HTML parsing if JSON extraction fails
+ * Fetch a Niche rankings page using a Playwright browser and extract school
+ * data from __NEXT_DATA__. Falls back to in-page DOM extraction if the JSON
+ * shape doesn't yield results.
  */
-async function fetchNichePage(pageNum) {
+async function fetchNichePage(browser, pageNum) {
   const url = pageNum === 1
     ? RANKINGS_URL
     : `${RANKINGS_URL}?page=${pageNum}`;
 
-  const res = await fetch(url, {
-    headers: {
-      'User-Agent': randomUA(),
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      'Accept-Language': 'en-US,en;q=0.5',
-      'Accept-Encoding': 'gzip, deflate, br',
-      'DNT': '1',
-      'Connection': 'keep-alive',
-      'Upgrade-Insecure-Requests': '1',
-    },
-  });
+  const page = await browser.newPage();
+  try {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.setExtraHTTPHeaders({
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+    });
 
-  if (!res.ok) {
-    if (res.status === 404) return null; // End of pages
-    throw new Error(`HTTP ${res.status} on page ${pageNum}`);
-  }
+    const response = await page.goto(url, {
+      waitUntil: 'networkidle',
+      timeout: 30000,
+    });
 
-  const html = await res.text();
+    if (response && response.status() === 404) return null;
+    if (response && !response.ok()) {
+      throw new Error(`HTTP ${response.status()} on page ${pageNum}`);
+    }
 
-  // Try __NEXT_DATA__ extraction first
-  const nextDataMatch = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
-  if (nextDataMatch) {
-    try {
-      const nextData = JSON.parse(nextDataMatch[1]);
+    // Human-like settle delay
+    await sleep(1500);
+
+    // Try __NEXT_DATA__ extraction first
+    const nextData = await page.evaluate(() => {
+      const el = document.getElementById('__NEXT_DATA__');
+      if (!el) return null;
+      try { return JSON.parse(el.textContent); } catch { return null; }
+    });
+
+    if (nextData) {
       const schools = extractFromNextData(nextData, pageNum);
       if (schools.length > 0) return schools;
-    } catch (e) {
-      console.warn(`  ⚠ JSON parse failed page ${pageNum}, falling back to HTML`);
     }
-  }
 
-  // HTML fallback — parse ranking cards
-  return extractFromHTML(html, pageNum);
+    // DOM fallback — same shape as extractFromHTML, but evaluated in-page
+    const domSchools = await page.evaluate((pageSize) => {
+      const out = [];
+      const cards = document.querySelectorAll(
+        'li[class*="search-result"], [class*="SearchResult"], article[class*="card"]'
+      );
+      cards.forEach((card) => {
+        const nameEl = card.querySelector(
+          'h2[class*="search-result__title"], h2, h3, [class*="title"]'
+        );
+        if (!nameEl) return;
+        const name = nameEl.textContent?.trim();
+        if (!name) return;
+
+        const gradeEl = card.querySelector(
+          '[class*="overall-grade"], [class*="OverallGrade"], [class*="niche-grade"]'
+        );
+        const gradeRaw = gradeEl?.textContent?.trim().match(/[A-F][+-]?/)?.[0] || null;
+
+        const slugEl = card.querySelector('a[href*="/colleges/"]');
+        const slugMatch = slugEl?.getAttribute('href')?.match(/\/colleges\/([^/]+)\//);
+        const slug = slugMatch ? slugMatch[1] : null;
+
+        const unitidAttr = card.getAttribute('data-id')
+          || card.getAttribute('data-college-id')
+          || null;
+
+        out.push({ name, slug, unitid: unitidAttr, gradeRaw });
+      });
+      return out;
+    }, PAGE_SIZE);
+
+    let rankOffset = (pageNum - 1) * PAGE_SIZE + 1;
+    return domSchools.map((s) => ({
+      name: s.name,
+      slug: s.slug,
+      unitid: s.unitid,
+      nicheRank: rankOffset++,
+      nicheGrade: gradeToNum(s.gradeRaw),
+      nicheGradeRaw: s.gradeRaw,
+    }));
+  } finally {
+    await page.close().catch(() => {});
+  }
 }
 
 function extractFromNextData(nextData, pageNum) {
@@ -153,99 +188,48 @@ function extractFromNextData(nextData, pageNum) {
   return schools;
 }
 
-function extractFromHTML(html, pageNum) {
-  const schools = [];
-  let rankOffset = (pageNum - 1) * PAGE_SIZE + 1;
-
-  // Match school cards — Niche uses consistent class patterns
-  // Pattern: data-id or data-college-id with name and grade
-  const cardPattern = /<li[^>]*class="[^"]*search-result[^"]*"[^>]*>([\s\S]*?)<\/li>/g;
-  let cardMatch;
-
-  while ((cardMatch = cardPattern.exec(html)) !== null) {
-    const card = cardMatch[1];
-
-    // Extract name
-    const nameMatch = card.match(/<h2[^>]*class="[^"]*search-result__title[^"]*"[^>]*>([^<]+)<\/h2>/);
-    if (!nameMatch) continue;
-    const name = nameMatch[1].trim();
-
-    // Extract grade
-    const gradeMatch = card.match(/Niche Grade[^"]*"[^>]*>([A-F][+-]?)<\/span>/i)
-      || card.match(/overall-grade[^>]*>([A-F][+-]?)<\/span>/i)
-      || card.match(/>([A-F][+-]?)<\/span>[^<]*Niche/i);
-    const gradeRaw = gradeMatch ? gradeMatch[1].trim() : null;
-
-    // Extract slug for individual page fetch if needed
-    const slugMatch = card.match(/href="\/colleges\/([^/]+)\//);
-    const slug = slugMatch ? slugMatch[1] : null;
-
-    // Extract unitid if embedded
-    const unitidMatch = card.match(/data-id="(\d+)"|data-college-id="(\d+)"|unitid[":]+(\d+)/);
-    const unitid = unitidMatch
-      ? (unitidMatch[1] || unitidMatch[2] || unitidMatch[3])
-      : null;
-
-    schools.push({
-      name,
-      slug,
-      unitid,
-      nicheRank: rankOffset++,
-      nicheGrade: gradeToNum(gradeRaw),
-      nicheGradeRaw: gradeRaw,
-    });
-  }
-
-  // If HTML parsing also fails, try a simpler anchor pattern
-  if (schools.length === 0) {
-    const anchorPattern = /href="\/colleges\/([^/]+)\/"\s*[^>]*>([^<]{5,80})<\/a>/g;
-    let aMatch;
-    while ((aMatch = anchorPattern.exec(html)) !== null) {
-      schools.push({
-        name: aMatch[2].trim(),
-        slug: aMatch[1],
-        unitid: null,
-        nicheRank: rankOffset++,
-        nicheGrade: null,
-        nicheGradeRaw: null,
-      });
-    }
-  }
-
-  return schools;
-}
-
 /**
  * For schools missing unitid, fetch their individual Niche profile page
- * to get the IPEDS unitid embedded in the page data
+ * via Playwright to get the IPEDS unitid embedded in the page data.
  */
-async function fetchUnitidFromProfile(slug) {
+async function fetchUnitidFromProfile(browser, slug) {
   if (!slug) return null;
+  const page = await browser.newPage();
   try {
     await sleep(1500);
-    const url = `${NICHE_BASE}/colleges/${slug}/`;
-    const res = await fetch(url, {
-      headers: { 'User-Agent': randomUA() },
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.setExtraHTTPHeaders({
+      'Accept-Language': 'en-US,en;q=0.9',
     });
-    if (!res.ok) return null;
-    const html = await res.text();
 
-    // Look for unitid in __NEXT_DATA__ or meta tags
-    const nextDataMatch = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
-    if (nextDataMatch) {
-      const data = JSON.parse(nextDataMatch[1]);
-      const entity = data?.props?.pageProps?.entity || data?.props?.pageProps?.college;
-      if (entity?.unitid || entity?.ipeds) {
-        return String(entity.unitid || entity.ipeds);
-      }
-    }
+    const url = `${NICHE_BASE}/colleges/${slug}/`;
+    const response = await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+    if (!response || !response.ok()) return null;
 
-    // Fallback: look for IPEDS in meta or structured data
+    // Try __NEXT_DATA__ for entity.unitid / ipeds
+    const fromNext = await page.evaluate(() => {
+      const el = document.getElementById('__NEXT_DATA__');
+      if (!el) return null;
+      try {
+        const data = JSON.parse(el.textContent);
+        const entity = data?.props?.pageProps?.entity || data?.props?.pageProps?.college;
+        if (entity?.unitid || entity?.ipeds) {
+          return String(entity.unitid || entity.ipeds);
+        }
+      } catch {}
+      return null;
+    });
+    if (fromNext) return fromNext;
+
+    // Regex fallback over rendered HTML
+    const html = await page.content();
     const ipedsMatch = html.match(/\"unitid\"[:\s]+"?(\d{6})"?/)
       || html.match(/ipeds[_\s]?id["\s:]+(\d{6})/i);
     return ipedsMatch ? ipedsMatch[1] : null;
   } catch {
     return null;
+  } finally {
+    await page.close().catch(() => {});
   }
 }
 
@@ -292,6 +276,15 @@ async function main() {
   console.log(`\nNiche Best Colleges Scraper`);
   console.log(`Max pages: ${maxPages} | Dry run: ${dryRun}\n`);
 
+  // Check playwright is available
+  let playwright;
+  try {
+    playwright = await import('playwright');
+  } catch {
+    console.error('Playwright not installed. Run: npm install playwright && npx playwright install chromium');
+    process.exit(1);
+  }
+
   // Load existing seed data for name matching
   let seedData = {};
   try {
@@ -307,49 +300,58 @@ async function main() {
   const allSchools = [];
   let emptyPages = 0;
 
-  for (let page = 1; page <= maxPages; page++) {
-    process.stdout.write(`  Page ${page}/${maxPages}... `);
+  const browser = await playwright.chromium.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  });
 
-    try {
-      const schools = await fetchNichePage(page);
+  try {
+    for (let page = 1; page <= maxPages; page++) {
+      process.stdout.write(`  Page ${page}/${maxPages}... `);
 
-      if (!schools || schools.length === 0) {
-        emptyPages++;
-        console.log(`empty (${emptyPages} in a row)`);
-        if (emptyPages >= 3) {
-          console.log('  3 empty pages in a row — assuming end of rankings');
-          break;
-        }
-        await sleep(DELAY_MS);
-        continue;
-      }
+      try {
+        const schools = await fetchNichePage(browser, page);
 
-      emptyPages = 0;
-
-      // Resolve unitids for schools that don't have them
-      for (const school of schools) {
-        if (!school.unitid) {
-          // Try name matching first (fast)
-          school.unitid = matchByName(school.name, nameIndex);
-
-          // If still no match and we have a slug, fetch profile page (slow)
-          if (!school.unitid && school.slug && page <= 50) {
-            school.unitid = await fetchUnitidFromProfile(school.slug);
+        if (!schools || schools.length === 0) {
+          emptyPages++;
+          console.log(`empty (${emptyPages} in a row)`);
+          if (emptyPages >= 3) {
+            console.log('  3 empty pages in a row — assuming end of rankings');
+            break;
           }
+          await sleep(DELAY_MS);
+          continue;
         }
-        allSchools.push(school);
+
+        emptyPages = 0;
+
+        // Resolve unitids for schools that don't have them
+        for (const school of schools) {
+          if (!school.unitid) {
+            // Try name matching first (fast)
+            school.unitid = matchByName(school.name, nameIndex);
+
+            // If still no match and we have a slug, fetch profile page (slow)
+            if (!school.unitid && school.slug && page <= 50) {
+              school.unitid = await fetchUnitidFromProfile(browser, school.slug);
+            }
+          }
+          allSchools.push(school);
+        }
+
+        console.log(`${schools.length} schools (total: ${allSchools.length})`);
+      } catch (err) {
+        console.log(`ERROR: ${err.message}`);
+        if (err.message.includes('429')) {
+          console.log('  Rate limited — waiting 30 seconds');
+          await sleep(30000);
+        }
       }
 
-      console.log(`${schools.length} schools (total: ${allSchools.length})`);
-    } catch (err) {
-      console.log(`ERROR: ${err.message}`);
-      if (err.message.includes('429')) {
-        console.log('  Rate limited — waiting 30 seconds');
-        await sleep(30000);
-      }
+      await sleep(DELAY_MS);
     }
-
-    await sleep(DELAY_MS);
+  } finally {
+    await browser.close().catch(() => {});
   }
 
   // Build output keyed by unitid where available
