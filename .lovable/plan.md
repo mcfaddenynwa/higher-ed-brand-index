@@ -1,44 +1,102 @@
-## Why each issue is happening
+## Goal
 
-### 1. UVM shows "R2 (Research 2)" but 2025 says R1
-Two different vintages of Carnegie data are being shown side-by-side:
-- The big heading (`R2 (Research 2)`) comes from the legacy `carnegie_id` column. UVM's row in the seeded `institutions` table has `carnegie_id = "r2"` (from the 2021 Basic Classification used to seed).
-- The "Research:" line under it comes from the new `carnegie2025` JSON, where UVM is `"Research 1: Very High Spending and Doctorate Production"`.
+Make 2025 the only Carnegie vintage in the app. Drop the 2021 Basic field everywhere. Rebuild the institutions dataset directly from `scripts/data/2025-Public-Data-File.xlsx` (3,929 schools, full 2025 IC + SAEC + Research designation). Redesign the Classify step so it shows just the auto-matched classification in the existing card, with a dropdown beside it to override.
 
-UVM was genuinely promoted from R2 → R1 in the 2025 framework. The data isn't wrong — the UI is just showing two snapshots without explaining which is which, so it reads like a contradiction.
+## Scope of "2025 cohort"
 
-**Fix options (pick one — I recommend B):**
-- **A.** Re-derive `carnegie_id` from the 2025 `researchDesignation` when seeding (so R1=3 → `r1`, R2=2 → `r2`, etc.). This rewrites history for every R-school whose designation moved. It also changes peer cohorts.
-- **B.** Keep the legacy `carnegie_id` for cohort math (so peer comparisons stay stable against the existing dataset), but **relabel the heading** to make the vintage explicit. Replace the bare "R2 (Research 2)" with a small "2021 Basic" eyebrow, and label the 2025 line as "2025 Research" instead of just "Research". Optionally show a subtle "↑ promoted to R1 in 2025" note when the two disagree.
-- **C.** Promote the 2025 designation to be the headline (e.g. "R1 — Research 1") and demote the legacy value to a footnote. Cleanest visually but masks the cohort that's actually driving the scoring.
+The 2025 Institutional Classification (IC) has 31 categories. We'll keep only 4-year-relevant ones and drop the five pure-Associate categories (ic2025 ids `1, 2, 3, 11, 12`) from the user-facing dropdown and from peer cohort math. Schools with those ids stay in the DB but won't appear as selectable cohorts.
 
-### 2. The "← BACK" button is floating in the middle
-The header is a flex row with `justify-content: space-between` and default `align-items: center`. When the 2025 lines were added, the left block grew ~3 lines taller, so the vertically-centered BACK now sits around the middle of that taller block.
+Final cohort list (26 categories), grouped:
+- **Associate/Baccalaureate** — 4, 13
+- **Baccalaureate** — 5, 14, 15
+- **Undergraduate/Graduate-Master's** — 9, 10, 19, 20
+- **Undergraduate/Graduate-Doctorate** — 6, 7, 8, 16, 17, 18
+- **Special Focus** — 21–31
 
-**Fix:** add `alignItems: 'flex-start'` to the flex container at line 1060, so BACK pins to the top next to "CLASSIFICATION".
+Research Activity Designation (R1 / R2 / RCU / None) becomes a **separate signal** surfaced on the card, not a cohort selector — matching how the 2025 framework actually works.
 
-### 3. The spider chart sits too low
-Same root cause: the left sidebar header grew taller from the 2025 lines, but the right pane's chart area uses internal padding/margin that was sized before those lines existed. A quick scan of the right pane (need to read lines ~1140–1300) will confirm whether to:
-- reduce the chart container's top padding, and/or
-- tighten the gap between the 2025 lines (`marginTop: 6`, `lineHeight: 1.4`) so the sidebar header is shorter.
+## What changes
 
-I'll apply both: shrink the 2025 block's top margin from 6→4 and line-height from 1.4→1.35, and trim the chart pane's top padding by ~12px so the chart's vertical center sits closer to the sidebar header.
+### 1. Data pipeline — single source of truth = the xlsx
 
-## Changes to `src/pages/HEBrandEquity.jsx`
+New script `scripts/build-institutions-2025.mjs`:
+- Reads `scripts/data/2025-Public-Data-File.xlsx` (`data` sheet).
+- Joins finance snapshot (`src/data/financeSnapshot.json`) and curated overlay (`src/data/curatedOverlay.json`) by `unitid`.
+- Emits `src/data/institutionsSeed.json` and posts the same payload to the existing `seed-institutions` edge function.
+- Per-row output drops `carnegie_id` (the legacy 2021 column) and instead writes:
+  - `ic2025` (number, 1–31), `ic2025name` (string), `ic2025group` (one of the 6 groups above)
+  - `research2025` (0–3), `research2025name`
+  - `saec2025` (0–6), `saec2025name`, `access_ratio`, `earnings_ratio`, `pell_2023`
+  - existing `flags`, `enrollment`, `metrics`, `finance`, `rankings`, `us_news_list`
 
-1. **Line 1060** — header flex: add `alignItems: 'flex-start'` so BACK sits at the top.
-2. **Lines 1062–1064** — relabel the eyebrow to make vintage explicit:
-   - `CLASSIFICATION` → `2021 BASIC` (kept in orange eyebrow style)
-   - Keep `selectedCarnegie?.short` as the bold line beneath.
-3. **Line 1068** — change `Research:` to `2025 Research:` and `2025 IC:` stays, `SAEC:` → `2025 SAEC:` (parallel labeling).
-4. **Lines 1066** — tighten the 2025 block: `marginTop: 4, lineHeight: 1.35`.
-5. **Right pane (chart container, ~line 1140+)** — read first, then trim its top padding by ~12px so the chart rises to align with the sidebar header.
+### 2. Database — replace `carnegie_id` with `ic2025`
 
-Net effect: the user sees `2021 BASIC: R2 (Research 2)` clearly distinguished from `2025 Research: Research 1…`, the BACK button anchors top-right of the sidebar header, and the spider chart sits higher in the right pane.
+Migration:
+- `ALTER TABLE institutions ADD COLUMN ic2025 smallint, ic2025name text, ic2025group text, research2025 smallint, research2025name text, saec2025 smallint, saec2025name text, access_ratio numeric, earnings_ratio numeric, pell_2023 numeric;`
+- Drop `carnegie_id`, `carnegie2025` (jsonb) columns once seeding completes.
+- Update `seed-institutions/index.ts` whitelist to the new column set; remove `carnegie_id` and `carnegie2025`.
+
+### 3. Frontend — `src/pages/HEBrandEquity.jsx`
+
+- Replace the `CARNEGIE_CATEGORIES` array (lines 102–116) with a `IC2025_COHORTS` array of the 26 4-year categories. Each entry: `{ id, label, group, description }` where `description` is a short data-driven blurb (program mix + research designation context).
+- Replace the `WEIGHTS` map (lines 137–153) with weights keyed by `ic2025group` (6 groups) instead of 12 legacy ids. Existing per-id weights collapse cleanly into the 6 groups; no scoring logic change beyond the lookup key.
+- Update `USNEWS_LIST_MAP` to key off `ic2025group` (Doctorate → `natl_univ`, Master's → `regional`, Bac → `lib_arts`/`regional`, Special Focus → `null`).
+- `flattenInstitutionRow` (~line 16): map `ic2025`, `ic2025group`, `research2025name` etc. straight through; remove the `carnegieId` legacy alias.
+- Selectors (lines 688, 1004, etc.): switch from `carnegieId` to `ic2025` everywhere.
+- Peer cohort lens in `src/lib/insightFramework.js`: `LENSES[*].match` switches `carnegieId` → `ic2025`. The "Affiliation" fallback also updates.
+- Remove all "2021 BASIC" UI: lines 1062 (eyebrow), and the dual-vintage block at 1066–1071. Sidebar header now shows just the matched 2025 IC + 2025 Research designation + 2025 SAEC.
+
+### 4. Classify screen redesign (lines 1018–1051)
+
+Replace the 12-card grid with:
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│ 2025 CARNEGIE CLASSIFICATION                                │
+│                                                             │
+│ Mixed Undergraduate/Graduate-Doctorate Medium               │
+│ Research 1 — Very High Research Activity                    │
+│                                                             │
+│ Doctoral institution with a balanced mix of academic and    │
+│ professional programs. ≥ $50M research spending AND ≥ 70    │
+│ research doctorates awarded annually.                       │
+│                                                             │
+│ ─────────────────────────────────────────────────────────── │
+│ Classification incorrect?                                   │
+│ [ Mixed Undergraduate/Graduate-Doctorate Medium     ▾ ]     │
+└─────────────────────────────────────────────────────────────┘
+
+                                          [ CONTINUE → ]
+```
+
+- Same outer card style as current selected button (white bg, `2px solid #1C3678`, `inset 4px 0 0 0 #EB5600`).
+- The dropdown is a `<select>` styled to match the card's typography. Options are the 26 4-year cohorts grouped via `<optgroup>` by the 6 groups above ("Doctorate", "Master's", "Baccalaureate", "Associate/Baccalaureate", "Special Focus").
+- Selecting an option immediately updates `ic2025`, recomputes weights and US News list default, and refreshes the card body.
+- If no institution has been picked yet (no auto-match), the card shows an empty state: "Search for your institution above, or pick a classification below" with the same dropdown.
+- International path keeps the existing `INTL_CATEGORIES` flow unchanged (it's a separate world).
+
+### 5. Cleanup
+
+- Delete `src/lib/carnegie2025.js` (its data is now the source-of-truth seed). The xlsx → seed pipeline replaces it.
+- Remove `institution2025IC`, `institutionSAEC`, `institutionResearch` state — they collapse into a single `selectedIC2025` object derived from the row.
+- Drop the `2021 BASIC` eyebrow and the alignment fix added for it (no longer needed once the header is one block).
+
+## Order of operations
+
+1. Migration: add new 2025 columns (don't drop legacy yet).
+2. Run `scripts/build-institutions-2025.mjs` → reseeds via edge function.
+3. Update `flattenInstitutionRow`, categories, weights, lenses, classify UI in one pass.
+4. Verify a known school (UVM) shows R1 correctly, peer cohort uses `ic2025`.
+5. Second migration: drop `carnegie_id`, `carnegie2025` columns; remove from edge function whitelist.
 
 ## Out of scope
-- Re-seeding `carnegie_id` to use 2025 designations (option A) — only do this if you'd rather collapse to a single vintage.
-- Any change to scoring, weights, or peer-cohort logic.
+
+- Changing the scoring formulas or axis weights' magnitudes (only the lookup key changes from 12 ids to 6 groups; group-level weights are derived as the average of the legacy ids that fall into each group).
+- International (`INTL_CATEGORIES`) flow.
+- The Results screen layout — only its labels referencing "Carnegie" wording stay; the underlying cohort key just switches.
 
 ## Confirm before I build
-Should I go with **option B** (keep legacy `carnegie_id`, relabel headings to show vintage) or do you want **option A** (rewrite `carnegie_id` from the 2025 designation so UVM becomes R1 everywhere, including peer cohorts)?
+
+Two quick checks:
+1. **Cohort key = group (6 buckets) vs. exact IC (26 buckets)?** I recommend grouping to 6, because most groups will have 30–600 schools (great peer math), while exact IC ids like "Special Focus: Theological Studies" would have <10 peers in the DB. Say "6 groups" or "exact 26".
+2. **Drop the legacy `carnegie_id` column entirely (option A from earlier)?** Confirming yes — that's what "clean sweep" implies, but I want explicit go-ahead before the destructive migration.
