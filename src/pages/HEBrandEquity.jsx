@@ -3,6 +3,7 @@ import InsightReport from "../components/InsightReport";
 import { scorePool, buildCohort, cohortTopLine } from "../lib/insightFramework";
 import financeSnapshot from "../data/financeSnapshot.json";
 import { supabase } from "@/integrations/supabase/client";
+import { get2025Data } from "@/lib/carnegie2025";
 
 // Flatten a row from the `institutions` table into the legacy IPEDS_DB shape
 // so the rest of the form / scoring code can stay untouched.
