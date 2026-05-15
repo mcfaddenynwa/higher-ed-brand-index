@@ -973,26 +973,25 @@ export default function App() {
         autoFields.push('totalRevenue');
       }
     }
-    // 2025 Carnegie data: prefer row column, fall back to bundled 52-school sample
-    const c2025 = school.carnegie2025 || get2025Data(school.unitid);
-    if (c2025) {
-      if (c2025.researchDesignation != null) {
-        populated.researchDesignation = String(c2025.researchDesignation);
+    // 2025 Carnegie data — straight from the institutions row.
+    if (!isIntl) {
+      if (school.research2025 != null) {
+        populated.researchDesignation = String(research2025ToScoreVal(school.research2025));
         autoFields.push('researchDesignation');
       }
-      if (c2025.saecScore != null) {
-        populated.saecScore = String(c2025.saecScore);
+      if (school.saec2025 != null) {
+        populated.saecScore = String(school.saec2025);
         autoFields.push('saecScore');
       }
-      if (c2025.accessRatio != null) {
-        populated.accessRatio = String(c2025.accessRatio);
+      if (school.accessRatio != null) {
+        populated.accessRatio = String(school.accessRatio);
         autoFields.push('accessRatio');
       }
-      setInstitution2025IC(c2025.ic2025name ?? null);
-      setInstitutionSAEC(c2025.saec2025name ?? null);
-      setInstitutionResearch(c2025.research2025name ?? null);
+      setSelectedIc2025(school.ic2025 ?? null);
+      setInstitutionSAEC(school.saec2025name ?? null);
+      setInstitutionResearch(school.research2025name ?? null);
     } else {
-      setInstitution2025IC(null);
+      setSelectedIc2025(null);
       setInstitutionSAEC(null);
       setInstitutionResearch(null);
     }
