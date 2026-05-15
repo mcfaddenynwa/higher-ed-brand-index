@@ -3,17 +3,55 @@ import InsightReport from "../components/InsightReport";
 import { scorePool, buildCohort, cohortTopLine } from "../lib/insightFramework";
 import financeSnapshot from "../data/financeSnapshot.json";
 import { supabase } from "@/integrations/supabase/client";
-import { get2025Data } from "@/lib/carnegie2025";
 
-// Flatten a row from the `institutions` table into the legacy IPEDS_DB shape
+// Map a 2025 IC + Research Activity Designation to the legacy 12-bucket
+// `carnegieId` used internally for weights, benchmarks and peer cohort lenses.
+// Research 1/2/RCU dominates IC when present.
+function deriveCarnegieId(ic2025, research2025) {
+  if (research2025 === 1) return "r1";
+  if (research2025 === 2) return "r2";
+  if (research2025 === 3) return "rcu";
+  if (ic2025 == null) return "";
+  if ([6, 7, 8].includes(ic2025)) return "mixed_doc";
+  if ([16, 17, 18].includes(ic2025)) return "prof_doc";
+  if ([9, 10].includes(ic2025)) return "mixed_masters";
+  if ([19, 20].includes(ic2025)) return "prof_masters";
+  if (ic2025 === 22) return "bac_arts";
+  if ([4, 5].includes(ic2025)) return "mixed_bac";
+  if ([13, 14, 15].includes(ic2025)) return "prof_bac";
+  if (ic2025 >= 21 && ic2025 <= 31) return "special";
+  return "";
+}
+
+// 2025 Research Activity Designation (1=R1, 2=R2, 3=RCU) → legacy
+// researchDesignation field (3=High, 2=Moderate, 1=Low, 0=None) used by scoring.
+function research2025ToScoreVal(r) {
+  if (r === 1) return 3;
+  if (r === 2) return 2;
+  if (r === 3) return 1;
+  return 0;
+}
+
+// Flatten a row from the `institutions` table into the IPEDS_DB shape
 // so the rest of the form / scoring code can stay untouched.
 function flattenInstitutionRow(r) {
+  const carnegieId = deriveCarnegieId(r.ic2025, r.research2025);
   return {
     name: r.name,
     unitid: r.unitid,
     city: r.city,
     state: r.state,
-    carnegieId: r.carnegie_id,
+    carnegieId,
+    ic2025: r.ic2025,
+    ic2025name: r.ic2025name,
+    ic2025group: r.ic2025group,
+    research2025: r.research2025,
+    research2025name: r.research2025name,
+    saec2025: r.saec2025,
+    saec2025name: r.saec2025name,
+    accessRatio: r.access_ratio,
+    earningsRatio: r.earnings_ratio,
+    pellPct: r.pell_2023 != null ? Math.round(r.pell_2023 * 100) : undefined,
     usNewsList: r.us_news_list,
     flags: r.flags || {},
     fte: r.fte,
@@ -21,9 +59,76 @@ function flattenInstitutionRow(r) {
     ...(r.metrics || {}),
     ...(r.rankings || {}),
     ...(r.finance || {}),
-    carnegie2025: r.carnegie2025 || null,
   };
 }
+
+// 26 four-year IC2025 cohorts grouped for the Classify dropdown.
+// Excludes ic 1, 2, 3, 11, 12 (Associate-only).
+const IC2025_COHORTS = [
+  // Associate / Baccalaureate
+  { id: 4,  group: "Associate/Baccalaureate", label: "Mixed Associate/Baccalaureate" },
+  { id: 13, group: "Associate/Baccalaureate", label: "Professions-focused Associate/Baccalaureate" },
+  // Baccalaureate
+  { id: 5,  group: "Baccalaureate", label: "Mixed Baccalaureate" },
+  { id: 14, group: "Baccalaureate", label: "Professions-focused Baccalaureate Medium" },
+  { id: 15, group: "Baccalaureate", label: "Professions-focused Baccalaureate Small" },
+  // Master's
+  { id: 9,  group: "Master's", label: "Mixed Undergraduate/Graduate-Master's Large/Medium" },
+  { id: 10, group: "Master's", label: "Mixed Undergraduate/Graduate-Master's Small" },
+  { id: 19, group: "Master's", label: "Professions-focused Undergraduate/Graduate-Master's Large/Medium" },
+  { id: 20, group: "Master's", label: "Professions-focused Undergraduate/Graduate-Master's Small" },
+  // Doctorate
+  { id: 6,  group: "Doctorate", label: "Mixed Undergraduate/Graduate-Doctorate Large" },
+  { id: 7,  group: "Doctorate", label: "Mixed Undergraduate/Graduate-Doctorate Medium" },
+  { id: 8,  group: "Doctorate", label: "Mixed Undergraduate/Graduate-Doctorate Small" },
+  { id: 16, group: "Doctorate", label: "Professions-focused Undergraduate/Graduate-Doctorate Large" },
+  { id: 17, group: "Doctorate", label: "Professions-focused Undergraduate/Graduate-Doctorate Medium" },
+  { id: 18, group: "Doctorate", label: "Professions-focused Undergraduate/Graduate-Doctorate Small" },
+  // Special Focus
+  { id: 21, group: "Special Focus", label: "Special Focus: Applied and Career Studies" },
+  { id: 22, group: "Special Focus", label: "Special Focus: Arts and Sciences" },
+  { id: 23, group: "Special Focus", label: "Special Focus: Arts, Music, and Design" },
+  { id: 24, group: "Special Focus", label: "Special Focus: Business" },
+  { id: 25, group: "Special Focus", label: "Special Focus: Graduate Studies" },
+  { id: 26, group: "Special Focus", label: "Special Focus: Law" },
+  { id: 27, group: "Special Focus", label: "Special Focus: Medical Schools and Centers" },
+  { id: 28, group: "Special Focus", label: "Special Focus: Nursing" },
+  { id: 29, group: "Special Focus", label: "Special Focus: Other Health Professions" },
+  { id: 30, group: "Special Focus", label: "Special Focus: Technology, Engineering, and Sciences" },
+  { id: 31, group: "Special Focus", label: "Special Focus: Theological Studies" },
+];
+
+const IC2025_GROUP_ORDER = ["Doctorate", "Master's", "Baccalaureate", "Associate/Baccalaureate", "Special Focus"];
+
+// Short blurbs surfaced under the auto-detected classification.
+const IC2025_DESCRIPTIONS = {
+  4:  "Mix of associate and bachelor's programs across multiple fields.",
+  5:  "Bachelor's-dominant institution with a balanced academic and professional mix.",
+  6:  "Large doctoral institution with a balanced academic and professional mix.",
+  7:  "Medium doctoral institution with a balanced academic and professional mix.",
+  8:  "Small doctoral institution with a balanced academic and professional mix.",
+  9:  "Master's-dominant institution (large/medium) with a balanced academic and professional mix.",
+  10: "Master's-dominant institution (small) with a balanced academic and professional mix.",
+  13: "Mix of associate and bachelor's programs concentrated in professional fields.",
+  14: "Bachelor's-dominant institution (medium) concentrated in professional fields.",
+  15: "Bachelor's-dominant institution (small) concentrated in professional fields.",
+  16: "Large doctoral institution concentrated in professional fields.",
+  17: "Medium doctoral institution concentrated in professional fields.",
+  18: "Small doctoral institution concentrated in professional fields.",
+  19: "Master's-dominant institution (large/medium) concentrated in professional fields.",
+  20: "Master's-dominant institution (small) concentrated in professional fields.",
+  21: "Special Focus institution centered on applied and career studies programs.",
+  22: "Special Focus institution centered on the arts and sciences (liberal arts).",
+  23: "Special Focus institution centered on arts, music, and design.",
+  24: "Special Focus institution centered on business and management.",
+  25: "Special Focus institution centered on graduate-only studies.",
+  26: "Special Focus institution centered on law.",
+  27: "Special Focus institution centered on medical schools and centers.",
+  28: "Special Focus institution centered on nursing.",
+  29: "Special Focus institution centered on other health professions.",
+  30: "Special Focus institution centered on technology, engineering, and sciences.",
+  31: "Special Focus institution centered on theological studies.",
+};
 // LOVABLE SETUP: Add this to your index.html <head>:
 //
 
