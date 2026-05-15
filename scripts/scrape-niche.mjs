@@ -188,99 +188,48 @@ function extractFromNextData(nextData, pageNum) {
   return schools;
 }
 
-function extractFromHTML(html, pageNum) {
-  const schools = [];
-  let rankOffset = (pageNum - 1) * PAGE_SIZE + 1;
-
-  // Match school cards — Niche uses consistent class patterns
-  // Pattern: data-id or data-college-id with name and grade
-  const cardPattern = /<li[^>]*class="[^"]*search-result[^"]*"[^>]*>([\s\S]*?)<\/li>/g;
-  let cardMatch;
-
-  while ((cardMatch = cardPattern.exec(html)) !== null) {
-    const card = cardMatch[1];
-
-    // Extract name
-    const nameMatch = card.match(/<h2[^>]*class="[^"]*search-result__title[^"]*"[^>]*>([^<]+)<\/h2>/);
-    if (!nameMatch) continue;
-    const name = nameMatch[1].trim();
-
-    // Extract grade
-    const gradeMatch = card.match(/Niche Grade[^"]*"[^>]*>([A-F][+-]?)<\/span>/i)
-      || card.match(/overall-grade[^>]*>([A-F][+-]?)<\/span>/i)
-      || card.match(/>([A-F][+-]?)<\/span>[^<]*Niche/i);
-    const gradeRaw = gradeMatch ? gradeMatch[1].trim() : null;
-
-    // Extract slug for individual page fetch if needed
-    const slugMatch = card.match(/href="\/colleges\/([^/]+)\//);
-    const slug = slugMatch ? slugMatch[1] : null;
-
-    // Extract unitid if embedded
-    const unitidMatch = card.match(/data-id="(\d+)"|data-college-id="(\d+)"|unitid[":]+(\d+)/);
-    const unitid = unitidMatch
-      ? (unitidMatch[1] || unitidMatch[2] || unitidMatch[3])
-      : null;
-
-    schools.push({
-      name,
-      slug,
-      unitid,
-      nicheRank: rankOffset++,
-      nicheGrade: gradeToNum(gradeRaw),
-      nicheGradeRaw: gradeRaw,
-    });
-  }
-
-  // If HTML parsing also fails, try a simpler anchor pattern
-  if (schools.length === 0) {
-    const anchorPattern = /href="\/colleges\/([^/]+)\/"\s*[^>]*>([^<]{5,80})<\/a>/g;
-    let aMatch;
-    while ((aMatch = anchorPattern.exec(html)) !== null) {
-      schools.push({
-        name: aMatch[2].trim(),
-        slug: aMatch[1],
-        unitid: null,
-        nicheRank: rankOffset++,
-        nicheGrade: null,
-        nicheGradeRaw: null,
-      });
-    }
-  }
-
-  return schools;
-}
-
 /**
  * For schools missing unitid, fetch their individual Niche profile page
- * to get the IPEDS unitid embedded in the page data
+ * via Playwright to get the IPEDS unitid embedded in the page data.
  */
-async function fetchUnitidFromProfile(slug) {
+async function fetchUnitidFromProfile(browser, slug) {
   if (!slug) return null;
+  const page = await browser.newPage();
   try {
     await sleep(1500);
-    const url = `${NICHE_BASE}/colleges/${slug}/`;
-    const res = await fetch(url, {
-      headers: { 'User-Agent': randomUA() },
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.setExtraHTTPHeaders({
+      'Accept-Language': 'en-US,en;q=0.9',
     });
-    if (!res.ok) return null;
-    const html = await res.text();
 
-    // Look for unitid in __NEXT_DATA__ or meta tags
-    const nextDataMatch = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
-    if (nextDataMatch) {
-      const data = JSON.parse(nextDataMatch[1]);
-      const entity = data?.props?.pageProps?.entity || data?.props?.pageProps?.college;
-      if (entity?.unitid || entity?.ipeds) {
-        return String(entity.unitid || entity.ipeds);
-      }
-    }
+    const url = `${NICHE_BASE}/colleges/${slug}/`;
+    const response = await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+    if (!response || !response.ok()) return null;
 
-    // Fallback: look for IPEDS in meta or structured data
+    // Try __NEXT_DATA__ for entity.unitid / ipeds
+    const fromNext = await page.evaluate(() => {
+      const el = document.getElementById('__NEXT_DATA__');
+      if (!el) return null;
+      try {
+        const data = JSON.parse(el.textContent);
+        const entity = data?.props?.pageProps?.entity || data?.props?.pageProps?.college;
+        if (entity?.unitid || entity?.ipeds) {
+          return String(entity.unitid || entity.ipeds);
+        }
+      } catch {}
+      return null;
+    });
+    if (fromNext) return fromNext;
+
+    // Regex fallback over rendered HTML
+    const html = await page.content();
     const ipedsMatch = html.match(/\"unitid\"[:\s]+"?(\d{6})"?/)
       || html.match(/ipeds[_\s]?id["\s:]+(\d{6})/i);
     return ipedsMatch ? ipedsMatch[1] : null;
   } catch {
     return null;
+  } finally {
+    await page.close().catch(() => {});
   }
 }
 
