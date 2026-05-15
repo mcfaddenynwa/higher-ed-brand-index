@@ -1,74 +1,44 @@
-## Goal
+## Why each issue is happening
 
-Implement Step 6 of the database brief — pull 2025 Carnegie data when an institution is selected and display the three 2025 framework labels (Institutional Classification, SAEC tier, Research Designation) for the chosen school. Steps 1–5, 7, and 8 of the brief are already in place from prior turns.
+### 1. UVM shows "R2 (Research 2)" but 2025 says R1
+Two different vintages of Carnegie data are being shown side-by-side:
+- The big heading (`R2 (Research 2)`) comes from the legacy `carnegie_id` column. UVM's row in the seeded `institutions` table has `carnegie_id = "r2"` (from the 2021 Basic Classification used to seed).
+- The "Research:" line under it comes from the new `carnegie2025` JSON, where UVM is `"Research 1: Very High Spending and Doctorate Production"`.
+
+UVM was genuinely promoted from R2 → R1 in the 2025 framework. The data isn't wrong — the UI is just showing two snapshots without explaining which is which, so it reads like a contradiction.
+
+**Fix options (pick one — I recommend B):**
+- **A.** Re-derive `carnegie_id` from the 2025 `researchDesignation` when seeding (so R1=3 → `r1`, R2=2 → `r2`, etc.). This rewrites history for every R-school whose designation moved. It also changes peer cohorts.
+- **B.** Keep the legacy `carnegie_id` for cohort math (so peer comparisons stay stable against the existing dataset), but **relabel the heading** to make the vintage explicit. Replace the bare "R2 (Research 2)" with a small "2021 Basic" eyebrow, and label the 2025 line as "2025 Research" instead of just "Research". Optionally show a subtle "↑ promoted to R1 in 2025" note when the two disagree.
+- **C.** Promote the 2025 designation to be the headline (e.g. "R1 — Research 1") and demote the legacy value to a footnote. Cleanest visually but masks the cohort that's actually driving the scoring.
+
+### 2. The "← BACK" button is floating in the middle
+The header is a flex row with `justify-content: space-between` and default `align-items: center`. When the 2025 lines were added, the left block grew ~3 lines taller, so the vertically-centered BACK now sits around the middle of that taller block.
+
+**Fix:** add `alignItems: 'flex-start'` to the flex container at line 1060, so BACK pins to the top next to "CLASSIFICATION".
+
+### 3. The spider chart sits too low
+Same root cause: the left sidebar header grew taller from the 2025 lines, but the right pane's chart area uses internal padding/margin that was sized before those lines existed. A quick scan of the right pane (need to read lines ~1140–1300) will confirm whether to:
+- reduce the chart container's top padding, and/or
+- tighten the gap between the 2025 lines (`marginTop: 6`, `lineHeight: 1.4`) so the sidebar header is shorter.
+
+I'll apply both: shrink the 2025 block's top margin from 6→4 and line-height from 1.4→1.35, and trim the chart pane's top padding by ~12px so the chart's vertical center sits closer to the sidebar header.
 
 ## Changes to `src/pages/HEBrandEquity.jsx`
 
-### 1. Import 2025 helpers
-Add at the top of the file (alongside other lib imports):
-```js
-import { get2025Data } from "@/lib/carnegie2025";
-```
+1. **Line 1060** — header flex: add `alignItems: 'flex-start'` so BACK sits at the top.
+2. **Lines 1062–1064** — relabel the eyebrow to make vintage explicit:
+   - `CLASSIFICATION` → `2021 BASIC` (kept in orange eyebrow style)
+   - Keep `selectedCarnegie?.short` as the bold line beneath.
+3. **Line 1068** — change `Research:` to `2025 Research:` and `2025 IC:` stays, `SAEC:` → `2025 SAEC:` (parallel labeling).
+4. **Lines 1066** — tighten the 2025 block: `marginTop: 4, lineHeight: 1.35`.
+5. **Right pane (chart container, ~line 1140+)** — read first, then trim its top padding by ~12px so the chart rises to align with the sidebar header.
 
-### 2. Add three new state variables
-Co-locate with the other selection-related state (near `unitid` / `carnegieId`):
-```js
-const [institution2025IC, setInstitution2025IC] = useState(null);
-const [institutionSAEC, setInstitutionSAEC] = useState(null);
-const [institutionResearch, setInstitutionResearch] = useState(null);
-```
-
-### 3. Extend `selectInstitution` (line 817)
-After existing auto-population logic and before `setValues`, pull `carnegie2025` from the row (with `get2025Data(unitid)` as a fallback for the 52-school sample whose row may predate the column):
-
-```js
-const c2025 = school.carnegie2025 || get2025Data(school.unitid);
-if (c2025) {
-  if (c2025.researchDesignation != null) {
-    populated.researchDesignation = String(c2025.researchDesignation);
-    autoFields.push('researchDesignation');
-  }
-  if (c2025.saecScore != null) {
-    populated.saecScore = String(c2025.saecScore);
-    autoFields.push('saecScore');
-  }
-  if (c2025.accessRatio != null) {
-    populated.accessRatio = String(c2025.accessRatio);
-    autoFields.push('accessRatio');
-  }
-  setInstitution2025IC(c2025.ic2025name ?? null);
-  setInstitutionSAEC(c2025.saec2025name ?? null);
-  setInstitutionResearch(c2025.research2025name ?? null);
-} else {
-  setInstitution2025IC(null);
-  setInstitutionSAEC(null);
-  setInstitutionResearch(null);
-}
-```
-
-The `populated.researchDesignation`/`saecScore`/`accessRatio` keys only take effect if matching input ids exist in the form. They're harmless otherwise (kept verbatim from the brief) and align with the brief's instruction.
-
-### 4. Surface the three 2025 labels in the Step 2 sidebar
-Augment the existing classification block (around line 1034–1037) to add up to three brand-styled rows beneath the institution name when present:
-
-```jsx
-{institution2025IC && (
-  <div style={{ fontSize: 11, color: '#595959', marginTop: 6, lineHeight: 1.4 }}>
-    <div><span style={{ color: '#1C3678', fontWeight: 600 }}>2025 IC:</span> {institution2025IC}</div>
-    {institutionResearch && <div><span style={{ color: '#1C3678', fontWeight: 600 }}>Research:</span> {institutionResearch}</div>}
-    {institutionSAEC && <div><span style={{ color: '#1C3678', fontWeight: 600 }}>SAEC:</span> {institutionSAEC}</div>}
-  </div>
-)}
-```
-
-Uses brand tokens (Navy `#1C3678`, Mid Gray `#595959`, Bitter body font already in scope). Steel-blue rule device is reserved for major section headings, so it's not used inside this compact sidebar block.
+Net effect: the user sees `2021 BASIC: R2 (Research 2)` clearly distinguished from `2025 Research: Research 1…`, the BACK button anchors top-right of the sidebar header, and the spider chart sits higher in the right pane.
 
 ## Out of scope
-- Steps 1–5 (data file, seed script, migration, seeding) — already done.
-- Step 7 (suggestion dropdown city/state/Carnegie short) — already implemented.
-- Step 8 (`IPEDS_DB` fallback) — already preserved.
-- Scoring logic, weights, and chart rendering — unchanged.
+- Re-seeding `carnegie_id` to use 2025 designations (option A) — only do this if you'd rather collapse to a single vintage.
+- Any change to scoring, weights, or peer-cohort logic.
 
-## Verification
-- Build will run automatically.
-- Manually: pick a US school in the typeahead, advance to Step 2, confirm the three 2025 lines render under the school name when available, and that schools without 2025 data render exactly as today.
+## Confirm before I build
+Should I go with **option B** (keep legacy `carnegie_id`, relabel headings to show vintage) or do you want **option A** (rewrite `carnegie_id` from the 2025 designation so UVM becomes R1 everywhere, including peer cohorts)?
