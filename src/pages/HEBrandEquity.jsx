@@ -1119,32 +1119,120 @@ export default function App() {
             )}
           </div>
 
-          {/* Manual Carnegie selection */}
-          <div style={{ fontSize: 14, color: '#243551', marginBottom: 14 }}>
-            {isIntl
-              ? (autoPopulated.length > 0 ? "Confirm or change your international classification:" : "Select your international classification:")
-              : (autoPopulated.length > 0 ? "Confirm or change your Carnegie classification:" : "Or select your Carnegie classification manually:")}
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 28 }}>
-{(isIntl ? INTL_CATEGORIES : CARNEGIE_CATEGORIES).map(cat => (
-              <button key={cat.id} onClick={() => { setCarnegieId(cat.id); if (USNEWS_LIST_MAP[cat.id]) setValues(p => ({ ...p, usNewsList: USNEWS_LIST_MAP[cat.id] })); }} style={{
-                textAlign: 'left', padding: '14px 16px',
-                background: carnegieId === cat.id ? '#FFFFFF' : '#F4F6F8',
-                border: carnegieId === cat.id ? '2px solid #1C3678' : '1px solid #E9EDEE',
-                borderRadius: 0, cursor: 'pointer', transition: 'all 0.12s',
-                boxShadow: carnegieId === cat.id ? 'inset 4px 0 0 0 #EB5600' : 'none',
+          {/* International keeps the legacy card grid */}
+          {isIntl && (
+            <>
+              <div style={{ fontSize: 14, color: '#243551', marginBottom: 14 }}>
+                {autoPopulated.length > 0 ? "Confirm or change your international classification:" : "Select your international classification:"}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 28 }}>
+                {INTL_CATEGORIES.map(cat => (
+                  <button key={cat.id} onClick={() => { setCarnegieId(cat.id); if (USNEWS_LIST_MAP[cat.id]) setValues(p => ({ ...p, usNewsList: USNEWS_LIST_MAP[cat.id] })); }} style={{
+                    textAlign: 'left', padding: '14px 16px',
+                    background: carnegieId === cat.id ? '#FFFFFF' : '#F4F6F8',
+                    border: carnegieId === cat.id ? '2px solid #1C3678' : '1px solid #E9EDEE',
+                    borderRadius: 0, cursor: 'pointer', transition: 'all 0.12s',
+                    boxShadow: carnegieId === cat.id ? 'inset 4px 0 0 0 #EB5600' : 'none',
+                  }}>
+                    <div style={{ fontSize: 14, fontFamily: "'Young Serif', Georgia, serif", color: '#243551', marginBottom: 4 }}>{cat.short}</div>
+                    <div style={{ fontSize: 13, color: '#595959', lineHeight: 1.5 }}>{cat.description}</div>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* US: single auto-detected 2025 classification card with override dropdown */}
+          {!isIntl && (() => {
+            const matched = IC2025_COHORTS.find(c => c.id === selectedIc2025);
+            const matchedName = matched?.label ?? null;
+            const description = matched ? IC2025_DESCRIPTIONS[matched.id] : null;
+            const groups = IC2025_GROUP_ORDER.map(g => ({
+              group: g,
+              items: IC2025_COHORTS.filter(c => c.group === g),
+            }));
+            const handlePick = (icId) => {
+              const cohort = IC2025_COHORTS.find(c => c.id === icId);
+              if (!cohort) return;
+              setSelectedIc2025(icId);
+              // Re-derive the legacy carnegieId, preferring the existing
+              // research2025 designation if the institution had one.
+              const r = parseFloat(values.researchDesignation);
+              // researchDesignation field is 3=R1, 2=R2, 1=RCU, 0=None — invert
+              const research2025 = r === 3 ? 1 : r === 2 ? 2 : r === 1 ? 3 : null;
+              const newCid = deriveCarnegieId(icId, research2025);
+              setCarnegieId(newCid);
+              if (USNEWS_LIST_MAP[newCid]) setValues(p => ({ ...p, usNewsList: USNEWS_LIST_MAP[newCid] }));
+            };
+            return (
+              <div style={{
+                background: '#FFFFFF',
+                border: '2px solid #1C3678',
+                boxShadow: 'inset 4px 0 0 0 #EB5600',
+                padding: '20px 22px',
+                marginBottom: 28,
               }}>
-                <div style={{ fontSize: 14, fontFamily: "'Young Serif', Georgia, serif", color: '#243551', marginBottom: 4 }}>{cat.short}</div>
-                <div style={{ fontSize: 13, color: '#595959', lineHeight: 1.5 }}>{cat.description}</div>
-              </button>
-            ))}
-          </div>
+                <div style={{ fontSize: 11, letterSpacing: 2, color: '#1C3678', fontWeight: 600, marginBottom: 8, textTransform: 'uppercase' }}>
+                  2025 Carnegie Classification
+                </div>
+                {matched ? (
+                  <>
+                    <div style={{ fontSize: 18, fontFamily: "'Young Serif', Georgia, serif", color: '#243551', lineHeight: 1.25, marginBottom: 4 }}>
+                      {matchedName}
+                    </div>
+                    {institutionResearch && (
+                      <div style={{ fontSize: 13, color: '#EB5600', fontWeight: 600, marginBottom: 10 }}>
+                        {institutionResearch}
+                      </div>
+                    )}
+                    {description && (
+                      <div style={{ fontSize: 13, color: '#595959', lineHeight: 1.55, marginBottom: 14 }}>
+                        {description}
+                      </div>
+                    )}
+                    {institutionSAEC && (
+                      <div style={{ fontSize: 12, color: '#595959', marginBottom: 14 }}>
+                        <span style={{ color: '#1C3678', fontWeight: 600 }}>2025 SAEC:</span> {institutionSAEC}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div style={{ fontSize: 14, color: '#595959', marginBottom: 14, lineHeight: 1.55 }}>
+                    Search for your institution above, or pick a 2025 classification below.
+                  </div>
+                )}
+
+                <div style={{ borderTop: '1px solid #E9EDEE', paddingTop: 14 }}>
+                  <div style={{ fontSize: 11, letterSpacing: 1.5, color: '#595959', textTransform: 'uppercase', marginBottom: 8 }}>
+                    {matched ? 'Classification incorrect? Change it:' : 'Choose a classification:'}
+                  </div>
+                  <select
+                    value={selectedIc2025 ?? ''}
+                    onChange={e => handlePick(parseInt(e.target.value, 10))}
+                    style={{
+                      ...iStyle,
+                      fontFamily: "'Bitter', Georgia, serif",
+                      fontSize: 14,
+                      cursor: 'pointer',
+                      background: '#FFFFFF',
+                    }}
+                  >
+                    <option value="" disabled>Select a 2025 IC classification…</option>
+                    {groups.map(g => (
+                      <optgroup key={g.group} label={g.group}>
+                        {g.items.map(c => (
+                          <option key={c.id} value={c.id}>{c.label}</option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            );
+          })()}
 
           {carnegieId
             ? <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <div style={{ fontSize: 14, color: '#243551' }}>
-                  Selected: <span style={{ color: '#EB5600', fontWeight: 600 }}>{selectedCarnegie?.label}</span>
-                </div>
                 <button onClick={() => setStep("data")} style={{
                   background: '#EB5600', color: '#FFFFFF', border: 'none',
                   borderRadius: 6, padding: '9px 22px', fontSize: 14, fontWeight: 700,
