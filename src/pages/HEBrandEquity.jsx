@@ -952,13 +952,17 @@ export default function App() {
     const defaultList = school.usNewsList ?? USNEWS_LIST_MAP[school.carnegieId] ?? null;
     if (defaultList) { populated.usNewsList = defaultList; }
     const fields = isIntl ? INTL_FIELDS : IPEDS_FIELDS;
+    // Grad-program rank fields: only auto-populate when ranked in the top N
+    // (matches the field label "blank if unranked in top 50").
+    const GRAD_RANK_MAX = { usNewsLaw: 50, usNewsBiz: 50, usNewsEng: 50 };
     fields.forEach(field => {
-      if (school[field] != null) {
-        // Map accessPct → pellPct for international schools (same axis input)
-        const targetField = (isIntl && field === 'accessPct') ? 'pellPct' : field;
-        populated[targetField] = String(school[field]);
-        autoFields.push(targetField);
-      }
+      if (school[field] == null) return;
+      const cap = GRAD_RANK_MAX[field];
+      if (cap != null && Number(school[field]) > cap) return;
+      // Map accessPct → pellPct for international schools (same axis input)
+      const targetField = (isIntl && field === 'accessPct') ? 'pellPct' : field;
+      populated[targetField] = String(school[field]);
+      autoFields.push(targetField);
     });
     if (!isIntl && school.flags) {
       // Auto-check from hardcoded flags (annual review recommended)
