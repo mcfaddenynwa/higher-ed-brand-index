@@ -246,6 +246,38 @@ async function loadAceData() {
 
       // 2021 Basic Classification code (for carnegieId mapping)
       basic2021: num(r.basic2021),
+
+      // ── NEW: US News rankings (from master file) ────────────────────
+      usNewsList:       USNEWS_LIST_SLUG[r.usnews_list] ?? null,
+      usNewsListRaw:    r.usnews_list ?? null,
+      usNewsListDetail: r.usnews_list_detail ?? null,
+      // usnews_rank: numeric, -1 = listed unranked, null = not on a list
+      usNews:           num(r.usnews_rank),
+      usNewsDisplay:    r.usnews_display_rank ?? null,
+      usNewsHbcuRank:   num(r.usnews_hbcu_rank),
+
+      // ── NEW: Global rankings ────────────────────────────────────────
+      qsRank:        parseRankRange(r.qs_2026_rank),
+      qsRankDisplay: r.qs_2026_rank != null ? String(r.qs_2026_rank) : null,
+      qsScore:       num(r.qs_2026_score),
+      theWorldRank:  num(r.the_2026_rank),
+      theScore:      num(r.the_2026_score),
+      caldwellRank:  num(r.caldwell_rank),
+      nicheGrade:    num(r.niche_grade),
+
+      // ── NEW: Grad program tiers + ranks ─────────────────────────────
+      lawTier:    r.law_school_tier ?? null,
+      usNewsLaw:  num(r.law_school_rank),
+      bizTier:    r.business_school_tier ?? null,
+      usNewsBiz:  num(r.business_school_rank),
+      engTier:    r.engineering_tier ?? null,
+      usNewsEng:  num(r.engineering_rank),
+
+      // ── NEW: Athletics ──────────────────────────────────────────────
+      athleticsBigFour: num(r.is_big_four_conference) === 1 ? 1 : 0,
+      athleticsD1:      num(r.is_division_1) === 1 ? 1 : 0,
+      ncaaConference:   r.ncaa_conference ?? null,
+      ncaaDivision:     r.ncaa_division ?? null,
     });
   }
 
