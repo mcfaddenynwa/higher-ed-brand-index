@@ -69,6 +69,15 @@ const FILES = {
   f2:    'F2223_F2.zip',
 };
 
+// Additional DRVEF years for 5-year enrollment trend.
+// Non-fatal if any are missing (older snapshots may not be hosted anymore).
+const ENROLL_TREND_FILES = {
+  drvef2018: 'DRVEF2018.zip',
+  drvef2019: 'DRVEF2019.zip',
+  drvef2020: 'DRVEF2020.zip',
+  drvef2021: 'DRVEF2021.zip',
+};
+
 // ── Helpers ───────────────────────────────────────────────────────────────
 
 async function downloadCsv(zipName) {
@@ -126,15 +135,40 @@ function num(v) {
 // ── 2025 ACE Carnegie file loader ─────────────────────────────────────────
 // Reads the local 2025-Public-Data-File.xlsx and returns a Map keyed by unitid
 
-async function loadAceData() {
-  const acePath = path.join(__dirname, 'data', '2025-Public-Data-File.xlsx');
+// US News list label → internal slug used by USNEWS_LIST_LABELS/MAX in HEBrandEquity
+const USNEWS_LIST_SLUG = {
+  'National Universities': 'natl_univ',
+  'National Liberal Arts Colleges': 'lib_arts',
+  'Regional Universities': 'regional',
+  'Regional Colleges': 'regional',
+  // HBCUs list is captured separately via usnews_hbcu_rank, not as a primary list
+  'HBCUs': null,
+};
 
-  try {
-    await fs.access(acePath);
-  } catch {
-    console.warn(`\n  ⚠ ACE 2025 data file not found at ${acePath}`);
+// Parse qsRank (may be number or range string e.g. "901-950") → numeric lower bound
+function parseRankRange(v) {
+  if (v == null || v === '') return null;
+  if (typeof v === 'number') return v;
+  const s = String(v).trim();
+  const m = s.match(/^(\d+)/);
+  return m ? parseInt(m[1], 10) : null;
+}
+
+async function loadAceData() {
+  // Prefer the new master file (with US News + global rankings + grad tiers + athletics).
+  // Fall back to the original ACE-only file for backwards compatibility.
+  const candidates = [
+    path.join(__dirname, 'data', '2025-Public-Data-File-with-USNews.xlsx'),
+    path.join(__dirname, 'data', '2025-Public-Data-File.xlsx'),
+  ];
+  let acePath = null;
+  for (const p of candidates) {
+    try { await fs.access(p); acePath = p; break; } catch {}
+  }
+  if (!acePath) {
+    console.warn(`\n  ⚠ ACE 2025 data file not found. Looked in:`);
+    candidates.forEach(p => console.warn(`     - ${p}`));
     console.warn('    Download from: https://carnegieclassifications.acenet.edu/carnegie-classification/resources/');
-    console.warn('    Place at: scripts/data/2025-Public-Data-File.xlsx');
     console.warn('    Proceeding without 2025 Carnegie data...\n');
     return new Map();
   }
@@ -212,6 +246,38 @@ async function loadAceData() {
 
       // 2021 Basic Classification code (for carnegieId mapping)
       basic2021: num(r.basic2021),
+
+      // ── NEW: US News rankings (from master file) ────────────────────
+      usNewsList:       USNEWS_LIST_SLUG[r.usnews_list] ?? null,
+      usNewsListRaw:    r.usnews_list ?? null,
+      usNewsListDetail: r.usnews_list_detail ?? null,
+      // usnews_rank: numeric, -1 = listed unranked, null = not on a list
+      usNews:           num(r.usnews_rank),
+      usNewsDisplay:    r.usnews_display_rank ?? null,
+      usNewsHbcuRank:   num(r.usnews_hbcu_rank),
+
+      // ── NEW: Global rankings ────────────────────────────────────────
+      qsRank:        parseRankRange(r.qs_2026_rank),
+      qsRankDisplay: r.qs_2026_rank != null ? String(r.qs_2026_rank) : null,
+      qsScore:       num(r.qs_2026_score),
+      theWorldRank:  num(r.the_2026_rank),
+      theScore:      num(r.the_2026_score),
+      caldwellRank:  num(r.caldwell_rank),
+      nicheGrade:    num(r.niche_grade),
+
+      // ── NEW: Grad program tiers + ranks ─────────────────────────────
+      lawTier:    r.law_school_tier ?? null,
+      usNewsLaw:  num(r.law_school_rank),
+      bizTier:    r.business_school_tier ?? null,
+      usNewsBiz:  num(r.business_school_rank),
+      engTier:    r.engineering_tier ?? null,
+      usNewsEng:  num(r.engineering_rank),
+
+      // ── NEW: Athletics ──────────────────────────────────────────────
+      athleticsBigFour: num(r.is_big_four_conference) === 1 ? 1 : 0,
+      athleticsD1:      num(r.is_division_1) === 1 ? 1 : 0,
+      ncaaConference:   r.ncaa_conference ?? null,
+      ncaaDivision:     r.ncaa_division ?? null,
     });
   }
 
@@ -286,6 +352,13 @@ async function main() {
     paths[k] = await downloadCsv(zip);
   }
 
+  // Optional multi-year DRVEF for 5-yr enrollment trend. Non-fatal on miss.
+  const trendPaths = {};
+  for (const [k, zip] of Object.entries(ENROLL_TREND_FILES)) {
+    try { trendPaths[k] = await downloadCsv(zip); }
+    catch (e) { console.warn(`  ⚠ skipping ${zip} (${e.message})`); }
+  }
+
   console.log('\n  Parsing CSVs...');
   const [hd, drvef, drvgr, adm, sfa, f1a, f2] = await Promise.all([
     parseCsv(paths.hd),
@@ -300,6 +373,15 @@ async function main() {
   const idx = rows => new Map(rows.map(r => [r.UNITID, r]));
   const HD = idx(hd), EF = idx(drvef), GR = idx(drvgr), AD = idx(adm),
         SF = idx(sfa), PUB = idx(f1a), PRIV = idx(f2);
+
+  // Index any historical DRVEF files we successfully grabbed.
+  const TREND = {};
+  for (const [k, p] of Object.entries(trendPaths)) {
+    try { TREND[k] = idx(await parseCsv(p)); }
+    catch (e) { console.warn(`  ⚠ parse failed for ${k}: ${e.message}`); }
+  }
+  const trendYears = Object.keys(TREND);
+  if (trendYears.length) console.log(`  ✓ enrollTrend: using ${trendYears.length} historical DRVEF years`);
 
   // Curated overlay (US News, QS, THE, Niche, Caldwell, athletics, law/biz/eng flags)
   const overlayPath = path.join(ROOT, 'src/data/curatedOverlay.json');
@@ -352,6 +434,20 @@ async function main() {
     const fte        = ef ? num(ef.FTE) : null;
     const enrollment = ef ? num(ef.EFTOTLT) : null;
 
+    // 5-yr enrollment trend (%) from oldest available historical DRVEF to current
+    let enrollTrend = null;
+    if (enrollment != null && trendYears.length) {
+      // Use the oldest year we got (drvef2018 if present, else drvef2019…)
+      for (const y of trendYears) {
+        const past = TREND[y]?.get(unitid);
+        const pastEnroll = past ? num(past.EFTOTLT) : null;
+        if (pastEnroll && pastEnroll > 0) {
+          enrollTrend = Math.round(((enrollment - pastEnroll) / pastEnroll) * 1000) / 10;
+          break;
+        }
+      }
+    }
+
     const applicants = ad ? num(ad.APPLCN) : null;
     const admits     = ad ? num(ad.ADMSSN) : null;
     const enrolled   = ad ? num(ad.ENRLT) : null;
@@ -364,6 +460,10 @@ async function main() {
 
     // Pell: prefer ACE real value; fallback to SFA survey
     const pellPct = ace?.pellPct ?? (sf ? num(sf.UPGRNTP) : null);
+
+    // firstGen — temporary bridge: use Pell % as a proxy until a direct
+    // IPEDS first-gen pull is wired in. Overlay/manual entry can still override.
+    const firstGenProxy = pellPct;
 
     // R&D: prefer ACE herd_avg (3yr NSF average); fallback null
     const rAndD = ace?.rAndD ?? null;
@@ -384,7 +484,7 @@ async function main() {
       ? Math.round((endowRaw / fte) / 1_000)
       : null;
 
-    // Flags — combine IPEDS HD flags with ACE flags
+    // Flags — combine IPEDS HD flags with ACE flags + new athletics/program flags
     const hospitalFlag = num(row.HOSPITAL) === 1 ? 1 : 0;
     const medicalFlag  = ace?.medicalFlag ?? hospitalFlag;
 
@@ -395,15 +495,19 @@ async function main() {
       state: (row.STABBR || '').trim() || null,
       sector,
       carnegie_id: carnegieId,
-      us_news_list: mapUsNewsList(carnegieId),
+      // Prefer master file US News list slug; else Carnegie-based default
+      us_news_list: ace?.usNewsList ?? mapUsNewsList(carnegieId),
 
       flags: {
-        bigFour:   0,  // curated overlay only
-        d1:        0,  // curated overlay only
+        // Athletics + grad program flags now from master file (was overlay-only)
+        bigFour:   ace?.athleticsBigFour ?? 0,
+        d1:        ace?.athleticsD1 ?? 0,
+        conference: ace?.ncaaConference ?? null,
+        ncaaDivision: ace?.ncaaDivision ?? null,
         health:    medicalFlag,
-        law:       0,  // curated overlay only
-        eng:       0,  // curated overlay only
-        aacsb:     0,  // curated overlay only
+        law:       ace?.lawTier ? 1 : 0,
+        eng:       ace?.engTier ? 1 : 0,
+        aacsb:     ace?.bizTier ? 1 : 0,
         womenOnly: ace?.womenOnly ?? 0,
         hbcu:      ace?.hbcu ?? (num(row.HBCU) === 1 ? 1 : 0),
         tribal:    ace?.tribal ?? (num(row.TRIBAL) === 1 ? 1 : 0),
@@ -421,11 +525,13 @@ async function main() {
         yieldRate,
         acceptRate,
         pellPct,
-        firstGen: null,       // not in current IPEDS pull; curated overlay
+        // firstGen bridge: pell_2023 × 100 as best public proxy until a real
+        // first-gen IPEDS pull lands. Overlay can override per-institution.
+        firstGen: firstGenProxy,
         rAndD,
         doctoralOutput,
         researchDesignation,
-        enrollTrend: null,    // requires multi-year; curated overlay
+        enrollTrend,
         accessRatio:   ace?.accessRatio ?? null,
         saecScore:     ace?.saecScore ?? null,
         earningsRatio: ace?.earningsRatio ?? null,
@@ -439,23 +545,32 @@ async function main() {
       },
 
       rankings: {
-        usNews:        null,
-        usNewsLaw:     null,
-        usNewsBiz:     null,
-        usNewsEng:     null,
-        qsRank:        null,
-        theWorldRank:  null,
+        // US News (from master file)
+        usNews:           ace?.usNews ?? null,
+        usNewsDisplay:    ace?.usNewsDisplay ?? null,
+        usNewsList:       ace?.usNewsList ?? null,
+        usNewsListDetail: ace?.usNewsListDetail ?? null,
+        usNewsHbcuRank:   ace?.usNewsHbcuRank ?? null,
+        // Grad program ranks + tiers (from master file)
+        usNewsLaw:     ace?.usNewsLaw ?? null,
+        lawTier:       ace?.lawTier ?? null,
+        usNewsBiz:     ace?.usNewsBiz ?? null,
+        bizTier:       ace?.bizTier ?? null,
+        usNewsEng:     ace?.usNewsEng ?? null,
+        engTier:       ace?.engTier ?? null,
+        // Global rankings (from master file)
+        qsRank:        ace?.qsRank ?? null,
+        qsRankDisplay: ace?.qsRankDisplay ?? null,
+        qsScore:       ace?.qsScore ?? null,
+        theWorldRank:  ace?.theWorldRank ?? null,
+        theScore:      ace?.theScore ?? null,
+        // Pending sources — preserved for overlay/manual override
         theImpactListed: null,
-        theImpactRank: null,
-        nicheRank:     null,
-        nicheGrade:    null,
-        caldwellListed: null,
-        caldwellRank:  null,
-        socialIg:      null,
-        socialLi:      null,
-        socialX:       null,
-        socialFb:      null,
-        socialYt:      null,
+        theImpactRank:   null,
+        nicheRank:       null,
+        nicheGrade:      ace?.nicheGrade ?? null,
+        caldwellListed:  null,
+        caldwellRank:    ace?.caldwellRank ?? null,
       },
 
       // New column: 2025 Carnegie data (all three frameworks)
@@ -492,10 +607,11 @@ async function main() {
 
       const r = baseRow.rankings;
       for (const k of [
-        'usNews','usNewsLaw','usNewsBiz','usNewsEng','qsRank','theWorldRank',
+        'usNews','usNewsDisplay','usNewsList','usNewsListDetail','usNewsHbcuRank',
+        'usNewsLaw','lawTier','usNewsBiz','bizTier','usNewsEng','engTier',
+        'qsRank','qsRankDisplay','qsScore','theWorldRank','theScore',
         'theImpactListed','theImpactRank','nicheRank','nicheGrade',
         'caldwellListed','caldwellRank',
-        'socialIg','socialLi','socialX','socialFb','socialYt'
       ]) {
         if (ov[k] != null) r[k] = ov[k];
       }

@@ -209,7 +209,7 @@ const INTL_DB = [
   { name: "Queen's University (Ontario)", country: "Canada", intlId: "queens-ca", checkboxDefaults: ["chk_lawSchool","chk_aacsb","chk_engineering"], qsRank: 193, theWorldRank: 275, theImpactListed: 1, theImpactRank: 8, retentionRate: 93, gradRate4yr: 89, gradRate6yr: 92, carnegieId: "intl_elite", intlGroup: "U15 Canada", enrollTrend: 1.8, acceptRate: 42, accessPct: null, rAndD: 85, doctoralOutput: 380, researchDesignation: 2, caldwellListed: 1, caldwellRank: 428, endowmentPerStudent: 33, totalRevenue: 800 },
 ];
 
-const IPEDS_FIELDS = ["usNews","usNewsList","enrollTrend","yieldRate","acceptRate","pellPct","firstGen","rAndD","doctoralOutput","researchDesignation","caldwellListed","caldwellRank","retentionRate","gradRate4yr","gradRate6yr","theImpactListed","theImpactRank","nicheRank","nicheGrade","usNewsLaw","usNewsBiz","usNewsEng","theWorldRank","qsRank"];
+const IPEDS_FIELDS = ["usNews","usNewsDisplay","usNewsHbcuRank","usNewsList","enrollTrend","yieldRate","acceptRate","pellPct","firstGen","rAndD","doctoralOutput","researchDesignation","caldwellListed","caldwellRank","retentionRate","gradRate4yr","gradRate6yr","theImpactListed","theImpactRank","nicheRank","nicheGrade","usNewsLaw","lawTier","usNewsBiz","bizTier","usNewsEng","engTier","theWorldRank","qsRank","qsRankDisplay"];
 
 // 2025 Carnegie Classification — Research Activity Designations + Institutional Classification
 // (collapsed from the official 31-grouping spectrum into the working benchmarking cohorts)
@@ -397,23 +397,33 @@ function normalizeAxis(axis, values) {
     let totalPoints = 0;
     const maxPoints = axis.checkboxes.length * 2; // max 2 pts each (1 presence + 1 rank)
     axis.checkboxes.forEach(c => {
+      // Tier multiplier for grad program ranks (law/biz/eng):
+      //   top_20 → 1.0, 21_50 → 0.6, null/missing → 1.0 (backward compatible)
+      const tierKey = c.rankId === 'usNewsLaw' ? 'lawTier'
+                    : c.rankId === 'usNewsBiz' ? 'bizTier'
+                    : c.rankId === 'usNewsEng' ? 'engTier'
+                    : null;
+      const tier = tierKey ? values[tierKey] : null;
+      const tierMult = tier === 'top_20' ? 1.0 : tier === '21_50' ? 0.6 : 1.0;
+
       if (values[c.id] === true) {
         totalPoints += 1; // presence point
         if (c.rankId) {
           const rank = parseFloat(values[c.rankId]);
           if (!isNaN(rank) && rank > 0) {
-            // Inverse curve within top 50: rank 1 = 1.0 bonus, rank 50 = 0.02 bonus
-            totalPoints += Math.max(0, 1 - ((rank - 1) / (c.rankMax - 1)));
+            const rankBonus = Math.max(0, 1 - ((rank - 1) / (c.rankMax - 1)));
+            totalPoints += rankBonus * tierMult;
           }
-          // unranked = 0 bonus (no points added)
         } else {
-          totalPoints += 1; // non-ranked checkboxes get full 2pts when checked
+          totalPoints += 1;
         }
       } else {
-        // unchecked with rankId: if they have a rank but forgot to check, still give partial
         if (c.rankId) {
           const rank = parseFloat(values[c.rankId]);
-          if (!isNaN(rank) && rank > 0) totalPoints += 0.5 * Math.max(0, 1 - ((rank - 1) / (c.rankMax - 1)));
+          if (!isNaN(rank) && rank > 0) {
+            const rankBonus = Math.max(0, 1 - ((rank - 1) / (c.rankMax - 1)));
+            totalPoints += 0.5 * rankBonus * tierMult;
+          }
         }
       }
     });
