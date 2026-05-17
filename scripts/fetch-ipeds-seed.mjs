@@ -79,7 +79,7 @@ const ENROLL_TREND_FILES = {
   y2018: { zip: 'EFFY2018.zip',  field: 'EFYTOTLT', filter: r => num(r.EFFYLEV) === 1 },
   y2019: { zip: 'EFFY2019.zip',  field: 'EFYTOTLT', filter: r => num(r.EFFYLEV) === 1 },
   y2020: { zip: 'EFFY2020.zip',  field: 'EFYTOTLT', filter: r => num(r.EFFYLEV) === 1 },
-  y2021: { zip: 'DRVEF2021.zip', field: 'EFTOTLT',  filter: null },
+  y2021: { zip: 'DRVEF2021.zip', field: 'ENRTOT',   filter: null },
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────
@@ -440,7 +440,7 @@ async function main() {
     const priv = PRIV.get(unitid);
 
     const fte        = ef ? num(ef.FTE) : null;
-    const enrollment = ef ? num(ef.EFTOTLT) : null;
+    const enrollment = ef ? num(ef.ENRTOT) : null;
 
     // 5-yr enrollment trend (%) from oldest available historical year to current
     let enrollTrend = null;
