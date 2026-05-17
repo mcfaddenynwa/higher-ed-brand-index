@@ -79,7 +79,7 @@ const ENROLL_TREND_FILES = {
   y2018: { zip: 'EFFY2018.zip',  field: 'EFYTOTLT', filter: r => num(r.EFFYLEV) === 1 },
   y2019: { zip: 'EFFY2019.zip',  field: 'EFYTOTLT', filter: r => num(r.EFFYLEV) === 1 },
   y2020: { zip: 'EFFY2020.zip',  field: 'EFYTOTLT', filter: r => num(r.EFFYLEV) === 1 },
-  y2021: { zip: 'DRVEF2021.zip', field: 'EFTOTLT',  filter: null },
+  y2021: { zip: 'DRVEF2021.zip', field: 'ENRTOT',   filter: null },
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────
