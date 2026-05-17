@@ -1,46 +1,45 @@
-## What I found
+## Bug
 
-**Penn State Main Campus (UNITID 214777) is the smoking gun.**
+The "US News Law Rank" field labels itself **"blank if unranked in top 50"** but auto-populates any rank value, including ones outside the top 50. Penn State Main's law school is rank 64 → field shows `64 LOCKED` instead of being blank. Same issue applies to **US News Business Rank** and **US News Engineering Rank** (both also use `rankMax: 50`).
 
-- In the DB: row exists with name/city/state/Carnegie2025 names populated, but `enrollment`, `fte`, `sector`, `finance`, `metrics`, `rankings`, `flags`, `fiscal_year` are all empty/null.
-- In `src/data/institutionsSeed.json`: **214777 is missing entirely.** It's never written by the seed, so the full upsert can't fill those fields. The reason the row exists at all is the earlier 2025 Carnegie-only upsert (`upsert_institutions_2025`) — that's why only the ACE-derived columns show data.
+## Why it happens
 
-### Why the seed drops it
-
-In `scripts/fetch-ipeds-seed.mjs` (lines 422–427):
+In `src/pages/HEBrandEquity.jsx` (lines 954–962), the auto-populate loop copies every IPEDS field straight onto the form values:
 
 ```js
-const ace = aceData.get(unitid);
-const basic2021 = ace?.basic2021 ?? num(row.C21BASIC);
-const carnegieId = mapCarnegie2021(basic2021);
-...
-if (!sector || !carnegieId) continue;
+fields.forEach(field => {
+  if (school[field] != null) {
+    populated[targetField] = String(school[field]);
+    autoFields.push(targetField);
+  }
+});
 ```
 
-For Penn State Main, ACE has `basic2021: -2` (the ACE file uses -2 for "not applicable" — Penn State Main is treated as a system office in the 2021 Carnegie). `-2` is not null, so the `??` fallback to HD's `C21BASIC` never fires. `mapCarnegie2021(-2)` returns null → institution dropped.
-
-The same fallback bug affects **151 institutions** in the ACE file with `basic2021 = -2` (including Penn State Main, the only R1 in that bucket).
+There's no gate on `usNewsLaw / usNewsBiz / usNewsEng` against their checkbox's `rankMax`. The scoring math already clamps the bonus to 0 for ranks > 50 (line 414), so the score is correct — but the displayed number is misleading.
 
 ## Fix
 
-One-line logic change in `scripts/fetch-ipeds-seed.mjs`:
+One focused change in the auto-populate loop: for the three grad-program rank fields, only populate when the rank is ≤ 50. Otherwise leave the value blank (and don't mark it auto-populated), matching the field's own label.
 
 ```js
-// Treat ACE -2 / missing / non-positive as "no value", fall back to HD C21BASIC
-const aceBasic = num(ace?.basic2021);
-const basic2021 = (aceBasic && aceBasic > 0) ? aceBasic : num(row.C21BASIC);
+const GRAD_RANK_MAX = { usNewsLaw: 50, usNewsBiz: 50, usNewsEng: 50 };
+
+fields.forEach(field => {
+  if (school[field] == null) return;
+  const cap = GRAD_RANK_MAX[field];
+  if (cap != null && Number(school[field]) > cap) return; // unranked in top 50 → leave blank
+  const targetField = (isIntl && field === 'accessPct') ? 'pellPct' : field;
+  populated[targetField] = String(school[field]);
+  autoFields.push(targetField);
+});
 ```
 
-Then:
+The `chk_lawSchool / chk_aacsb / chk_engineering` checkboxes still get checked from `school.flags` (lines 968–970), so the presence of the school is preserved — only the rank number is suppressed when it's outside the top 50. This matches how the field already behaves for users who type the value manually (the placeholder/hint asks them to leave it blank if unranked).
 
-1. Re-run `node scripts/fetch-ipeds-seed.mjs` to regenerate `src/data/institutionsSeed.json` (Penn State Main and any other negative-basic2021 institutions that legitimately classify via HD will be included with full finance/enrollment/rankings/flags).
-2. Re-invoke the `seed-institutions` edge function to upsert the new rows into the database.
-3. Verify in DB:
-   - `214777` now has populated `enrollment`, `fte`, `sector='public'`, `finance.totalRevenue`, `metrics.enrollTrend`, `rankings.usNews`, athletics flags (Big Ten, D1), etc.
-   - Spot-check 3–4 other "Main Campus" / system-office institutions to confirm none are still silently dropped.
+## Verification
 
-## Out of scope (for this plan)
+- Penn State Main (214777): law checkbox stays checked, US News Law Rank input is empty. Business rank 37 still shows. Engineering rank 20 still shows.
+- A school with law rank ≤ 50 (e.g., Michigan = 9, Texas = 15) still shows the number.
+- Score for Penn State's profile axis is unchanged (rank-bonus math already returned 0 for >50).
 
-- I did **not** dig into UI categorization yet (the user mentioned "some could be UI fixes"). Once the data is flowing correctly for Penn State, we should re-check the Penn State page in the app and address any remaining UI labeling issues as a separate, smaller pass.
-
-Approve and I'll apply the fix, re-seed, reload, and verify Penn State end-to-end.
+Approve and I'll apply the fix.
