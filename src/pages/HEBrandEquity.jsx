@@ -209,7 +209,7 @@ const INTL_DB = [
   { name: "Queen's University (Ontario)", country: "Canada", intlId: "queens-ca", checkboxDefaults: ["chk_lawSchool","chk_aacsb","chk_engineering"], qsRank: 193, theWorldRank: 275, theImpactListed: 1, theImpactRank: 8, retentionRate: 93, gradRate4yr: 89, gradRate6yr: 92, carnegieId: "intl_elite", intlGroup: "U15 Canada", enrollTrend: 1.8, acceptRate: 42, accessPct: null, rAndD: 85, doctoralOutput: 380, researchDesignation: 2, caldwellListed: 1, caldwellRank: 428, endowmentPerStudent: 33, totalRevenue: 800 },
 ];
 
-const IPEDS_FIELDS = ["usNews","usNewsList","enrollTrend","yieldRate","acceptRate","pellPct","firstGen","rAndD","doctoralOutput","researchDesignation","caldwellListed","caldwellRank","retentionRate","gradRate4yr","gradRate6yr","theImpactListed","theImpactRank","nicheRank","nicheGrade","usNewsLaw","usNewsBiz","usNewsEng","theWorldRank","qsRank"];
+const IPEDS_FIELDS = ["usNews","usNewsDisplay","usNewsHbcuRank","usNewsList","enrollTrend","yieldRate","acceptRate","pellPct","firstGen","rAndD","doctoralOutput","researchDesignation","caldwellListed","caldwellRank","retentionRate","gradRate4yr","gradRate6yr","theImpactListed","theImpactRank","nicheRank","nicheGrade","usNewsLaw","lawTier","usNewsBiz","bizTier","usNewsEng","engTier","theWorldRank","qsRank","qsRankDisplay"];
 
 // 2025 Carnegie Classification — Research Activity Designations + Institutional Classification
 // (collapsed from the official 31-grouping spectrum into the working benchmarking cohorts)
