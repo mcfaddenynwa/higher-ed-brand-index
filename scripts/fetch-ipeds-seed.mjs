@@ -442,13 +442,13 @@ async function main() {
     const fte        = ef ? num(ef.FTE) : null;
     const enrollment = ef ? num(ef.EFTOTLT) : null;
 
-    // 5-yr enrollment trend (%) from oldest available historical DRVEF to current
+    // 5-yr enrollment trend (%) from oldest available historical year to current
     let enrollTrend = null;
     if (enrollment != null && trendYears.length) {
-      // Use the oldest year we got (drvef2018 if present, else drvef2019…)
       for (const y of trendYears) {
         const past = TREND[y]?.get(unitid);
-        const pastEnroll = past ? num(past.EFTOTLT) : null;
+        const field = ENROLL_TREND_FILES[y].field;
+        const pastEnroll = past ? num(past[field]) : null;
         if (pastEnroll && pastEnroll > 0) {
           enrollTrend = Math.round(((enrollment - pastEnroll) / pastEnroll) * 1000) / 10;
           break;
