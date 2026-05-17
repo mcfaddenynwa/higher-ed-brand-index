@@ -1,72 +1,38 @@
-# Plan: Data Source Reference for the 6 Dimensions
+# Restore 5-year enrollment trend
 
-You want a single document you can paste into Claude so it knows, for every input in every dimension, **where the value comes from** (which dataset, which file, which variable) and **how it currently flows into the app**. I'll produce that as a Markdown reference at `docs/data-sources.md`.
+## Problem
 
-## What the doc will contain
+NCES no longer hosts `DRVEF2018`–`DRVEF2020` (derived enrollment files). Only `DRVEF2021` is still available, so the script currently produces a 1-year trend instead of 5-year.
 
-### 1. Dimension → Inputs map (verbatim from `src/pages/HEBrandEquity.jsx` lines 298-370)
+## Fix
 
-For each of the 6 axes (Visibility & Reach, Enrollment & Retention, Financial Strength, Institutional Profile, Academic & Research Reputation, Diversity & Access):
-- Axis key, label, hidden-for cohorts
-- Every input id, label, min/max, invert/binary flag
-- Every checkbox id + linked rank field
-- The `WEIGHTS` / `INTL_WEIGHTS` / `QS_BAND_WEIGHTS` profile that scales it
+Use the raw 12-month enrollment files (`EFFY{year}.zip`) for 2018–2020, which contain the same underlying data. `EFFY` files use field `EFYTOTLT` (total 12-month unduplicated headcount), which is the source DRVEF derives its `EFTOTLT` column from. Values are directly comparable.
 
-### 2. Source-of-record for every input
+## Changes to `scripts/fetch-ipeds-seed.mjs`
 
-A table with columns: **Input id | Dimension | Source dataset | File/endpoint | Variable | Pull script | Lands in DB as**. Sources currently wired up:
+1. Update `ENROLL_TREND_FILES` to map each year to the right zip:
+   ```js
+   const ENROLL_TREND_FILES = {
+     y2018: { zip: 'EFFY2018.zip',  field: 'EFYTOTLT' },
+     y2019: { zip: 'EFFY2019.zip',  field: 'EFYTOTLT' },
+     y2020: { zip: 'EFFY2020.zip',  field: 'EFYTOTLT' },
+     y2021: { zip: 'DRVEF2021.zip', field: 'EFTOTLT' },
+   };
+   ```
 
-- **IPEDS HD2022** — directory (name, city, state, sector, HBCU/HSI/Tribal flags) → `scripts/fetch-ipeds-seed.mjs` → `institutions.{name,city,state,sector,flags}`
-- **IPEDS DRVEF2022** — `FTE`, `EFTOTLT` → `institutions.{fte,enrollment}`
-- **IPEDS DRVGR2022** — `RET_PCF` (retention), `GBA4RTT`, `GBA6RTT` → `metrics.{retentionRate,gradRate4yr,gradRate6yr}`
-- **IPEDS ADM2022** — `APPLCN`, `ADMSSN`, `ENRLT` → derived `acceptRate`, `yieldRate`
-- **IPEDS SFA2122** — `UPGRNTP` (Pell %) → fallback for `pellPct`
-- **IPEDS F2223_F1A / F2** — `F1B25`/`F2D18` (total revenue), `F1H02`/`F2H02` (endowment) → `finance.{totalRevenue,endowmentTotal,endowmentPerStudent}` via `scripts/fetch-ipeds-finance.mjs` → `src/data/financeSnapshot.json`
-- **ACE 2025 Carnegie public data file** (`scripts/data/2025-Public-Data-File.xlsx`) — `ic2025`, `research2025`, `saec2025`, `access_ratio`, `earnings_ratio`, `pell_2023`, `herd_avg` (3-yr NSF HERD avg → `rAndD`), `rdoc_avg` (`doctoralOutput`), `medical`, `hbcu`, `tribal`, `hsi`, `landgrant`, `womenonly` → top-level `institutions` columns + `metrics`
-- **NSF HERD** — currently *not* pulled directly; comes in through ACE `herd_avg` 3-yr average
-- **NACUBO endowment** — currently *not* pulled directly; endowment comes from IPEDS finance F1H02/F2H02 only
-- **US News** — `scripts/scrape-usnews.mjs` (internal JSON API) → `rankings.{usNews,usNewsRankNum,usNewsList}` via `ingest-rankings` edge function
-- **Niche** — `scripts/scrape-niche.mjs` (Playwright) → `rankings.{nicheRank,nicheGrade}` via same edge function
-- **QS / THE / THE Impact / Caldwell / US News Law/Biz/Eng** — currently **not** scraped; values live only in `src/data/curatedOverlay.json` (hand-maintained) and get merged in `scripts/fetch-ipeds-seed.mjs`
-- **Athletic conference (Big Four / D1)** — manual flags in `curatedOverlay.json` only
+2. In the download loop, iterate the new shape and remember which field to read for each year.
 
-### 3. End-to-end flow diagram
+3. EFFY files contain multiple rows per UNITID (one per level-of-student). Filter to `EFFYLEV == 1` (all students, total) before indexing, otherwise the Map will collapse on duplicate UNITIDs.
 
-```text
-NCES IPEDS ZIPs ─┐
-ACE 2025 xlsx ───┼─► fetch-ipeds-seed.mjs ─► institutionsSeed.json + TSV ─► institutions table
-curatedOverlay ──┘                                                          │
-                                                                            ▼
-IPEDS Finance ───► fetch-ipeds-finance.mjs ─► financeSnapshot.json ─► merged client-side in selectInstitution()
-                                                                            ▲
-US News API ─────► scrape-usnews.mjs ──┐                                    │
-Niche (Playwright)─► scrape-niche.mjs ─┴─► ingest-rankings edge fn ─► institutions.rankings JSONB
-                                                                            │
-                                                                            ▼
-                                          HEBrandEquity.jsx → flattenInstitutionRow() → AXES.normalizeAxis() → radar score
-```
+4. In the trend calculation, look up `past[fieldForYear]` instead of hardcoded `past.EFTOTLT`.
 
-### 4. Known gaps / "broken" connections
+## Expected result
 
-I'll flag each input whose source is *not* currently wired so you know what to ask Claude to build:
+Trend calculated from 2018 → 2022 (4-year delta, labeled as 5-year in UI per current convention) for nearly all 2,428 institutions, instead of just the 1-year delta from 2021.
 
-- `firstGen` — no source pull; nullable
-- `enrollTrend` — needs multi-year IPEDS EF pull; curated overlay only
-- `qsRank`, `theWorldRank`, `theImpactListed/Rank` — overlay only, no scraper
-- `caldwellListed`, `caldwellRank` — overlay only
-- `usNewsLaw`, `usNewsBiz`, `usNewsEng` — overlay only (US News specialty rankings API not wired)
-- NACUBO direct feed — none; relies on IPEDS finance
-- NSF HERD direct — none; relies on ACE 3-yr `herd_avg`
+## Verification
 
-### 5. Field-name crosswalk
-
-A small table showing how a DB column → `flattenInstitutionRow()` → axis input id (e.g. `metrics.retentionRate` → `school.retentionRate` → input `retentionRate` in Enrollment axis). This is what Claude needs to write new ingestion code without breaking the UI.
-
-## Deliverable
-
-One file: `docs/data-sources.md` (no app code changes). You upload your spreadsheet, then Claude can read it alongside this doc to write a precise ingestion prompt.
-
-## Open question
-
-Do you want me to **also** include the raw `WEIGHTS` / `normalizeAxis` scoring math in the doc, or keep it strictly to "where does each data point come from"? Let me know and I'll write it.
-
+Re-run `bun run scripts/fetch-ipeds-seed.mjs` and confirm:
+- All 4 historical files download (no 404s)
+- Log reads `✓ enrollTrend: using 4 historical DRVEF years`
+- Spot-check `enrollTrend` values in `src/data/institutionsSeed.json` for a few well-known schools

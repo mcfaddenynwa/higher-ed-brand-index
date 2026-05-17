@@ -71,11 +71,15 @@ const FILES = {
 
 // Additional DRVEF years for 5-year enrollment trend.
 // Non-fatal if any are missing (older snapshots may not be hosted anymore).
+// DRVEF (derived) only exists for 2021+. For earlier years, fall back to
+// raw EFFY (12-month unduplicated enrollment) — the source DRVEF derives from.
+// EFFY uses field EFYTOTLT and has multiple rows per UNITID (one per EFFYLEV);
+// we filter to EFFYLEV == 1 (all students, total) downstream.
 const ENROLL_TREND_FILES = {
-  drvef2018: 'DRVEF2018.zip',
-  drvef2019: 'DRVEF2019.zip',
-  drvef2020: 'DRVEF2020.zip',
-  drvef2021: 'DRVEF2021.zip',
+  y2018: { zip: 'EFFY2018.zip',  field: 'EFYTOTLT', filter: r => num(r.EFFYLEV) === 1 },
+  y2019: { zip: 'EFFY2019.zip',  field: 'EFYTOTLT', filter: r => num(r.EFFYLEV) === 1 },
+  y2020: { zip: 'EFFY2020.zip',  field: 'EFYTOTLT', filter: r => num(r.EFFYLEV) === 1 },
+  y2021: { zip: 'DRVEF2021.zip', field: 'EFTOTLT',  filter: null },
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────
@@ -352,11 +356,11 @@ async function main() {
     paths[k] = await downloadCsv(zip);
   }
 
-  // Optional multi-year DRVEF for 5-yr enrollment trend. Non-fatal on miss.
+  // Optional multi-year enrollment files for 5-yr trend. Non-fatal on miss.
   const trendPaths = {};
-  for (const [k, zip] of Object.entries(ENROLL_TREND_FILES)) {
-    try { trendPaths[k] = await downloadCsv(zip); }
-    catch (e) { console.warn(`  ⚠ skipping ${zip} (${e.message})`); }
+  for (const [k, spec] of Object.entries(ENROLL_TREND_FILES)) {
+    try { trendPaths[k] = await downloadCsv(spec.zip); }
+    catch (e) { console.warn(`  ⚠ skipping ${spec.zip} (${e.message})`); }
   }
 
   console.log('\n  Parsing CSVs...');
@@ -374,14 +378,18 @@ async function main() {
   const HD = idx(hd), EF = idx(drvef), GR = idx(drvgr), AD = idx(adm),
         SF = idx(sfa), PUB = idx(f1a), PRIV = idx(f2);
 
-  // Index any historical DRVEF files we successfully grabbed.
+  // Index historical enrollment files; apply per-file row filter (EFFY needs EFFYLEV=1).
   const TREND = {};
   for (const [k, p] of Object.entries(trendPaths)) {
-    try { TREND[k] = idx(await parseCsv(p)); }
-    catch (e) { console.warn(`  ⚠ parse failed for ${k}: ${e.message}`); }
+    try {
+      const spec = ENROLL_TREND_FILES[k];
+      let rows = await parseCsv(p);
+      if (spec.filter) rows = rows.filter(spec.filter);
+      TREND[k] = idx(rows);
+    } catch (e) { console.warn(`  ⚠ parse failed for ${k}: ${e.message}`); }
   }
   const trendYears = Object.keys(TREND);
-  if (trendYears.length) console.log(`  ✓ enrollTrend: using ${trendYears.length} historical DRVEF years`);
+  if (trendYears.length) console.log(`  ✓ enrollTrend: using ${trendYears.length} historical enrollment years`);
 
   // Curated overlay (US News, QS, THE, Niche, Caldwell, athletics, law/biz/eng flags)
   const overlayPath = path.join(ROOT, 'src/data/curatedOverlay.json');
@@ -434,13 +442,13 @@ async function main() {
     const fte        = ef ? num(ef.FTE) : null;
     const enrollment = ef ? num(ef.EFTOTLT) : null;
 
-    // 5-yr enrollment trend (%) from oldest available historical DRVEF to current
+    // 5-yr enrollment trend (%) from oldest available historical year to current
     let enrollTrend = null;
     if (enrollment != null && trendYears.length) {
-      // Use the oldest year we got (drvef2018 if present, else drvef2019…)
       for (const y of trendYears) {
         const past = TREND[y]?.get(unitid);
-        const pastEnroll = past ? num(past.EFTOTLT) : null;
+        const field = ENROLL_TREND_FILES[y].field;
+        const pastEnroll = past ? num(past[field]) : null;
         if (pastEnroll && pastEnroll > 0) {
           enrollTrend = Math.round(((enrollment - pastEnroll) / pastEnroll) * 1000) / 10;
           break;
