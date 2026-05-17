@@ -607,10 +607,11 @@ async function main() {
 
       const r = baseRow.rankings;
       for (const k of [
-        'usNews','usNewsLaw','usNewsBiz','usNewsEng','qsRank','theWorldRank',
+        'usNews','usNewsDisplay','usNewsList','usNewsListDetail','usNewsHbcuRank',
+        'usNewsLaw','lawTier','usNewsBiz','bizTier','usNewsEng','engTier',
+        'qsRank','qsRankDisplay','qsScore','theWorldRank','theScore',
         'theImpactListed','theImpactRank','nicheRank','nicheGrade',
         'caldwellListed','caldwellRank',
-        'socialIg','socialLi','socialX','socialFb','socialYt'
       ]) {
         if (ov[k] != null) r[k] = ov[k];
       }
