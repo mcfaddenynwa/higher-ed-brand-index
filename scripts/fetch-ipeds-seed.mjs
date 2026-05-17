@@ -135,15 +135,40 @@ function num(v) {
 // ── 2025 ACE Carnegie file loader ─────────────────────────────────────────
 // Reads the local 2025-Public-Data-File.xlsx and returns a Map keyed by unitid
 
-async function loadAceData() {
-  const acePath = path.join(__dirname, 'data', '2025-Public-Data-File.xlsx');
+// US News list label → internal slug used by USNEWS_LIST_LABELS/MAX in HEBrandEquity
+const USNEWS_LIST_SLUG = {
+  'National Universities': 'natl_univ',
+  'National Liberal Arts Colleges': 'lib_arts',
+  'Regional Universities': 'regional',
+  'Regional Colleges': 'regional',
+  // HBCUs list is captured separately via usnews_hbcu_rank, not as a primary list
+  'HBCUs': null,
+};
 
-  try {
-    await fs.access(acePath);
-  } catch {
-    console.warn(`\n  ⚠ ACE 2025 data file not found at ${acePath}`);
+// Parse qsRank (may be number or range string e.g. "901-950") → numeric lower bound
+function parseRankRange(v) {
+  if (v == null || v === '') return null;
+  if (typeof v === 'number') return v;
+  const s = String(v).trim();
+  const m = s.match(/^(\d+)/);
+  return m ? parseInt(m[1], 10) : null;
+}
+
+async function loadAceData() {
+  // Prefer the new master file (with US News + global rankings + grad tiers + athletics).
+  // Fall back to the original ACE-only file for backwards compatibility.
+  const candidates = [
+    path.join(__dirname, 'data', '2025-Public-Data-File-with-USNews.xlsx'),
+    path.join(__dirname, 'data', '2025-Public-Data-File.xlsx'),
+  ];
+  let acePath = null;
+  for (const p of candidates) {
+    try { await fs.access(p); acePath = p; break; } catch {}
+  }
+  if (!acePath) {
+    console.warn(`\n  ⚠ ACE 2025 data file not found. Looked in:`);
+    candidates.forEach(p => console.warn(`     - ${p}`));
     console.warn('    Download from: https://carnegieclassifications.acenet.edu/carnegie-classification/resources/');
-    console.warn('    Place at: scripts/data/2025-Public-Data-File.xlsx');
     console.warn('    Proceeding without 2025 Carnegie data...\n');
     return new Map();
   }
