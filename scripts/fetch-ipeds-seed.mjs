@@ -434,6 +434,20 @@ async function main() {
     const fte        = ef ? num(ef.FTE) : null;
     const enrollment = ef ? num(ef.EFTOTLT) : null;
 
+    // 5-yr enrollment trend (%) from oldest available historical DRVEF to current
+    let enrollTrend = null;
+    if (enrollment != null && trendYears.length) {
+      // Use the oldest year we got (drvef2018 if present, else drvef2019…)
+      for (const y of trendYears) {
+        const past = TREND[y]?.get(unitid);
+        const pastEnroll = past ? num(past.EFTOTLT) : null;
+        if (pastEnroll && pastEnroll > 0) {
+          enrollTrend = Math.round(((enrollment - pastEnroll) / pastEnroll) * 1000) / 10;
+          break;
+        }
+      }
+    }
+
     const applicants = ad ? num(ad.APPLCN) : null;
     const admits     = ad ? num(ad.ADMSSN) : null;
     const enrolled   = ad ? num(ad.ENRLT) : null;
@@ -446,6 +460,10 @@ async function main() {
 
     // Pell: prefer ACE real value; fallback to SFA survey
     const pellPct = ace?.pellPct ?? (sf ? num(sf.UPGRNTP) : null);
+
+    // firstGen — temporary bridge: use Pell % as a proxy until a direct
+    // IPEDS first-gen pull is wired in. Overlay/manual entry can still override.
+    const firstGenProxy = pellPct;
 
     // R&D: prefer ACE herd_avg (3yr NSF average); fallback null
     const rAndD = ace?.rAndD ?? null;
@@ -466,7 +484,7 @@ async function main() {
       ? Math.round((endowRaw / fte) / 1_000)
       : null;
 
-    // Flags — combine IPEDS HD flags with ACE flags
+    // Flags — combine IPEDS HD flags with ACE flags + new athletics/program flags
     const hospitalFlag = num(row.HOSPITAL) === 1 ? 1 : 0;
     const medicalFlag  = ace?.medicalFlag ?? hospitalFlag;
 
@@ -477,15 +495,19 @@ async function main() {
       state: (row.STABBR || '').trim() || null,
       sector,
       carnegie_id: carnegieId,
-      us_news_list: mapUsNewsList(carnegieId),
+      // Prefer master file US News list slug; else Carnegie-based default
+      us_news_list: ace?.usNewsList ?? mapUsNewsList(carnegieId),
 
       flags: {
-        bigFour:   0,  // curated overlay only
-        d1:        0,  // curated overlay only
+        // Athletics + grad program flags now from master file (was overlay-only)
+        bigFour:   ace?.athleticsBigFour ?? 0,
+        d1:        ace?.athleticsD1 ?? 0,
+        conference: ace?.ncaaConference ?? null,
+        ncaaDivision: ace?.ncaaDivision ?? null,
         health:    medicalFlag,
-        law:       0,  // curated overlay only
-        eng:       0,  // curated overlay only
-        aacsb:     0,  // curated overlay only
+        law:       ace?.lawTier ? 1 : 0,
+        eng:       ace?.engTier ? 1 : 0,
+        aacsb:     ace?.bizTier ? 1 : 0,
         womenOnly: ace?.womenOnly ?? 0,
         hbcu:      ace?.hbcu ?? (num(row.HBCU) === 1 ? 1 : 0),
         tribal:    ace?.tribal ?? (num(row.TRIBAL) === 1 ? 1 : 0),
@@ -503,11 +525,13 @@ async function main() {
         yieldRate,
         acceptRate,
         pellPct,
-        firstGen: null,       // not in current IPEDS pull; curated overlay
+        // firstGen bridge: pell_2023 × 100 as best public proxy until a real
+        // first-gen IPEDS pull lands. Overlay can override per-institution.
+        firstGen: firstGenProxy,
         rAndD,
         doctoralOutput,
         researchDesignation,
-        enrollTrend: null,    // requires multi-year; curated overlay
+        enrollTrend,
         accessRatio:   ace?.accessRatio ?? null,
         saecScore:     ace?.saecScore ?? null,
         earningsRatio: ace?.earningsRatio ?? null,
@@ -521,18 +545,32 @@ async function main() {
       },
 
       rankings: {
-        usNews:        null,
-        usNewsLaw:     null,
-        usNewsBiz:     null,
-        usNewsEng:     null,
-        qsRank:        null,
-        theWorldRank:  null,
+        // US News (from master file)
+        usNews:           ace?.usNews ?? null,
+        usNewsDisplay:    ace?.usNewsDisplay ?? null,
+        usNewsList:       ace?.usNewsList ?? null,
+        usNewsListDetail: ace?.usNewsListDetail ?? null,
+        usNewsHbcuRank:   ace?.usNewsHbcuRank ?? null,
+        // Grad program ranks + tiers (from master file)
+        usNewsLaw:     ace?.usNewsLaw ?? null,
+        lawTier:       ace?.lawTier ?? null,
+        usNewsBiz:     ace?.usNewsBiz ?? null,
+        bizTier:       ace?.bizTier ?? null,
+        usNewsEng:     ace?.usNewsEng ?? null,
+        engTier:       ace?.engTier ?? null,
+        // Global rankings (from master file)
+        qsRank:        ace?.qsRank ?? null,
+        qsRankDisplay: ace?.qsRankDisplay ?? null,
+        qsScore:       ace?.qsScore ?? null,
+        theWorldRank:  ace?.theWorldRank ?? null,
+        theScore:      ace?.theScore ?? null,
+        // Pending sources — preserved for overlay/manual override
         theImpactListed: null,
-        theImpactRank: null,
-        nicheRank:     null,
-        nicheGrade:    null,
-        caldwellListed: null,
-        caldwellRank:  null,
+        theImpactRank:   null,
+        nicheRank:       null,
+        nicheGrade:      ace?.nicheGrade ?? null,
+        caldwellListed:  null,
+        caldwellRank:    ace?.caldwellRank ?? null,
         socialIg:      null,
         socialLi:      null,
         socialX:       null,
