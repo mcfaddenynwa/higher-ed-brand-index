@@ -418,9 +418,12 @@ async function main() {
     const unitid = row.UNITID;
     const sector = mapSector(row.CONTROL);
 
-    // Use ACE 2021 basic code if available; fallback to HD C21BASIC
+    // Use ACE 2021 basic code if available; fallback to HD C21BASIC.
+    // ACE encodes "not applicable" (e.g. system offices like Penn State Main)
+    // as -2; treat any non-positive value as missing and fall back to HD.
     const ace = aceData.get(unitid);
-    const basic2021 = ace?.basic2021 ?? num(row.C21BASIC);
+    const aceBasic = num(ace?.basic2021);
+    const basic2021 = (aceBasic && aceBasic > 0) ? aceBasic : num(row.C21BASIC);
     const carnegieId = mapCarnegie2021(basic2021);
 
     if (!sector || !carnegieId) continue;

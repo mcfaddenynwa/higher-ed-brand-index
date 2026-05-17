@@ -1,38 +1,46 @@
-# Restore 5-year enrollment trend
+## What I found
 
-## Problem
+**Penn State Main Campus (UNITID 214777) is the smoking gun.**
 
-NCES no longer hosts `DRVEF2018`–`DRVEF2020` (derived enrollment files). Only `DRVEF2021` is still available, so the script currently produces a 1-year trend instead of 5-year.
+- In the DB: row exists with name/city/state/Carnegie2025 names populated, but `enrollment`, `fte`, `sector`, `finance`, `metrics`, `rankings`, `flags`, `fiscal_year` are all empty/null.
+- In `src/data/institutionsSeed.json`: **214777 is missing entirely.** It's never written by the seed, so the full upsert can't fill those fields. The reason the row exists at all is the earlier 2025 Carnegie-only upsert (`upsert_institutions_2025`) — that's why only the ACE-derived columns show data.
+
+### Why the seed drops it
+
+In `scripts/fetch-ipeds-seed.mjs` (lines 422–427):
+
+```js
+const ace = aceData.get(unitid);
+const basic2021 = ace?.basic2021 ?? num(row.C21BASIC);
+const carnegieId = mapCarnegie2021(basic2021);
+...
+if (!sector || !carnegieId) continue;
+```
+
+For Penn State Main, ACE has `basic2021: -2` (the ACE file uses -2 for "not applicable" — Penn State Main is treated as a system office in the 2021 Carnegie). `-2` is not null, so the `??` fallback to HD's `C21BASIC` never fires. `mapCarnegie2021(-2)` returns null → institution dropped.
+
+The same fallback bug affects **151 institutions** in the ACE file with `basic2021 = -2` (including Penn State Main, the only R1 in that bucket).
 
 ## Fix
 
-Use the raw 12-month enrollment files (`EFFY{year}.zip`) for 2018–2020, which contain the same underlying data. `EFFY` files use field `EFYTOTLT` (total 12-month unduplicated headcount), which is the source DRVEF derives its `EFTOTLT` column from. Values are directly comparable.
+One-line logic change in `scripts/fetch-ipeds-seed.mjs`:
 
-## Changes to `scripts/fetch-ipeds-seed.mjs`
+```js
+// Treat ACE -2 / missing / non-positive as "no value", fall back to HD C21BASIC
+const aceBasic = num(ace?.basic2021);
+const basic2021 = (aceBasic && aceBasic > 0) ? aceBasic : num(row.C21BASIC);
+```
 
-1. Update `ENROLL_TREND_FILES` to map each year to the right zip:
-   ```js
-   const ENROLL_TREND_FILES = {
-     y2018: { zip: 'EFFY2018.zip',  field: 'EFYTOTLT' },
-     y2019: { zip: 'EFFY2019.zip',  field: 'EFYTOTLT' },
-     y2020: { zip: 'EFFY2020.zip',  field: 'EFYTOTLT' },
-     y2021: { zip: 'DRVEF2021.zip', field: 'EFTOTLT' },
-   };
-   ```
+Then:
 
-2. In the download loop, iterate the new shape and remember which field to read for each year.
+1. Re-run `node scripts/fetch-ipeds-seed.mjs` to regenerate `src/data/institutionsSeed.json` (Penn State Main and any other negative-basic2021 institutions that legitimately classify via HD will be included with full finance/enrollment/rankings/flags).
+2. Re-invoke the `seed-institutions` edge function to upsert the new rows into the database.
+3. Verify in DB:
+   - `214777` now has populated `enrollment`, `fte`, `sector='public'`, `finance.totalRevenue`, `metrics.enrollTrend`, `rankings.usNews`, athletics flags (Big Ten, D1), etc.
+   - Spot-check 3–4 other "Main Campus" / system-office institutions to confirm none are still silently dropped.
 
-3. EFFY files contain multiple rows per UNITID (one per level-of-student). Filter to `EFFYLEV == 1` (all students, total) before indexing, otherwise the Map will collapse on duplicate UNITIDs.
+## Out of scope (for this plan)
 
-4. In the trend calculation, look up `past[fieldForYear]` instead of hardcoded `past.EFTOTLT`.
+- I did **not** dig into UI categorization yet (the user mentioned "some could be UI fixes"). Once the data is flowing correctly for Penn State, we should re-check the Penn State page in the app and address any remaining UI labeling issues as a separate, smaller pass.
 
-## Expected result
-
-Trend calculated from 2018 → 2022 (4-year delta, labeled as 5-year in UI per current convention) for nearly all 2,428 institutions, instead of just the 1-year delta from 2021.
-
-## Verification
-
-Re-run `bun run scripts/fetch-ipeds-seed.mjs` and confirm:
-- All 4 historical files download (no 404s)
-- Log reads `✓ enrollTrend: using 4 historical DRVEF years`
-- Spot-check `enrollTrend` values in `src/data/institutionsSeed.json` for a few well-known schools
+Approve and I'll apply the fix, re-seed, reload, and verify Penn State end-to-end.
