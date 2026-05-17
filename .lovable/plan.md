@@ -1,39 +1,72 @@
-## Remove social follower data
+# Plan: Data Source Reference for the 6 Dimensions
 
-Goal: purge `socialIg`, `socialLi`, `socialX`, `socialFb`, `socialYt` (and any `socialReach` references) from the app. Scoring math, weights, UI layout, and all other fields stay as-is.
+You want a single document you can paste into Claude so it knows, for every input in every dimension, **where the value comes from** (which dataset, which file, which variable) and **how it currently flows into the app**. I'll produce that as a Markdown reference at `docs/data-sources.md`.
 
-### Note before starting
-Two items in the request don't currently exist in the codebase — flagging so you know nothing was missed:
-- **No `computeSocialReach` function exists** in `HEBrandEquity.jsx` (or anywhere in the project).
-- **No `socialReach` input** is present in the Visibility & Reach axis `inputs` array. The only trace is the word "social reach" inside the axis `description` string (line 301).
-- **`normalizeAxis` has no social-specific branch** — it's a generic loop over `axis.inputs`. Once `socialReach` is gone from inputs (already gone) there's nothing to remove inside the function.
+## What the doc will contain
 
-So those three bullets reduce to: delete the phrase "social reach (normalized by enrollment)" from the visibility axis description.
+### 1. Dimension → Inputs map (verbatim from `src/pages/HEBrandEquity.jsx` lines 298-370)
 
-### Changes
+For each of the 6 axes (Visibility & Reach, Enrollment & Retention, Financial Strength, Institutional Profile, Academic & Research Reputation, Diversity & Access):
+- Axis key, label, hidden-for cohorts
+- Every input id, label, min/max, invert/binary flag
+- Every checkbox id + linked rank field
+- The `WEIGHTS` / `INTL_WEIGHTS` / `QS_BAND_WEIGHTS` profile that scales it
 
-**1. `src/pages/HEBrandEquity.jsx`**
-- **IPEDS_DB entries (lines ~147–200ish)**: remove `socialIg`, `socialLi`, `socialX`, `socialFb`, `socialYt` keys from every row. Use a regex sweep:
-  ```
-  ,?\s*social(Ig|Li|X|Fb|Yt):\s*-?\d+,?
-  ```
-  applied per-line so commas stay clean.
-- **INTL_DB entries**: same sweep across the international block.
-- **`INTL_FIELDS` (line 205)**: drop the trailing `"socialIg","socialLi","socialX","socialFb","socialYt"`.
-- **`IPEDS_FIELDS` (line 212)**: drop the trailing `"socialIg","socialLi","socialX","socialFb","socialYt"`.
-- **Visibility axis description (line 301)**: change
-  `"…THE Impact, athletics conference, social reach (normalized by enrollment)"` → `"…THE Impact, athletics conference"`.
+### 2. Source-of-record for every input
 
-**2. `src/data/curatedOverlay.json`**
-- Strip the five `socialIg/Li/X/Fb/Yt` keys from every institution entry. Easiest path: small node script that loads JSON, deletes those keys per entry, writes back with the existing 2-space pretty-print + trailing newline.
+A table with columns: **Input id | Dimension | Source dataset | File/endpoint | Variable | Pull script | Lands in DB as**. Sources currently wired up:
 
-**3. `flattenInstitutionRow` rankings JSONB expectation**
-- The function currently spreads `r.rankings` wholesale (line 69). It does not enumerate social fields, so no code edit is required there. The "expectation" is documentary: nothing in the app reads social keys anymore, so any social keys still sitting in the `rankings` JSONB column will be harmlessly spread and ignored. Out-of-scope but worth knowing: a future seed/ingest run would need to stop writing them.
+- **IPEDS HD2022** — directory (name, city, state, sector, HBCU/HSI/Tribal flags) → `scripts/fetch-ipeds-seed.mjs` → `institutions.{name,city,state,sector,flags}`
+- **IPEDS DRVEF2022** — `FTE`, `EFTOTLT` → `institutions.{fte,enrollment}`
+- **IPEDS DRVGR2022** — `RET_PCF` (retention), `GBA4RTT`, `GBA6RTT` → `metrics.{retentionRate,gradRate4yr,gradRate6yr}`
+- **IPEDS ADM2022** — `APPLCN`, `ADMSSN`, `ENRLT` → derived `acceptRate`, `yieldRate`
+- **IPEDS SFA2122** — `UPGRNTP` (Pell %) → fallback for `pellPct`
+- **IPEDS F2223_F1A / F2** — `F1B25`/`F2D18` (total revenue), `F1H02`/`F2H02` (endowment) → `finance.{totalRevenue,endowmentTotal,endowmentPerStudent}` via `scripts/fetch-ipeds-finance.mjs` → `src/data/financeSnapshot.json`
+- **ACE 2025 Carnegie public data file** (`scripts/data/2025-Public-Data-File.xlsx`) — `ic2025`, `research2025`, `saec2025`, `access_ratio`, `earnings_ratio`, `pell_2023`, `herd_avg` (3-yr NSF HERD avg → `rAndD`), `rdoc_avg` (`doctoralOutput`), `medical`, `hbcu`, `tribal`, `hsi`, `landgrant`, `womenonly` → top-level `institutions` columns + `metrics`
+- **NSF HERD** — currently *not* pulled directly; comes in through ACE `herd_avg` 3-yr average
+- **NACUBO endowment** — currently *not* pulled directly; endowment comes from IPEDS finance F1H02/F2H02 only
+- **US News** — `scripts/scrape-usnews.mjs` (internal JSON API) → `rankings.{usNews,usNewsRankNum,usNewsList}` via `ingest-rankings` edge function
+- **Niche** — `scripts/scrape-niche.mjs` (Playwright) → `rankings.{nicheRank,nicheGrade}` via same edge function
+- **QS / THE / THE Impact / Caldwell / US News Law/Biz/Eng** — currently **not** scraped; values live only in `src/data/curatedOverlay.json` (hand-maintained) and get merged in `scripts/fetch-ipeds-seed.mjs`
+- **Athletic conference (Big Four / D1)** — manual flags in `curatedOverlay.json` only
 
-### Out of scope (not touched)
-- `scripts/fetch-ipeds-seed.mjs` and `scripts/extract-curated-overlay.mjs` still reference social fields. Per the request, scoring logic and UI are the only targets. If you want these scripts cleaned up too, say the word and I'll add it.
-- No changes to `normalizeAxis`, weights, AXES order, charts, or insight framework.
+### 3. End-to-end flow diagram
 
-### Verification
-- `rg "social(Ig|Li|X|Fb|Yt|Reach)" src/pages/HEBrandEquity.jsx src/data/curatedOverlay.json` → no matches.
-- App still renders; Visibility & Reach axis still scores from the remaining 9 inputs.
+```text
+NCES IPEDS ZIPs ─┐
+ACE 2025 xlsx ───┼─► fetch-ipeds-seed.mjs ─► institutionsSeed.json + TSV ─► institutions table
+curatedOverlay ──┘                                                          │
+                                                                            ▼
+IPEDS Finance ───► fetch-ipeds-finance.mjs ─► financeSnapshot.json ─► merged client-side in selectInstitution()
+                                                                            ▲
+US News API ─────► scrape-usnews.mjs ──┐                                    │
+Niche (Playwright)─► scrape-niche.mjs ─┴─► ingest-rankings edge fn ─► institutions.rankings JSONB
+                                                                            │
+                                                                            ▼
+                                          HEBrandEquity.jsx → flattenInstitutionRow() → AXES.normalizeAxis() → radar score
+```
+
+### 4. Known gaps / "broken" connections
+
+I'll flag each input whose source is *not* currently wired so you know what to ask Claude to build:
+
+- `firstGen` — no source pull; nullable
+- `enrollTrend` — needs multi-year IPEDS EF pull; curated overlay only
+- `qsRank`, `theWorldRank`, `theImpactListed/Rank` — overlay only, no scraper
+- `caldwellListed`, `caldwellRank` — overlay only
+- `usNewsLaw`, `usNewsBiz`, `usNewsEng` — overlay only (US News specialty rankings API not wired)
+- NACUBO direct feed — none; relies on IPEDS finance
+- NSF HERD direct — none; relies on ACE 3-yr `herd_avg`
+
+### 5. Field-name crosswalk
+
+A small table showing how a DB column → `flattenInstitutionRow()` → axis input id (e.g. `metrics.retentionRate` → `school.retentionRate` → input `retentionRate` in Enrollment axis). This is what Claude needs to write new ingestion code without breaking the UI.
+
+## Deliverable
+
+One file: `docs/data-sources.md` (no app code changes). You upload your spreadsheet, then Claude can read it alongside this doc to write a precise ingestion prompt.
+
+## Open question
+
+Do you want me to **also** include the raw `WEIGHTS` / `normalizeAxis` scoring math in the doc, or keep it strictly to "where does each data point come from"? Let me know and I'll write it.
+
