@@ -352,6 +352,13 @@ async function main() {
     paths[k] = await downloadCsv(zip);
   }
 
+  // Optional multi-year DRVEF for 5-yr enrollment trend. Non-fatal on miss.
+  const trendPaths = {};
+  for (const [k, zip] of Object.entries(ENROLL_TREND_FILES)) {
+    try { trendPaths[k] = await downloadCsv(zip); }
+    catch (e) { console.warn(`  ⚠ skipping ${zip} (${e.message})`); }
+  }
+
   console.log('\n  Parsing CSVs...');
   const [hd, drvef, drvgr, adm, sfa, f1a, f2] = await Promise.all([
     parseCsv(paths.hd),
@@ -366,6 +373,15 @@ async function main() {
   const idx = rows => new Map(rows.map(r => [r.UNITID, r]));
   const HD = idx(hd), EF = idx(drvef), GR = idx(drvgr), AD = idx(adm),
         SF = idx(sfa), PUB = idx(f1a), PRIV = idx(f2);
+
+  // Index any historical DRVEF files we successfully grabbed.
+  const TREND = {};
+  for (const [k, p] of Object.entries(trendPaths)) {
+    try { TREND[k] = idx(await parseCsv(p)); }
+    catch (e) { console.warn(`  ⚠ parse failed for ${k}: ${e.message}`); }
+  }
+  const trendYears = Object.keys(TREND);
+  if (trendYears.length) console.log(`  ✓ enrollTrend: using ${trendYears.length} historical DRVEF years`);
 
   // Curated overlay (US News, QS, THE, Niche, Caldwell, athletics, law/biz/eng flags)
   const overlayPath = path.join(ROOT, 'src/data/curatedOverlay.json');
