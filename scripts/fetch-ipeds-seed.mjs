@@ -71,11 +71,15 @@ const FILES = {
 
 // Additional DRVEF years for 5-year enrollment trend.
 // Non-fatal if any are missing (older snapshots may not be hosted anymore).
+// DRVEF (derived) only exists for 2021+. For earlier years, fall back to
+// raw EFFY (12-month unduplicated enrollment) — the source DRVEF derives from.
+// EFFY uses field EFYTOTLT and has multiple rows per UNITID (one per EFFYLEV);
+// we filter to EFFYLEV == 1 (all students, total) downstream.
 const ENROLL_TREND_FILES = {
-  drvef2018: 'DRVEF2018.zip',
-  drvef2019: 'DRVEF2019.zip',
-  drvef2020: 'DRVEF2020.zip',
-  drvef2021: 'DRVEF2021.zip',
+  y2018: { zip: 'EFFY2018.zip',  field: 'EFYTOTLT', filter: r => num(r.EFFYLEV) === 1 },
+  y2019: { zip: 'EFFY2019.zip',  field: 'EFYTOTLT', filter: r => num(r.EFFYLEV) === 1 },
+  y2020: { zip: 'EFFY2020.zip',  field: 'EFYTOTLT', filter: r => num(r.EFFYLEV) === 1 },
+  y2021: { zip: 'DRVEF2021.zip', field: 'EFTOTLT',  filter: null },
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────
