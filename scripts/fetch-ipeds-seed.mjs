@@ -571,11 +571,6 @@ async function main() {
         nicheGrade:      ace?.nicheGrade ?? null,
         caldwellListed:  null,
         caldwellRank:    ace?.caldwellRank ?? null,
-        socialIg:      null,
-        socialLi:      null,
-        socialX:       null,
-        socialFb:      null,
-        socialYt:      null,
       },
 
       // New column: 2025 Carnegie data (all three frameworks)
