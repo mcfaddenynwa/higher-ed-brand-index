@@ -110,6 +110,7 @@ export type Database = {
     }
     Functions: {
       upsert_institutions_2025: { Args: { payload: Json }; Returns: number }
+      upsert_institutions_full: { Args: { payload: Json }; Returns: number }
     }
     Enums: {
       [_ in never]: never
