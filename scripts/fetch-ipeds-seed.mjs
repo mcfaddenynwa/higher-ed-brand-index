@@ -440,7 +440,7 @@ async function main() {
     const priv = PRIV.get(unitid);
 
     const fte        = ef ? num(ef.FTE) : null;
-    const enrollment = ef ? num(ef.EFTOTLT) : null;
+    const enrollment = ef ? num(ef.ENRTOT) : null;
 
     // 5-yr enrollment trend (%) from oldest available historical year to current
     let enrollTrend = null;
