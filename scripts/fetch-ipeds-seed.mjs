@@ -69,6 +69,15 @@ const FILES = {
   f2:    'F2223_F2.zip',
 };
 
+// Additional DRVEF years for 5-year enrollment trend.
+// Non-fatal if any are missing (older snapshots may not be hosted anymore).
+const ENROLL_TREND_FILES = {
+  drvef2018: 'DRVEF2018.zip',
+  drvef2019: 'DRVEF2019.zip',
+  drvef2020: 'DRVEF2020.zip',
+  drvef2021: 'DRVEF2021.zip',
+};
+
 // ── Helpers ───────────────────────────────────────────────────────────────
 
 async function downloadCsv(zipName) {
