@@ -829,17 +829,25 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data, error } = await supabase
-        .from("institutions")
-        .select("unitid,name,city,state,us_news_list,flags,enrollment,fte,metrics,rankings,finance,ic2025,ic2025name,ic2025group,research2025,research2025name,saec2025,saec2025name,access_ratio,earnings_ratio,pell_2023")
-        .order("name", { ascending: true })
-        .range(0, 2499);
-      if (cancelled) return;
-      if (error || !data?.length) {
-        console.warn("institutions fetch failed, using bundled IPEDS_DB", error);
-        return;
+      const PAGE = 1000;
+      const all = [];
+      for (let start = 0; ; start += PAGE) {
+        const { data, error } = await supabase
+          .from("institutions")
+          .select("unitid,name,city,state,us_news_list,flags,enrollment,fte,metrics,rankings,finance,ic2025,ic2025name,ic2025group,research2025,research2025name,saec2025,saec2025name,access_ratio,earnings_ratio,pell_2023")
+          .order("name", { ascending: true })
+          .range(start, start + PAGE - 1);
+        if (cancelled) return;
+        if (error) {
+          console.warn("institutions fetch failed, using bundled IPEDS_DB", error);
+          return;
+        }
+        if (!data?.length) break;
+        all.push(...data);
+        if (data.length < PAGE) break;
       }
-      setUsDb(data.map(flattenInstitutionRow));
+      if (cancelled || !all.length) return;
+      setUsDb(all.map(flattenInstitutionRow));
     })();
     return () => { cancelled = true; };
   }, []);
