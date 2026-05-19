@@ -304,14 +304,13 @@ const USNEWS_LIST_MAX = {
 const AXES = [
   {
     key: "visibility", label: "Visibility & Reach", color: "#EB5600",
-    description: "Rankings, Caldwell, QS/THE/Niche footprint, THE Impact, athletics conference",
+    description: "Key rankings and visibility through athletics.",
     hiddenFor: ["associates", "tribal"],
     checkboxes: [
       { id: "chk_bigFour", label: "Big Four athletic conference (ACC, Big Ten, Big 12, SEC)" },
       { id: "chk_d1athletics", label: "Division I athletics (non-Big Four)" },
     ],
     inputs: [
-      { id: "usNewsList", label: "US News ranking list", usNewsListSelector: true },
       { id: "usNews", label: "US News Rank", placeholder: "e.g. 45", max: 500, invert: true, emptyScore: 10, usNewsRank: true, dynamic: true },
       { id: "qsRank", label: "QS World University Rank (blank if not listed)", placeholder: "e.g. 300", max: 1000, invert: true, emptyScore: 5 },
       { id: "theWorldRank", label: "THE World University Rank (blank if not listed)", placeholder: "e.g. 250", max: 1000, invert: true, emptyScore: 5 },
@@ -319,8 +318,6 @@ const AXES = [
       { id: "caldwellRank", label: "American Caldwell rank (1–1000; blank if not listed)", placeholder: "e.g. 312", max: 1000, invert: true, emptyScore: null },
       { id: "theImpactListed", label: "Listed in THE Impact Rankings? (1=Yes, 0=No)", placeholder: "0 or 1", max: 1, binary: true },
       { id: "theImpactRank", label: "THE Impact Rank (blank if not listed)", placeholder: "e.g. 401", max: 2526, invert: true, emptyScore: null },
-      { id: "nicheRank", label: "Niche Best Colleges Rank (blank if unranked)", placeholder: "e.g. 180", max: 1500, invert: true, emptyScore: 5 },
-      { id: "nicheGrade", label: "Niche Overall Grade (A+=100, A=91, A-=83, B+=75, B=67, B-=58, C+=50, C=42 or below)", placeholder: "e.g. 91", max: 100, nicheGrade: true },
     ]
   },
   {
