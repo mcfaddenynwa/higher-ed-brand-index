@@ -1,68 +1,62 @@
-## What I picked up from the doc
+# Two things in this pass
 
-Three buckets of work: **UI changes** (Classify / Enter Data / Results), **a couple of open questions** I want your call on before coding, and **database-data bugs** that need their own investigation pass.
+## 1. Fix Classify dropdown (still flipping up, unscrollable)
 
----
+**Root cause:** The `<SelectContent>` uses `position="popper"` with `side="bottom"`, but Radix's default collision behavior flips the panel above the trigger whenever there isn't enough room below. When it flips up, the available height collapses to whatever space exists *above* the trigger — which on this page is small — so `max-h-[min(60vh,520px)]` ends up being clipped and the inner scroll never engages.
 
-## A. Classify page
+**Fix (single file, `src/pages/HEBrandEquity.jsx`, the SelectContent at ~line 1238):**
 
-1. Remove the "US Institution / International" toggle. Default to US only. Keep the international code paths in place (just hidden) so we can re-enable later without rewriting.
-2. Re-order the 2025 Carnegie dropdown so Doctorate appears first; within Doctorate keep Mixed Large / Medium / Small then Professions. (See open question #1 on whether to also surface R1/R2/RCU labels.)
-3. Remove the **2025 SAEC** line from the classification card. Leave the field in the database and in the underlying record — just stop displaying it on this page (and on the Enter Data sidebar where it also shows).
-4. Fix the dropdown clipping: the popover currently has `avoidCollisions={false}` and a fixed `max-h-[360px]` which truncates options without an internal scroll. Switch to a scrollable popover that always renders fully on screen.
+- Add `avoidCollisions={false}` so the panel stays anchored below the trigger.
+- Add `collisionPadding={16}` as a safety net.
+- Keep `position="popper"`, `side="bottom"`, `align="start"`.
+- Tighten max-height to `max-h-[420px]` so it never exceeds typical viewport-below space, and keep `overflow-y-auto` so the list scrolls inside the panel.
+- Add `onWheel={(e) => e.stopPropagation()}` on the SelectContent so wheel events scroll the list rather than bubbling to the page.
 
-## B. Enter Data page
+That combination forces the dropdown to open downward, cap its height, and scroll internally — which is what you're asking for.
 
-1. Same Doctorate-first re-order (driven by the same source list as Classify, so one change covers both).
-2. Sidebar header re-order: **Institution Name on top** (largest), then 2025 Carnegie underneath. Drop SAEC line.
-3. Visibility & Reach pillar:
-   - Replace description with: *"Key rankings and visibility through athletics."*
-   - Remove the **US News ranking list** selector (the row of pill buttons + auto-suggested label).
-   - Remove the **Niche Best Colleges Rank** and **Niche Overall Grade** inputs from the UI. Keep the scraper, the DB columns, and the `nicheRank` / `nicheGrade` fields untouched.
-4. Financial Strength: drop the trailing sentence *"International institutions: manual entry, USD equivalent."* from the pillar description.
-5. Institutional Profile: change the helper line under the checkboxes to just *"Ranked programs score higher."* — remove "Auto-populated from institutional database" and "Review annually."
-6. Remove the **"See benchmarks for your Carnegie type"** dropdowns under Endowment / Revenue (and the brand-spend ones if/when they appear). Keep the BENCHMARKS data object in source for now.
-7. Remove the "IPEDS" badge / "pre-filled from IPEDS" copy? *Not requested — leaving as-is.*
+## 2. How the peer-tier logic works today
 
-## C. Results page
+Each pillar score is compared to the cohort (right now: same Carnegie / R1, R2, RCU) using a **z-score** — how many standard deviations your score sits above or below the peer mean.
 
-1. Add a bit more vertical padding between the dimension labels and the spider chart polygon (labels currently sit very close to the rings).
-2. Remove the **IPEDS Unit ID** line under the institution name.
-3. Remove the **QS band chip** (the orange `QS Top 100` / `QS 401–600` etc. badge) from both the header line and the score box.
-4. In the Dimension Breakdown rows, remove the small grey weight `%` (e.g., the "28%" next to the score) and bump the score number up one step (≈17 → 22 px) so it reads as the primary value.
+```text
+z = (your_score − peer_mean) / peer_stdev
+```
 
-## D. Peer cohort tiers (Insight Report)
+Tier thresholds (from `src/lib/insightFramework.js → classifyZ`):
 
-Today there are five tiers driven by the focal institution's z-score vs the cohort:
+```text
+z ≥ +1.5   → Category leader
++0.5 ≤ z < +1.5 → Notable strength
+−0.5 < z < +0.5 → On par with peers
+−1.5 < z ≤ −0.5 → Notable gap
+z ≤ −1.5   → Critical gap
+```
 
-| z-score      | tier            | label                 |
-|--------------|-----------------|-----------------------|
-| ≥ +1.5       | leader          | Category leader       |
-| +0.5 to +1.5 | strength        | Notable strength      |
-| −0.5 to +0.5 | on-par          | On par with peers     |
-| −1.5 to −0.5 | gap             | Notable gap           |
-| < −1.5       | critical-gap    | Critical gap          |
+In plain English, assuming a roughly normal cohort:
 
-So a parity tier already exists in the framework. The reason your feedback flagged "what's between Strength and Gap" is that the **Results page only renders the Insight Report below the spider/dimension breakdown** — and the breakdown itself just shows raw `+/− vs R1` deltas, not the tier label. I'll surface the tier chip (with its plain-English meaning + thresholds) in the dimension breakdown rows so the parity case is visible, and add a small "How tiers work" tooltip explaining the z-score logic in business terms (e.g. "Leader = more than ~1.5 standard deviations above the R1 average — top ~7% of the cohort").
+- **Leader (z ≥ +1.5):** top ~7% of the cohort on that pillar.
+- **Strength (+0.5 to +1.5):** clearly above average, roughly top 7–31%.
+- **On par (−0.5 to +0.5):** middle ~38% — statistically indistinguishable from peers.
+- **Gap (−0.5 to −1.5):** below average, roughly bottom 7–31%.
+- **Critical gap (z ≤ −1.5):** bottom ~7% of the cohort.
 
-## E. Database-data issues (separate investigation, not part of this UI batch)
+**Guardrails already in the code:**
 
-Logging these as a follow-up so we don't conflate them with the UI changes:
+- If the cohort has `< 2` peers, or the peer standard deviation is `≤ 1` (i.e. everyone scores nearly the same so any z-score becomes noisy), the function returns `null` and the tier is reported as **"Insufficient peer data"** rather than labeling you a leader or critical gap on thin signal.
+- Cohort mean, median, stdev, peer count `n`, the delta in raw points, and the cohort leader's name + score are all returned per pillar — they just aren't all surfaced in the UI yet.
 
-- **Financial Strength missing for many institutions** — endowment/revenue come from `src/data/financeSnapshot.json` keyed by unitid. Likely the snapshot covers only a subset (the original IPEDS-Finance pull). Action: audit coverage, re-run `scripts/fetch-ipeds-finance.mjs`, push fresh snapshot.
-- **Institutional Profile missing for many** — `flags.health/law/aacsb/eng` come from the seed JSON. Many institutions in the live DB likely have empty `flags{}`. Action: query `institutions` for null/empty flag distribution, then refresh from the curated overlay or backfill.
-- **Enrollment & Retention gaps (e.g. Oregon retention)** — `retentionRate` lives in `metrics`. Action: spot-check Oregon's row in the DB, identify whether it's missing in seed or being overwritten on flatten.
+**What this means for justification:**
 
-I'll come back with a concrete fix plan for these after we land the UI batch.
+- "Leader" and "Critical gap" require you to be **1.5σ** away from the peer average — a meaningful separation, not a small lead.
+- "Strength" / "Gap" are softer — half a standard deviation off — and are framed in the narrative as "worth amplifying" / "worth a focused plan" rather than absolute claims.
+- "On par" is the honest default and covers the bulk of cases for an average R1 vs. R1 cohort.
 
----
+## What I'm *not* doing in this pass
 
-## Open questions
+- Not changing the thresholds.
+- Not adding inline tier chips to the Results dimension rows yet (still deferred — want your read on the logic above first).
+- Not touching the database-data backlog (finance/profile gaps).
 
-1. **R1/R2/RCU in the Classify dropdown.** Right now the dropdown is keyed by the 2025 IC group (Doctorate / Master's / etc.) and the R1/R2 split is derived separately from the Research Activity Designation column. Three options:
-   - **(a)** Leave the dropdown as IC-only and just re-order (Doctorate first). R1/R2/RCU keeps showing as the orange sub-line under the matched name. *Smallest change, no backend ripple.*
-   - **(b)** Add a top "Research" group with three pseudo-items — R1, R2, RCU — that select the appropriate combo of IC + research designation. Doctorate IC groups still appear below for non-research doctoral programs.
-   - **(c)** Split each Doctorate IC label to include the research designation (e.g. "Mixed Doctorate Large — R1"). Most explicit, longest labels.
-2. **"Research activity designation weighted twice" — confirmation.** Inside the Research pillar, the three inputs (R&D $, doctoral output, R1/R2/RCU designation) are averaged equally, so the designation is one of three components, not double-applied within the pillar. Separately, the designation also helps choose the Carnegie *weight profile* (an R1 weighted-pillar mix vs an R2 mix). That's by design — same value affecting both the pillar score and the cohort weights. **Is that what you want, or do you want the designation removed as a scored input so it only drives weights?**
+## Open question for you
 
-Once you answer those two, I'll implement A–D in one pass and circle back on E.
+The 1.5σ / 0.5σ cutoffs are the standard convention but they're a judgment call. Want to keep them, tighten "Leader" to 2σ (top ~2%) so the badge feels rarer, or loosen "Strength" to 0.25σ so more institutions get a positive callout? Happy to adjust once the dropdown is fixed.
