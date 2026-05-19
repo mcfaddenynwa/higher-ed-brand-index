@@ -1398,12 +1398,6 @@ export default function App() {
                         <input type="number" value={values[input.id] ?? ''} onChange={e => setValues(p => ({ ...p, [input.id]: e.target.value }))}
                           placeholder={input.placeholder} style={{ ...iStyle, fontFamily: "'Bitter', Georgia, serif", borderColor: '#D6DCE5' }} />
                       )}
-                      {['endowmentPerStudent','totalRevenue'].includes(input.id) && (
-                        <BenchmarkDropdown field={{ id: input.id, section: 'financial' }} carnegieId={carnegieId} color="#1C3678" />
-                      )}
-                      {['mktgBudgetPct','mktgFTE'].includes(input.id) && (
-                        <BenchmarkDropdown field={{ id: input.id, section: 'brand' }} carnegieId={carnegieId} color="#A8C46A" />
-                      )}
                     </div>
                   );
                 })}
@@ -1417,7 +1411,7 @@ export default function App() {
                       {curAxis.key === 'visibility'
                         ? 'Check all that apply. Athletic conferences drive significant national brand exposure.'
                         : curAxis.key === 'profile'
-                        ? 'Auto-populated from institutional database. Ranked programs score higher. Review annually.'
+                        ? 'Ranked programs score higher.'
                         : 'Check all that apply. Ranked programs contribute bonus credit; unranked = presence credit only.'}
                     </div>
                     {curAxis.checkboxes.map(chk => (
