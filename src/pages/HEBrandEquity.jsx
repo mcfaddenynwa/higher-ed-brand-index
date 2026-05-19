@@ -1215,11 +1215,6 @@ export default function App() {
                         {description}
                       </div>
                     )}
-                    {institutionSAEC && (
-                      <div style={{ fontSize: 12, color: '#595959', marginBottom: 14 }}>
-                        <span style={{ color: '#1C3678', fontWeight: 600 }}>2025 SAEC:</span> {institutionSAEC}
-                      </div>
-                    )}
                   </>
                 ) : (
                   <div style={{ fontSize: 14, color: '#595959', marginBottom: 14, lineHeight: 1.55 }}>
