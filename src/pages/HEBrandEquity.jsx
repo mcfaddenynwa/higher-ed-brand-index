@@ -995,15 +995,19 @@ export default function App() {
     // Auto-check defaults (international programs)
     if (school.checkboxDefaults) { school.checkboxDefaults.forEach(id => { populated[id] = true; }); }
     // Merge live IPEDS Finance / NACUBO snapshot (US institutions only).
-    // Snapshot wins over hardcoded values for US rows; intl rows stay manual.
-    if (!isIntl && school.unitid && financeSnapshot[school.unitid]) {
-      const fin = financeSnapshot[school.unitid];
-      if (fin.endowmentPerStudent != null) {
-        populated.endowmentPerStudent = String(fin.endowmentPerStudent);
+    // Snapshot wins; fall back to the DB row's own finance values so any
+    // institution with finance JSON in the database auto-populates (not just
+    // the ~49 schools in the snapshot overlay).
+    if (!isIntl) {
+      const fin = (school.unitid && financeSnapshot[school.unitid]) || {};
+      const eps = fin.endowmentPerStudent ?? school.endowmentPerStudent;
+      const rev = fin.totalRevenue ?? school.totalRevenue;
+      if (eps != null) {
+        populated.endowmentPerStudent = String(eps);
         autoFields.push('endowmentPerStudent');
       }
-      if (fin.totalRevenue != null) {
-        populated.totalRevenue = String(fin.totalRevenue);
+      if (rev != null) {
+        populated.totalRevenue = String(rev);
         autoFields.push('totalRevenue');
       }
     }
@@ -1202,14 +1206,14 @@ export default function App() {
                 </div>
                 {matched ? (
                   <>
-                    <div style={{ fontSize: 18, fontFamily: "'Young Serif', Georgia, serif", color: '#243551', lineHeight: 1.25, marginBottom: 4 }}>
-                      {matchedName}
-                    </div>
                     {institutionResearch && (
-                      <div style={{ fontSize: 13, color: '#EB5600', fontWeight: 600, marginBottom: 10 }}>
+                      <div style={{ fontSize: 15, color: '#EB5600', fontWeight: 700, marginBottom: 6 }}>
                         {institutionResearch}
                       </div>
                     )}
+                    <div style={{ fontSize: 18, fontFamily: "'Young Serif', Georgia, serif", color: '#243551', lineHeight: 1.25, marginBottom: 10 }}>
+                      {matchedName}
+                    </div>
                     {description && (
                       <div style={{ fontSize: 13, color: '#595959', lineHeight: 1.55, marginBottom: 14 }}>
                         {description}
@@ -1302,8 +1306,8 @@ export default function App() {
                       </div>
                     )}
                     <div style={{ fontSize: 11, letterSpacing: 2, color: '#1C3678', fontWeight: 600, marginBottom: 4, textTransform: 'uppercase' }}>2025 Carnegie</div>
+                    {institutionResearch && <div style={{ fontSize: 13, color: '#EB5600', fontWeight: 700, marginBottom: 2 }}>{institutionResearch}</div>}
                     {ic && <div style={{ fontSize: 13, fontFamily: "'Bitter', Georgia, serif", color: '#243551', lineHeight: 1.35 }}>{ic.label}</div>}
-                    {institutionResearch && <div style={{ fontSize: 12, color: '#EB5600', fontWeight: 600, marginTop: 2 }}>{institutionResearch}</div>}
                   </div>
                   <button onClick={() => setStep("carnegie")} style={{ fontSize: 11, letterSpacing: 1.5, color: '#595959', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginTop: 2, flexShrink: 0 }}>← BACK</button>
                 </div>
