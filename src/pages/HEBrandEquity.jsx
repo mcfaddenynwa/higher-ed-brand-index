@@ -73,19 +73,13 @@ function flattenInstitutionRow(r) {
 
 // 26 four-year IC2025 cohorts grouped for the Classify dropdown.
 // Excludes ic 1, 2, 3, 11, 12 (Associate-only).
+// Research Activity entries (R1/R2/RCU) are pseudo-ids that map directly to a
+// carnegieId without an IC2025 code — handled specially in handlePick.
 const IC2025_COHORTS = [
-  // Associate / Baccalaureate
-  { id: 4,  group: "Associate/Baccalaureate", label: "Mixed Associate/Baccalaureate" },
-  { id: 13, group: "Associate/Baccalaureate", label: "Professions-focused Associate/Baccalaureate" },
-  // Baccalaureate
-  { id: 5,  group: "Baccalaureate", label: "Mixed Baccalaureate" },
-  { id: 14, group: "Baccalaureate", label: "Professions-focused Baccalaureate Medium" },
-  { id: 15, group: "Baccalaureate", label: "Professions-focused Baccalaureate Small" },
-  // Master's
-  { id: 9,  group: "Master's", label: "Mixed Undergraduate/Graduate-Master's Large/Medium" },
-  { id: 10, group: "Master's", label: "Mixed Undergraduate/Graduate-Master's Small" },
-  { id: 19, group: "Master's", label: "Professions-focused Undergraduate/Graduate-Master's Large/Medium" },
-  { id: 20, group: "Master's", label: "Professions-focused Undergraduate/Graduate-Master's Small" },
+  // Research Activity (ACE designation)
+  { id: "r1",  group: "Research Activity", label: "Research 1: Very High Spending and Doctorate Production" },
+  { id: "r2",  group: "Research Activity", label: "Research 2: High Spending and Doctorate Production" },
+  { id: "rcu", group: "Research Activity", label: "Research Colleges and Universities" },
   // Doctorate
   { id: 6,  group: "Doctorate", label: "Mixed Undergraduate/Graduate-Doctorate Large" },
   { id: 7,  group: "Doctorate", label: "Mixed Undergraduate/Graduate-Doctorate Medium" },
@@ -93,6 +87,18 @@ const IC2025_COHORTS = [
   { id: 16, group: "Doctorate", label: "Professions-focused Undergraduate/Graduate-Doctorate Large" },
   { id: 17, group: "Doctorate", label: "Professions-focused Undergraduate/Graduate-Doctorate Medium" },
   { id: 18, group: "Doctorate", label: "Professions-focused Undergraduate/Graduate-Doctorate Small" },
+  // Master's
+  { id: 9,  group: "Master's", label: "Mixed Undergraduate/Graduate-Master's Large/Medium" },
+  { id: 10, group: "Master's", label: "Mixed Undergraduate/Graduate-Master's Small" },
+  { id: 19, group: "Master's", label: "Professions-focused Undergraduate/Graduate-Master's Large/Medium" },
+  { id: 20, group: "Master's", label: "Professions-focused Undergraduate/Graduate-Master's Small" },
+  // Baccalaureate
+  { id: 5,  group: "Baccalaureate", label: "Mixed Baccalaureate" },
+  { id: 14, group: "Baccalaureate", label: "Professions-focused Baccalaureate Medium" },
+  { id: 15, group: "Baccalaureate", label: "Professions-focused Baccalaureate Small" },
+  // Associate / Baccalaureate
+  { id: 4,  group: "Associate/Baccalaureate", label: "Mixed Associate/Baccalaureate" },
+  { id: 13, group: "Associate/Baccalaureate", label: "Professions-focused Associate/Baccalaureate" },
   // Special Focus
   { id: 21, group: "Special Focus", label: "Special Focus: Applied and Career Studies" },
   { id: 22, group: "Special Focus", label: "Special Focus: Arts and Sciences" },
@@ -107,7 +113,7 @@ const IC2025_COHORTS = [
   { id: 31, group: "Special Focus", label: "Special Focus: Theological Studies" },
 ];
 
-const IC2025_GROUP_ORDER = ["Doctorate", "Master's", "Baccalaureate", "Associate/Baccalaureate", "Special Focus"];
+const IC2025_GROUP_ORDER = ["Research Activity", "Doctorate", "Master's", "Baccalaureate", "Associate/Baccalaureate", "Special Focus"];
 
 // Short blurbs surfaced under the auto-detected classification.
 const IC2025_DESCRIPTIONS = {
@@ -298,14 +304,13 @@ const USNEWS_LIST_MAX = {
 const AXES = [
   {
     key: "visibility", label: "Visibility & Reach", color: "#EB5600",
-    description: "Rankings, Caldwell, QS/THE/Niche footprint, THE Impact, athletics conference",
+    description: "Key rankings and visibility through athletics.",
     hiddenFor: ["associates", "tribal"],
     checkboxes: [
       { id: "chk_bigFour", label: "Big Four athletic conference (ACC, Big Ten, Big 12, SEC)" },
       { id: "chk_d1athletics", label: "Division I athletics (non-Big Four)" },
     ],
     inputs: [
-      { id: "usNewsList", label: "US News ranking list", usNewsListSelector: true },
       { id: "usNews", label: "US News Rank", placeholder: "e.g. 45", max: 500, invert: true, emptyScore: 10, usNewsRank: true, dynamic: true },
       { id: "qsRank", label: "QS World University Rank (blank if not listed)", placeholder: "e.g. 300", max: 1000, invert: true, emptyScore: 5 },
       { id: "theWorldRank", label: "THE World University Rank (blank if not listed)", placeholder: "e.g. 250", max: 1000, invert: true, emptyScore: 5 },
@@ -313,8 +318,6 @@ const AXES = [
       { id: "caldwellRank", label: "American Caldwell rank (1–1000; blank if not listed)", placeholder: "e.g. 312", max: 1000, invert: true, emptyScore: null },
       { id: "theImpactListed", label: "Listed in THE Impact Rankings? (1=Yes, 0=No)", placeholder: "0 or 1", max: 1, binary: true },
       { id: "theImpactRank", label: "THE Impact Rank (blank if not listed)", placeholder: "e.g. 401", max: 2526, invert: true, emptyScore: null },
-      { id: "nicheRank", label: "Niche Best Colleges Rank (blank if unranked)", placeholder: "e.g. 180", max: 1500, invert: true, emptyScore: 5 },
-      { id: "nicheGrade", label: "Niche Overall Grade (A+=100, A=91, A-=83, B+=75, B=67, B-=58, C+=50, C=42 or below)", placeholder: "e.g. 91", max: 100, nicheGrade: true },
     ]
   },
   {
@@ -331,7 +334,7 @@ const AXES = [
   },
   {
     key: "financial", label: "Financial Strength", color: "#243551",
-    description: "Endowment per student, total operating revenue. Auto-populated for US institutions from IPEDS Finance + NACUBO via the Urban Institute Education Data Portal (annual refresh). International institutions: manual entry, USD equivalent.",
+    description: "Endowment per student, total operating revenue. Auto-populated for US institutions from IPEDS Finance + NACUBO via the Urban Institute Education Data Portal (annual refresh).",
     inputs: [
       { id: "endowmentPerStudent", label: "Endowment per student ($K)", labelIntl: "Endowment per student (USD equiv. $K)", placeholder: "e.g. 45", max: 600 },
       { id: "totalRevenue", label: "Total annual revenue ($M)", labelIntl: "Total annual revenue (USD equiv. $M)", placeholder: "e.g. 800", max: 5000 },
@@ -563,7 +566,7 @@ function SpiderChart({ scores, carnegieAvg, globalAvg, axes }) {
   const globVals = fillNulls(globalAvg) ?? axes.map(() => 0);
   const hasScore = userVals.some(v => v > 0);
 
-  const labelDist = r + 44;
+  const labelDist = r + 58;
 
   return (
     <svg width={size} height={size} style={{ overflow: 'visible' }}>
@@ -1084,25 +1087,7 @@ export default function App() {
         <div style={{ maxWidth: 780, margin: '0 auto', padding: '36px 36px' }}>
           <div style={{ fontSize: 22, fontFamily: "'Young Serif', Georgia, serif", marginBottom: 8 }}>Identify Your Institution</div>
           <div style={{ fontSize: 14, color: '#243551', marginBottom: 20, lineHeight: 1.6, maxWidth: 560 }}>
-            {isIntl
-              ? "Start typing your institution’s name. International institutions are sourced from our global database. Revenue and endowment fields use USD equivalents."
-              : "Start typing your institution’s name. If it’s in our database, we’ll pre-fill your IPEDS data automatically and suggest your Carnegie classification."}
-          </div>
-
-          {/* US / International toggle */}
-          <div style={{ display: 'flex', gap: 0, marginBottom: 24, width: 'fit-content', border: '1px solid #E4E8EE', borderRadius: 8, overflow: 'hidden' }}>
-            {[{ label: 'US Institution', val: false }, { label: 'International', val: true }].map(({ label, val }) => (
-              <button key={label} onClick={() => { setIsIntl(val); setInstitution(''); setSuggestions([]); setUnitid(''); setAutoPopulated([]); }}
-                style={{
-                  padding: '8px 20px', fontSize: 12, letterSpacing: 1, fontFamily: "'Bitter', Georgia, serif",
-                  border: 'none', cursor: 'pointer', transition: 'all 0.15s',
-                  background: isIntl === val ? '#EB5600' : '#F8FAFB',
-                  color: isIntl === val ? '#FFFFFF' : '#6B7585',
-                  fontWeight: isIntl === val ? 700 : 400,
-                }}>
-                {label}
-              </button>
-            ))}
+            Start typing your institution’s name. If it’s in our database, we’ll pre-fill your IPEDS data automatically and suggest your Carnegie classification.
           </div>
 
           {/* Typeahead */}
@@ -1186,8 +1171,17 @@ export default function App() {
               const cohort = IC2025_COHORTS.find(c => c.id === icId);
               if (!cohort) return;
               setSelectedIc2025(icId);
-              // Re-derive the legacy carnegieId, preferring the existing
-              // research2025 designation if the institution had one.
+              // Research Activity pseudo-ids map straight to a legacy carnegieId
+              // and seed the researchDesignation scoring value.
+              if (icId === "r1" || icId === "r2" || icId === "rcu") {
+                setCarnegieId(icId);
+                if (USNEWS_LIST_MAP[icId]) setValues(p => ({ ...p, usNewsList: USNEWS_LIST_MAP[icId] }));
+                const designation = icId === "r1" ? "3" : icId === "r2" ? "2" : "1";
+                setValues(p => ({ ...p, researchDesignation: designation }));
+                return;
+              }
+              // IC-based selection: re-derive the legacy carnegieId, preferring
+              // the existing research2025 designation if the institution had one.
               const r = parseFloat(values.researchDesignation);
               // researchDesignation field is 3=R1, 2=R2, 1=RCU, 0=None — invert
               const research2025 = r === 3 ? 1 : r === 2 ? 2 : r === 1 ? 3 : null;
@@ -1221,11 +1215,6 @@ export default function App() {
                         {description}
                       </div>
                     )}
-                    {institutionSAEC && (
-                      <div style={{ fontSize: 12, color: '#595959', marginBottom: 14 }}>
-                        <span style={{ color: '#1C3678', fontWeight: 600 }}>2025 SAEC:</span> {institutionSAEC}
-                      </div>
-                    )}
                   </>
                 ) : (
                   <div style={{ fontSize: 14, color: '#595959', marginBottom: 14, lineHeight: 1.55 }}>
@@ -1239,7 +1228,7 @@ export default function App() {
                   </div>
                   <Select
                     value={selectedIc2025 != null ? String(selectedIc2025) : undefined}
-                    onValueChange={v => handlePick(parseInt(v, 10))}
+                    onValueChange={v => handlePick(/^\d+$/.test(v) ? parseInt(v, 10) : v)}
                   >
                     <SelectTrigger
                       className="h-11 w-full rounded-none border-2 border-[#1C3678] bg-white px-3 text-[14px] text-[#243551] font-['Bitter',Georgia,serif] shadow-none hover:bg-[#F5F7FA] focus:ring-2 focus:ring-[#1C3678] focus:ring-offset-0 [&>svg]:text-[#EB5600] [&>svg]:opacity-100"
@@ -1251,9 +1240,8 @@ export default function App() {
                       side="bottom"
                       align="start"
                       sideOffset={4}
-                      avoidCollisions={false}
                       style={{ backgroundColor: '#FFFFFF' }}
-                      className="z-[100] max-h-[360px] rounded-none border-2 border-[#1C3678] bg-white font-['Bitter',Georgia,serif] shadow-[0_12px_32px_-12px_rgba(28,54,120,0.35)]"
+                      className="z-[100] max-h-[min(60vh,520px)] overflow-y-auto rounded-none border-2 border-[#1C3678] bg-white font-['Bitter',Georgia,serif] shadow-[0_12px_32px_-12px_rgba(28,54,120,0.35)]"
                     >
                       {groups.map((g, gi) => (
                         <SelectGroup key={g.group}>
@@ -1305,15 +1293,14 @@ export default function App() {
               return (
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, gap: 12 }}>
                   <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontSize: 11, letterSpacing: 2, color: '#1C3678', fontWeight: 600, marginBottom: 4, textTransform: 'uppercase' }}>2025 Carnegie</div>
-                    {ic && <div style={{ fontSize: 14, fontFamily: "'Young Serif', Georgia, serif", color: '#243551', lineHeight: 1.3 }}>{ic.label}</div>}
-                    {institutionResearch && <div style={{ fontSize: 12, color: '#EB5600', fontWeight: 600, marginTop: 2 }}>{institutionResearch}</div>}
-                    {institution && <div style={{ fontSize: 14, color: '#243551', marginTop: 6 }}>{institution}</div>}
-                    {institutionSAEC && (
-                      <div style={{ fontSize: 11, color: '#595959', marginTop: 4 }}>
-                        <span style={{ color: '#1C3678', fontWeight: 600 }}>SAEC:</span> {institutionSAEC}
+                    {institution && (
+                      <div style={{ fontSize: 18, fontFamily: "'Young Serif', Georgia, serif", color: '#243551', lineHeight: 1.2, marginBottom: 8 }}>
+                        {institution}
                       </div>
                     )}
+                    <div style={{ fontSize: 11, letterSpacing: 2, color: '#1C3678', fontWeight: 600, marginBottom: 4, textTransform: 'uppercase' }}>2025 Carnegie</div>
+                    {ic && <div style={{ fontSize: 13, fontFamily: "'Bitter', Georgia, serif", color: '#243551', lineHeight: 1.35 }}>{ic.label}</div>}
+                    {institutionResearch && <div style={{ fontSize: 12, color: '#EB5600', fontWeight: 600, marginTop: 2 }}>{institutionResearch}</div>}
                   </div>
                   <button onClick={() => setStep("carnegie")} style={{ fontSize: 11, letterSpacing: 1.5, color: '#595959', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginTop: 2, flexShrink: 0 }}>← BACK</button>
                 </div>
@@ -1411,12 +1398,6 @@ export default function App() {
                         <input type="number" value={values[input.id] ?? ''} onChange={e => setValues(p => ({ ...p, [input.id]: e.target.value }))}
                           placeholder={input.placeholder} style={{ ...iStyle, fontFamily: "'Bitter', Georgia, serif", borderColor: '#D6DCE5' }} />
                       )}
-                      {['endowmentPerStudent','totalRevenue'].includes(input.id) && (
-                        <BenchmarkDropdown field={{ id: input.id, section: 'financial' }} carnegieId={carnegieId} color="#1C3678" />
-                      )}
-                      {['mktgBudgetPct','mktgFTE'].includes(input.id) && (
-                        <BenchmarkDropdown field={{ id: input.id, section: 'brand' }} carnegieId={carnegieId} color="#A8C46A" />
-                      )}
                     </div>
                   );
                 })}
@@ -1430,7 +1411,7 @@ export default function App() {
                       {curAxis.key === 'visibility'
                         ? 'Check all that apply. Athletic conferences drive significant national brand exposure.'
                         : curAxis.key === 'profile'
-                        ? 'Auto-populated from institutional database. Ranked programs score higher. Review annually.'
+                        ? 'Ranked programs score higher.'
                         : 'Check all that apply. Ranked programs contribute bonus credit; unranked = presence credit only.'}
                     </div>
                     {curAxis.checkboxes.map(chk => (
@@ -1534,13 +1515,7 @@ export default function App() {
               {institution && <div style={{ fontSize: 22, fontFamily: "'Young Serif', Georgia, serif", marginBottom: 6 }}>{institution}</div>}
               <div style={{ fontSize: 14, color: '#243551', marginBottom: 3 }}>
                 {selectedCarnegie?.label}
-                {values.qsRank && (
-                  <span style={{ marginLeft: 10, fontSize: 11, letterSpacing: 1, color: '#EB5600', background: 'rgba(235,86,0,0.12)', border: '1px solid rgba(235,86,0,0.30)', borderRadius: 4, padding: '2px 7px' }}>
-                    {QS_BAND_LABELS[qsBand]}
-                  </span>
-                )}
               </div>
-              {unitid && <div style={{ fontSize: 14, color: '#6B7585' }}>IPEDS Unit ID: {unitid}</div>}
             </div>
             {overall !== null && (
               <div style={{ background: 'rgba(235,86,0,0.08)', border: '1px solid #EB560033', borderRadius: 12, padding: '16px 22px', flexShrink: 0, minWidth: 280 }}>
@@ -1550,7 +1525,6 @@ export default function App() {
                     <div style={{ fontSize: 50, fontFamily: "'Bitter', Georgia, serif", color: '#EB5600', lineHeight: 1 }}>{overall}</div>
                     <div style={{ fontSize: 12, color: '#6B7585', marginTop: 2 }}>
                       /100 · {selectedCarnegie?.short}
-                      {values.qsRank && <span style={{ marginLeft: 6, color: 'rgba(235,86,0,0.70)', fontSize: 11 }}>· {QS_BAND_LABELS[qsBand]}</span>}
                     </div>
                   </div>
                   <div style={{ width: 1, alignSelf: 'stretch', background: '#EB560033' }} />
@@ -1628,8 +1602,7 @@ export default function App() {
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                           {delta !== null && <span style={{ fontSize: 14, color: delta >= 0 ? '#1A9988' : '#EB5600' }}>{delta >= 0 ? '+' : ''}{delta} vs {selectedCarnegie?.short}</span>}
-                          <span style={{ fontSize: 17, fontFamily: "'Bitter', Georgia, serif", color: s != null ? '#243551' : '#6B7585' }}>{s != null ? Math.round(s) : '–'}</span>
-                          <span style={{ fontSize: 14, color: '#6B7585' }}>{Math.round(w * 100)}%</span>
+                          <span style={{ fontSize: 24, fontFamily: "'Bitter', Georgia, serif", color: s != null ? '#243551' : '#6B7585' }}>{s != null ? Math.round(s) : '–'}</span>
                         </div>
                       </div>
                       {s != null && (
