@@ -1602,8 +1602,7 @@ export default function App() {
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                           {delta !== null && <span style={{ fontSize: 14, color: delta >= 0 ? '#1A9988' : '#EB5600' }}>{delta >= 0 ? '+' : ''}{delta} vs {selectedCarnegie?.short}</span>}
-                          <span style={{ fontSize: 17, fontFamily: "'Bitter', Georgia, serif", color: s != null ? '#243551' : '#6B7585' }}>{s != null ? Math.round(s) : '–'}</span>
-                          <span style={{ fontSize: 14, color: '#6B7585' }}>{Math.round(w * 100)}%</span>
+                          <span style={{ fontSize: 24, fontFamily: "'Bitter', Georgia, serif", color: s != null ? '#243551' : '#6B7585' }}>{s != null ? Math.round(s) : '–'}</span>
                         </div>
                       </div>
                       {s != null && (
