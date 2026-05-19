@@ -566,7 +566,7 @@ function SpiderChart({ scores, carnegieAvg, globalAvg, axes }) {
   const globVals = fillNulls(globalAvg) ?? axes.map(() => 0);
   const hasScore = userVals.some(v => v > 0);
 
-  const labelDist = r + 44;
+  const labelDist = r + 58;
 
   return (
     <svg width={size} height={size} style={{ overflow: 'visible' }}>
