@@ -1228,7 +1228,7 @@ export default function App() {
                   </div>
                   <Select
                     value={selectedIc2025 != null ? String(selectedIc2025) : undefined}
-                    onValueChange={v => handlePick(parseInt(v, 10))}
+                    onValueChange={v => handlePick(/^\d+$/.test(v) ? parseInt(v, 10) : v)}
                   >
                     <SelectTrigger
                       className="h-11 w-full rounded-none border-2 border-[#1C3678] bg-white px-3 text-[14px] text-[#243551] font-['Bitter',Georgia,serif] shadow-none hover:bg-[#F5F7FA] focus:ring-2 focus:ring-[#1C3678] focus:ring-offset-0 [&>svg]:text-[#EB5600] [&>svg]:opacity-100"
@@ -1240,9 +1240,8 @@ export default function App() {
                       side="bottom"
                       align="start"
                       sideOffset={4}
-                      avoidCollisions={false}
                       style={{ backgroundColor: '#FFFFFF' }}
-                      className="z-[100] max-h-[360px] rounded-none border-2 border-[#1C3678] bg-white font-['Bitter',Georgia,serif] shadow-[0_12px_32px_-12px_rgba(28,54,120,0.35)]"
+                      className="z-[100] max-h-[min(60vh,520px)] overflow-y-auto rounded-none border-2 border-[#1C3678] bg-white font-['Bitter',Georgia,serif] shadow-[0_12px_32px_-12px_rgba(28,54,120,0.35)]"
                     >
                       {groups.map((g, gi) => (
                         <SelectGroup key={g.group}>
