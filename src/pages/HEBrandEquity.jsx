@@ -1293,15 +1293,14 @@ export default function App() {
               return (
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, gap: 12 }}>
                   <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontSize: 11, letterSpacing: 2, color: '#1C3678', fontWeight: 600, marginBottom: 4, textTransform: 'uppercase' }}>2025 Carnegie</div>
-                    {ic && <div style={{ fontSize: 14, fontFamily: "'Young Serif', Georgia, serif", color: '#243551', lineHeight: 1.3 }}>{ic.label}</div>}
-                    {institutionResearch && <div style={{ fontSize: 12, color: '#EB5600', fontWeight: 600, marginTop: 2 }}>{institutionResearch}</div>}
-                    {institution && <div style={{ fontSize: 14, color: '#243551', marginTop: 6 }}>{institution}</div>}
-                    {institutionSAEC && (
-                      <div style={{ fontSize: 11, color: '#595959', marginTop: 4 }}>
-                        <span style={{ color: '#1C3678', fontWeight: 600 }}>SAEC:</span> {institutionSAEC}
+                    {institution && (
+                      <div style={{ fontSize: 18, fontFamily: "'Young Serif', Georgia, serif", color: '#243551', lineHeight: 1.2, marginBottom: 8 }}>
+                        {institution}
                       </div>
                     )}
+                    <div style={{ fontSize: 11, letterSpacing: 2, color: '#1C3678', fontWeight: 600, marginBottom: 4, textTransform: 'uppercase' }}>2025 Carnegie</div>
+                    {ic && <div style={{ fontSize: 13, fontFamily: "'Bitter', Georgia, serif", color: '#243551', lineHeight: 1.35 }}>{ic.label}</div>}
+                    {institutionResearch && <div style={{ fontSize: 12, color: '#EB5600', fontWeight: 600, marginTop: 2 }}>{institutionResearch}</div>}
                   </div>
                   <button onClick={() => setStep("carnegie")} style={{ fontSize: 11, letterSpacing: 1.5, color: '#595959', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginTop: 2, flexShrink: 0 }}>← BACK</button>
                 </div>
