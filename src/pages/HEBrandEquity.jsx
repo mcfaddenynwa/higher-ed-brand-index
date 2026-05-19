@@ -1240,8 +1240,11 @@ export default function App() {
                       side="bottom"
                       align="start"
                       sideOffset={4}
+                      avoidCollisions={false}
+                      collisionPadding={16}
+                      onWheel={(e) => e.stopPropagation()}
                       style={{ backgroundColor: '#FFFFFF' }}
-                      className="z-[100] max-h-[min(60vh,520px)] overflow-y-auto rounded-none border-2 border-[#1C3678] bg-white font-['Bitter',Georgia,serif] shadow-[0_12px_32px_-12px_rgba(28,54,120,0.35)]"
+                      className="z-[100] max-h-[420px] overflow-y-auto rounded-none border-2 border-[#1C3678] bg-white font-['Bitter',Georgia,serif] shadow-[0_12px_32px_-12px_rgba(28,54,120,0.35)]"
                     >
                       {groups.map((g, gi) => (
                         <SelectGroup key={g.group}>
