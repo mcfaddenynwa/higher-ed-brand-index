@@ -1,62 +1,71 @@
-# Two things in this pass
+# Hierarchy + data-coverage fixes
 
-## 1. Fix Classify dropdown (still flipping up, unscrollable)
+## 1. Carnegie hierarchy on both pages (quick fix)
 
-**Root cause:** The `<SelectContent>` uses `position="popper"` with `side="bottom"`, but Radix's default collision behavior flips the panel above the trigger whenever there isn't enough room below. When it flips up, the available height collapses to whatever space exists *above* the trigger — which on this page is small — so `max-h-[min(60vh,520px)]` ends up being clipped and the inner scroll never engages.
+Right now on both the Classify card and the Enter Data sidebar, the IC2025 name ("Mixed Undergraduate/Graduate-Doctorate Medium") renders **above** the orange Research designation ("Research 1: Very High Spending and Doctorate Production"). You want Research first.
 
-**Fix (single file, `src/pages/HEBrandEquity.jsx`, the SelectContent at ~line 1238):**
+**Files / locations:**
 
-- Add `avoidCollisions={false}` so the panel stays anchored below the trigger.
-- Add `collisionPadding={16}` as a safety net.
-- Keep `position="popper"`, `side="bottom"`, `align="start"`.
-- Tighten max-height to `max-h-[420px]` so it never exceeds typical viewport-below space, and keep `overflow-y-auto` so the list scrolls inside the panel.
-- Add `onWheel={(e) => e.stopPropagation()}` on the SelectContent so wheel events scroll the list rather than bubbling to the page.
+- `src/pages/HEBrandEquity.jsx` ~lines 1205–1212 (Classify confirmation card): swap the order so `institutionResearch` (orange) renders above `matchedName` (serif IC name). Keep both styles as-is; just swap the JSX blocks.
+- `src/pages/HEBrandEquity.jsx` ~lines 1304–1306 (Enter Data sidebar): render `institutionResearch` line immediately under the "2025 Carnegie" eyebrow, then `ic.label` below it.
 
-That combination forces the dropdown to open downward, cap its height, and scroll internally — which is what you're asking for.
+No logic changes — pure render-order swap on both pages.
 
-## 2. How the peer-tier logic works today
+## 2. Finance fields not auto-populating (UVM and many others) — real bug
 
-Each pillar score is compared to the cohort (right now: same Carnegie / R1, R2, RCU) using a **z-score** — how many standard deviations your score sits above or below the peer mean.
+I checked University of Vermont in the database. Its row **does** have finance data (`totalRevenue: 909`, `endowmentPerStudent: 63`, `endowmentTotal: 835`) but the form leaves Financial Strength blank.
+
+**Root cause:** `selectInstitution` (HEBrandEquity.jsx ~lines 997–1009) only auto-fills `endowmentPerStudent` / `totalRevenue` from `src/data/financeSnapshot.json`, which is a 49-school overlay. It never falls back to the values already on the DB row (`school.endowmentPerStudent`, `school.totalRevenue`), so any institution outside the 49 hand-curated rows shows blank — including UVM.
+
+**Fix:** in `selectInstitution`, prefer snapshot value, then fall back to `school.endowmentPerStudent` / `school.totalRevenue` from the flattened DB row. Existing snapshot precedence stays the same; this just adds a fallback.
+
+This single fix lifts finance auto-fill from 49 institutions to ~2,052 (the count in the DB with a totalRevenue value), and resolves the UVM case immediately.
+
+## 3. Why D1 athletics is wrong, and retention is mostly blank — pipeline issues
+
+Database audit just now:
 
 ```text
-z = (your_score − peer_mean) / peer_stdev
+total institutions:                3,189
+with retentionRate populated:         48   (1.5%)
+with flags.d1 = 1:                    96   (3%)
+with finance.totalRevenue:          2,052  (64%)
 ```
 
-Tier thresholds (from `src/lib/insightFramework.js → classifyZ`):
+These three are upstream data-load problems, not UI problems. Findings:
 
-```text
-z ≥ +1.5   → Category leader
-+0.5 ≤ z < +1.5 → Notable strength
-−0.5 < z < +0.5 → On par with peers
-−1.5 < z ≤ −0.5 → Notable gap
-z ≤ −1.5   → Critical gap
+**Retention (1.5% coverage).** `scripts/fetch-ipeds-seed.mjs` line 468 pulls retention from the DRVGR file:
+
+```js
+const retentionRate = gr ? num(gr.RET_PCF) : null;
 ```
 
-In plain English, assuming a roughly normal cohort:
+`RET_PCF` no longer lives in the current DRVGR derived-graduation file for most institutions — IPEDS moved the full-time first-year retention rate to `EF{year}D` (Fall Enrollment, Part D — `RRFTCT` for full-time cohort retention, `RRPTCT` for part-time). That's why 98.5% of rows are null. Confirmed by spot-checking UVM (has well-documented ~87% retention but DB row is null).
 
-- **Leader (z ≥ +1.5):** top ~7% of the cohort on that pillar.
-- **Strength (+0.5 to +1.5):** clearly above average, roughly top 7–31%.
-- **On par (−0.5 to +0.5):** middle ~38% — statistically indistinguishable from peers.
-- **Gap (−0.5 to −1.5):** below average, roughly bottom 7–31%.
-- **Critical gap (z ≤ −1.5):** bottom ~7% of the cohort.
+**Fix:** add an EF{year}D loader to the seed script, read `RRFTCT` (full-time, four-year and grad institutions) with `RRPTCT` fallback, and use that as the retention source. Re-run seed and upsert.
 
-**Guardrails already in the code:**
+**D1 athletics (3% coverage).** The seed reads `is_division_1` from a local ACE file (line 282). That file only contains the ~340 schools ACE tracks, so any institution outside that list defaults to `d1: 0` — including a lot of legitimate D1 programs (UVM among them; UVM competes in America East).
 
-- If the cohort has `< 2` peers, or the peer standard deviation is `≤ 1` (i.e. everyone scores nearly the same so any z-score becomes noisy), the function returns `null` and the tier is reported as **"Insufficient peer data"** rather than labeling you a leader or critical gap on thin signal.
-- Cohort mean, median, stdev, peer count `n`, the delta in raw points, and the cohort leader's name + score are all returned per pillar — they just aren't all surfaced in the UI yet.
+**Fix options, in order of effort:**
 
-**What this means for justification:**
+1. Drop in a CSV of the official 2024-25 NCAA D1 membership list (~362 schools, public from ncaa.org) and join on `unitid` or `name`. Cleanest and complete.
+2. Or read IPEDS' Athletic Aid survey (`SFA{year}_P2`) which records NCAA division participation per institution — fully covers all reporting institutions.
 
-- "Leader" and "Critical gap" require you to be **1.5σ** away from the peer average — a meaningful separation, not a small lead.
-- "Strength" / "Gap" are softer — half a standard deviation off — and are framed in the narrative as "worth amplifying" / "worth a focused plan" rather than absolute claims.
-- "On par" is the honest default and covers the bulk of cases for an average R1 vs. R1 cohort.
+After whichever source is chosen, re-run the seed and the d1 flag will populate correctly across the dataset.
 
-## What I'm *not* doing in this pass
+**Finance (64% coverage).** Reasonable today; the remaining 36% are mostly small institutions where IPEDS Finance hasn't been pulled for the current fiscal year. Lower priority than the two above, but if you want full coverage we'd re-run `scripts/fetch-ipeds-finance.mjs` against the latest F{year}_F1A / F{year}_F2 files.
 
-- Not changing the thresholds.
-- Not adding inline tier chips to the Results dimension rows yet (still deferred — want your read on the logic above first).
-- Not touching the database-data backlog (finance/profile gaps).
+## Proposed order of work
+
+1. **Now, this pass (UI-only, no data re-pulls):**
+   - Swap Research / IC order on Classify and Enter Data pages.
+   - Add DB-row fallback for `endowmentPerStudent` / `totalRevenue` in `selectInstitution`.
+
+2. **Next pass (data pipeline — needs re-running seed scripts and re-upserting):**
+   - Add EF{year}D loader → fixes retention universally.
+   - Replace ACE-only D1 flag with NCAA D1 roster CSV (or IPEDS Athletic Aid) → fixes D1 universally.
+   - Optional: re-run finance pull for fuller coverage.
 
 ## Open question for you
 
-The 1.5σ / 0.5σ cutoffs are the standard convention but they're a judgment call. Want to keep them, tighten "Leader" to 2σ (top ~2%) so the badge feels rarer, or loosen "Strength" to 0.25σ so more institutions get a positive callout? Happy to adjust once the dropdown is fixed.
+For step 2, do you want me to wire it up to **IPEDS' Athletic Aid survey** (fully automated re-pull, no manual list to maintain) or **a static NCAA D1 roster CSV** (simpler, but you'd need to refresh it each season)? Athletic Aid is my recommendation. Same question doesn't apply to retention — fix is the same path either way.
