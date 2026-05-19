@@ -1171,8 +1171,17 @@ export default function App() {
               const cohort = IC2025_COHORTS.find(c => c.id === icId);
               if (!cohort) return;
               setSelectedIc2025(icId);
-              // Re-derive the legacy carnegieId, preferring the existing
-              // research2025 designation if the institution had one.
+              // Research Activity pseudo-ids map straight to a legacy carnegieId
+              // and seed the researchDesignation scoring value.
+              if (icId === "r1" || icId === "r2" || icId === "rcu") {
+                setCarnegieId(icId);
+                if (USNEWS_LIST_MAP[icId]) setValues(p => ({ ...p, usNewsList: USNEWS_LIST_MAP[icId] }));
+                const designation = icId === "r1" ? "3" : icId === "r2" ? "2" : "1";
+                setValues(p => ({ ...p, researchDesignation: designation }));
+                return;
+              }
+              // IC-based selection: re-derive the legacy carnegieId, preferring
+              // the existing research2025 designation if the institution had one.
               const r = parseFloat(values.researchDesignation);
               // researchDesignation field is 3=R1, 2=R2, 1=RCU, 0=None — invert
               const research2025 = r === 3 ? 1 : r === 2 ? 2 : r === 1 ? 3 : null;
