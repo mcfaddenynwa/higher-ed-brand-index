@@ -1087,25 +1087,7 @@ export default function App() {
         <div style={{ maxWidth: 780, margin: '0 auto', padding: '36px 36px' }}>
           <div style={{ fontSize: 22, fontFamily: "'Young Serif', Georgia, serif", marginBottom: 8 }}>Identify Your Institution</div>
           <div style={{ fontSize: 14, color: '#243551', marginBottom: 20, lineHeight: 1.6, maxWidth: 560 }}>
-            {isIntl
-              ? "Start typing your institution’s name. International institutions are sourced from our global database. Revenue and endowment fields use USD equivalents."
-              : "Start typing your institution’s name. If it’s in our database, we’ll pre-fill your IPEDS data automatically and suggest your Carnegie classification."}
-          </div>
-
-          {/* US / International toggle */}
-          <div style={{ display: 'flex', gap: 0, marginBottom: 24, width: 'fit-content', border: '1px solid #E4E8EE', borderRadius: 8, overflow: 'hidden' }}>
-            {[{ label: 'US Institution', val: false }, { label: 'International', val: true }].map(({ label, val }) => (
-              <button key={label} onClick={() => { setIsIntl(val); setInstitution(''); setSuggestions([]); setUnitid(''); setAutoPopulated([]); }}
-                style={{
-                  padding: '8px 20px', fontSize: 12, letterSpacing: 1, fontFamily: "'Bitter', Georgia, serif",
-                  border: 'none', cursor: 'pointer', transition: 'all 0.15s',
-                  background: isIntl === val ? '#EB5600' : '#F8FAFB',
-                  color: isIntl === val ? '#FFFFFF' : '#6B7585',
-                  fontWeight: isIntl === val ? 700 : 400,
-                }}>
-                {label}
-              </button>
-            ))}
+            Start typing your institution’s name. If it’s in our database, we’ll pre-fill your IPEDS data automatically and suggest your Carnegie classification.
           </div>
 
           {/* Typeahead */}
