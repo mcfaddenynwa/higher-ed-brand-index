@@ -1515,13 +1515,7 @@ export default function App() {
               {institution && <div style={{ fontSize: 22, fontFamily: "'Young Serif', Georgia, serif", marginBottom: 6 }}>{institution}</div>}
               <div style={{ fontSize: 14, color: '#243551', marginBottom: 3 }}>
                 {selectedCarnegie?.label}
-                {values.qsRank && (
-                  <span style={{ marginLeft: 10, fontSize: 11, letterSpacing: 1, color: '#EB5600', background: 'rgba(235,86,0,0.12)', border: '1px solid rgba(235,86,0,0.30)', borderRadius: 4, padding: '2px 7px' }}>
-                    {QS_BAND_LABELS[qsBand]}
-                  </span>
-                )}
               </div>
-              {unitid && <div style={{ fontSize: 14, color: '#6B7585' }}>IPEDS Unit ID: {unitid}</div>}
             </div>
             {overall !== null && (
               <div style={{ background: 'rgba(235,86,0,0.08)', border: '1px solid #EB560033', borderRadius: 12, padding: '16px 22px', flexShrink: 0, minWidth: 280 }}>
@@ -1531,7 +1525,6 @@ export default function App() {
                     <div style={{ fontSize: 50, fontFamily: "'Bitter', Georgia, serif", color: '#EB5600', lineHeight: 1 }}>{overall}</div>
                     <div style={{ fontSize: 12, color: '#6B7585', marginTop: 2 }}>
                       /100 · {selectedCarnegie?.short}
-                      {values.qsRank && <span style={{ marginLeft: 6, color: 'rgba(235,86,0,0.70)', fontSize: 11 }}>· {QS_BAND_LABELS[qsBand]}</span>}
                     </div>
                   </div>
                   <div style={{ width: 1, alignSelf: 'stretch', background: '#EB560033' }} />
