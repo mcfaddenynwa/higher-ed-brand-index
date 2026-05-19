@@ -73,19 +73,13 @@ function flattenInstitutionRow(r) {
 
 // 26 four-year IC2025 cohorts grouped for the Classify dropdown.
 // Excludes ic 1, 2, 3, 11, 12 (Associate-only).
+// Research Activity entries (R1/R2/RCU) are pseudo-ids that map directly to a
+// carnegieId without an IC2025 code — handled specially in handlePick.
 const IC2025_COHORTS = [
-  // Associate / Baccalaureate
-  { id: 4,  group: "Associate/Baccalaureate", label: "Mixed Associate/Baccalaureate" },
-  { id: 13, group: "Associate/Baccalaureate", label: "Professions-focused Associate/Baccalaureate" },
-  // Baccalaureate
-  { id: 5,  group: "Baccalaureate", label: "Mixed Baccalaureate" },
-  { id: 14, group: "Baccalaureate", label: "Professions-focused Baccalaureate Medium" },
-  { id: 15, group: "Baccalaureate", label: "Professions-focused Baccalaureate Small" },
-  // Master's
-  { id: 9,  group: "Master's", label: "Mixed Undergraduate/Graduate-Master's Large/Medium" },
-  { id: 10, group: "Master's", label: "Mixed Undergraduate/Graduate-Master's Small" },
-  { id: 19, group: "Master's", label: "Professions-focused Undergraduate/Graduate-Master's Large/Medium" },
-  { id: 20, group: "Master's", label: "Professions-focused Undergraduate/Graduate-Master's Small" },
+  // Research Activity (ACE designation)
+  { id: "r1",  group: "Research Activity", label: "Research 1: Very High Spending and Doctorate Production" },
+  { id: "r2",  group: "Research Activity", label: "Research 2: High Spending and Doctorate Production" },
+  { id: "rcu", group: "Research Activity", label: "Research Colleges and Universities" },
   // Doctorate
   { id: 6,  group: "Doctorate", label: "Mixed Undergraduate/Graduate-Doctorate Large" },
   { id: 7,  group: "Doctorate", label: "Mixed Undergraduate/Graduate-Doctorate Medium" },
@@ -93,6 +87,18 @@ const IC2025_COHORTS = [
   { id: 16, group: "Doctorate", label: "Professions-focused Undergraduate/Graduate-Doctorate Large" },
   { id: 17, group: "Doctorate", label: "Professions-focused Undergraduate/Graduate-Doctorate Medium" },
   { id: 18, group: "Doctorate", label: "Professions-focused Undergraduate/Graduate-Doctorate Small" },
+  // Master's
+  { id: 9,  group: "Master's", label: "Mixed Undergraduate/Graduate-Master's Large/Medium" },
+  { id: 10, group: "Master's", label: "Mixed Undergraduate/Graduate-Master's Small" },
+  { id: 19, group: "Master's", label: "Professions-focused Undergraduate/Graduate-Master's Large/Medium" },
+  { id: 20, group: "Master's", label: "Professions-focused Undergraduate/Graduate-Master's Small" },
+  // Baccalaureate
+  { id: 5,  group: "Baccalaureate", label: "Mixed Baccalaureate" },
+  { id: 14, group: "Baccalaureate", label: "Professions-focused Baccalaureate Medium" },
+  { id: 15, group: "Baccalaureate", label: "Professions-focused Baccalaureate Small" },
+  // Associate / Baccalaureate
+  { id: 4,  group: "Associate/Baccalaureate", label: "Mixed Associate/Baccalaureate" },
+  { id: 13, group: "Associate/Baccalaureate", label: "Professions-focused Associate/Baccalaureate" },
   // Special Focus
   { id: 21, group: "Special Focus", label: "Special Focus: Applied and Career Studies" },
   { id: 22, group: "Special Focus", label: "Special Focus: Arts and Sciences" },
@@ -107,7 +113,7 @@ const IC2025_COHORTS = [
   { id: 31, group: "Special Focus", label: "Special Focus: Theological Studies" },
 ];
 
-const IC2025_GROUP_ORDER = ["Doctorate", "Master's", "Baccalaureate", "Associate/Baccalaureate", "Special Focus"];
+const IC2025_GROUP_ORDER = ["Research Activity", "Doctorate", "Master's", "Baccalaureate", "Associate/Baccalaureate", "Special Focus"];
 
 // Short blurbs surfaced under the auto-detected classification.
 const IC2025_DESCRIPTIONS = {
