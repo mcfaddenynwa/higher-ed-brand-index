@@ -61,13 +61,57 @@ const BASE = 'https://nces.ed.gov/ipeds/datacenter/data';
 
 const FILES = {
   hd:    'HD2022.zip',
+  ic:    'IC2022.zip',       // Institutional Characteristics — for NCAA D1 detection
   drvef: 'DRVEF2022.zip',
   drvgr: 'DRVGR2022.zip',
+  efd:   'EF2022D.zip',      // Fall Enrollment Part D — retention rates
   adm:   'ADM2022.zip',
   sfa:   'SFA2122.zip',
   f1a:   'F2223_F1A.zip',
   f2:    'F2223_F2.zip',
 };
+
+// NCAA Division I conference IPEDS codes (CONFNO1-4 in IC).
+// If any of an institution's reported conferences is in this set, treat as D1.
+// Source: IPEDS IC2022/2023 dictionary conference value labels.
+const NCAA_D1_CONFERENCES = new Set([
+  101, // America East
+  102, // ACC
+  103, // Atlantic 10
+  104, // Big East
+  105, // Big Sky
+  106, // Big South
+  107, // Big Ten
+  108, // Big 12
+  109, // Big West
+  110, // Colonial (CAA)
+  111, // Conference USA
+  112, // Division I Independents
+  113, // Division I-A Independents
+  117, // Ivy
+  118, // MAAC
+  119, // MAC
+  120, // Summit League
+  121, // MEAC
+  122, // Horizon League
+  123, // Missouri Valley
+  125, // Northeast Conference
+  126, // Ohio Valley
+  127, // Pac-12
+  128, // Patriot League
+  129, // Pioneer Football League (FCS football-only)
+  130, // SEC
+  131, // Southern Conference
+  132, // Southland
+  133, // SWAC
+  134, // Sun Belt
+  135, // ASUN (Atlantic Sun)
+  136, // West Coast Conference
+  137, // WAC
+  203, // Mountain West
+  372, // American Athletic Conference
+  379, // United Athletic Conference
+]);
 
 // Additional DRVEF years for 5-year enrollment trend.
 // Non-fatal if any are missing (older snapshots may not be hosted anymore).
@@ -364,10 +408,12 @@ async function main() {
   }
 
   console.log('\n  Parsing CSVs...');
-  const [hd, drvef, drvgr, adm, sfa, f1a, f2] = await Promise.all([
+  const [hd, ic, drvef, drvgr, efd, adm, sfa, f1a, f2] = await Promise.all([
     parseCsv(paths.hd),
+    parseCsv(paths.ic),
     parseCsv(paths.drvef),
     parseCsv(paths.drvgr),
+    parseCsv(paths.efd),
     parseCsv(paths.adm),
     parseCsv(paths.sfa),
     parseCsv(paths.f1a),
@@ -375,8 +421,9 @@ async function main() {
   ]);
 
   const idx = rows => new Map(rows.map(r => [r.UNITID, r]));
-  const HD = idx(hd), EF = idx(drvef), GR = idx(drvgr), AD = idx(adm),
-        SF = idx(sfa), PUB = idx(f1a), PRIV = idx(f2);
+  const HD = idx(hd), IC = idx(ic), EF = idx(drvef), GR = idx(drvgr),
+        EFD = idx(efd), AD = idx(adm), SF = idx(sfa),
+        PUB = idx(f1a), PRIV = idx(f2);
 
   // Index historical enrollment files; apply per-file row filter (EFFY needs EFFYLEV=1).
   const TREND = {};
@@ -437,6 +484,8 @@ async function main() {
 
     const ef   = EF.get(unitid);
     const gr   = GR.get(unitid);
+    const efdr = EFD.get(unitid);
+    const icr  = IC.get(unitid);
     const ad   = AD.get(unitid);
     const sf   = SF.get(unitid);
     const pub  = PUB.get(unitid);
@@ -465,7 +514,13 @@ async function main() {
     const acceptRate = (admits && applicants) ? Math.round((admits / applicants) * 100) : null;
     const yieldRate  = (enrolled && admits) ? Math.round((enrolled / admits) * 100) : null;
 
-    const retentionRate = gr ? num(gr.RET_PCF) : null;
+    // Retention: primary source is EF{year}D (RET_PCF full-time, RET_PCP part-time
+    // fallback). DRVGR.RET_PCF is null for ~98% of institutions in current IPEDS
+    // releases, so EFD direct read is the reliable path.
+    const retentionRate =
+      (efdr ? num(efdr.RET_PCF) : null) ??
+      (efdr ? num(efdr.RET_PCP) : null) ??
+      (gr ? num(gr.RET_PCF) : null);
     const gradRate4yr   = gr ? num(gr.GBA4RTT) : null;
     const gradRate6yr   = gr ? num(gr.GBA6RTT) : null;
 
@@ -499,6 +554,18 @@ async function main() {
     const hospitalFlag = num(row.HOSPITAL) === 1 ? 1 : 0;
     const medicalFlag  = ace?.medicalFlag ?? hospitalFlag;
 
+    // NCAA Division I detection from IPEDS IC (CONFNO1..CONFNO4).
+    // NCAA member (ASSOC1=1) AND any reported conference is in the D1 set.
+    let icD1 = 0;
+    if (icr && num(icr.ASSOC1) === 1) {
+      for (const k of ['CONFNO1','CONFNO2','CONFNO3','CONFNO4']) {
+        const c = num(icr[k]);
+        if (c != null && NCAA_D1_CONFERENCES.has(c)) { icD1 = 1; break; }
+      }
+    }
+    // Prefer IC-derived D1 (universal coverage) over ACE master file (~340 schools).
+    const d1Flag = icD1 || (ace?.athleticsD1 ?? 0);
+
     const baseRow = {
       unitid,
       name: (row.INSTNM || '').replace(/"/g, '').trim(),
@@ -512,7 +579,7 @@ async function main() {
       flags: {
         // Athletics + grad program flags now from master file (was overlay-only)
         bigFour:   ace?.athleticsBigFour ?? 0,
-        d1:        ace?.athleticsD1 ?? 0,
+        d1:        d1Flag,
         conference: ace?.ncaaConference ?? null,
         ncaaDivision: ace?.ncaaDivision ?? null,
         health:    medicalFlag,
