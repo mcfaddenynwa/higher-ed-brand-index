@@ -514,7 +514,13 @@ async function main() {
     const acceptRate = (admits && applicants) ? Math.round((admits / applicants) * 100) : null;
     const yieldRate  = (enrolled && admits) ? Math.round((enrolled / admits) * 100) : null;
 
-    const retentionRate = gr ? num(gr.RET_PCF) : null;
+    // Retention: primary source is EF{year}D (RET_PCF full-time, RET_PCP part-time
+    // fallback). DRVGR.RET_PCF is null for ~98% of institutions in current IPEDS
+    // releases, so EFD direct read is the reliable path.
+    const retentionRate =
+      (efdr ? num(efdr.RET_PCF) : null) ??
+      (efdr ? num(efdr.RET_PCP) : null) ??
+      (gr ? num(gr.RET_PCF) : null);
     const gradRate4yr   = gr ? num(gr.GBA4RTT) : null;
     const gradRate6yr   = gr ? num(gr.GBA6RTT) : null;
 
