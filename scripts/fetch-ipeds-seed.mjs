@@ -61,13 +61,57 @@ const BASE = 'https://nces.ed.gov/ipeds/datacenter/data';
 
 const FILES = {
   hd:    'HD2022.zip',
+  ic:    'IC2022.zip',       // Institutional Characteristics — for NCAA D1 detection
   drvef: 'DRVEF2022.zip',
   drvgr: 'DRVGR2022.zip',
+  efd:   'EF2022D.zip',      // Fall Enrollment Part D — retention rates
   adm:   'ADM2022.zip',
   sfa:   'SFA2122.zip',
   f1a:   'F2223_F1A.zip',
   f2:    'F2223_F2.zip',
 };
+
+// NCAA Division I conference IPEDS codes (CONFNO1-4 in IC).
+// If any of an institution's reported conferences is in this set, treat as D1.
+// Source: IPEDS IC2022/2023 dictionary conference value labels.
+const NCAA_D1_CONFERENCES = new Set([
+  101, // America East
+  102, // ACC
+  103, // Atlantic 10
+  104, // Big East
+  105, // Big Sky
+  106, // Big South
+  107, // Big Ten
+  108, // Big 12
+  109, // Big West
+  110, // Colonial (CAA)
+  111, // Conference USA
+  112, // Division I Independents
+  113, // Division I-A Independents
+  117, // Ivy
+  118, // MAAC
+  119, // MAC
+  120, // Summit League
+  121, // MEAC
+  122, // Horizon League
+  123, // Missouri Valley
+  125, // Northeast Conference
+  126, // Ohio Valley
+  127, // Pac-12
+  128, // Patriot League
+  129, // Pioneer Football League (FCS football-only)
+  130, // SEC
+  131, // Southern Conference
+  132, // Southland
+  133, // SWAC
+  134, // Sun Belt
+  135, // ASUN (Atlantic Sun)
+  136, // West Coast Conference
+  137, // WAC
+  203, // Mountain West
+  372, // American Athletic Conference
+  379, // United Athletic Conference
+]);
 
 // Additional DRVEF years for 5-year enrollment trend.
 // Non-fatal if any are missing (older snapshots may not be hosted anymore).
