@@ -1,71 +1,64 @@
-# Hierarchy + data-coverage fixes
+## Pipeline pass: fix retention + D1 universally
 
-## 1. Carnegie hierarchy on both pages (quick fix)
+Two data-pipeline fixes to `scripts/fetch-ipeds-seed.mjs`, then re-seed and upsert. No UI changes.
 
-Right now on both the Classify card and the Enter Data sidebar, the IC2025 name ("Mixed Undergraduate/Graduate-Doctorate Medium") renders **above** the orange Research designation ("Research 1: Very High Spending and Doctorate Production"). You want Research first.
+### 1. Retention — switch source to EF{year}D
 
-**Files / locations:**
+**Problem:** `DRVGR.RET_PCF` is null for ~98.5% of institutions in current IPEDS releases. Only 48 of 3,189 schools have retention populated.
 
-- `src/pages/HEBrandEquity.jsx` ~lines 1205–1212 (Classify confirmation card): swap the order so `institutionResearch` (orange) renders above `matchedName` (serif IC name). Keep both styles as-is; just swap the JSX blocks.
-- `src/pages/HEBrandEquity.jsx` ~lines 1304–1306 (Enter Data sidebar): render `institutionResearch` line immediately under the "2025 Carnegie" eyebrow, then `ic.label` below it.
+**Fix:** Add a Fall Enrollment Part D loader (`EF{year}D.zip`) and read:
+- `RRFTCT` — full-time first-year retention rate (primary)
+- `RRPTCT` — part-time first-year retention rate (fallback for institutions that don't report full-time)
 
-No logic changes — pure render-order swap on both pages.
+Wire the result into `metrics.retentionRate`, replacing the current `DRVGR.RET_PCF` read at line 468. Keep `DRVGR` for `GBA4RTT`/`GBA6RTT` (grad rates) — those are still correct there.
 
-## 2. Finance fields not auto-populating (UVM and many others) — real bug
+Expected coverage lift: ~1.5% → ~85–90% (every degree-granting 4-year and most 2-year institutions report this).
 
-I checked University of Vermont in the database. Its row **does** have finance data (`totalRevenue: 909`, `endowmentPerStudent: 63`, `endowmentTotal: 835`) but the form leaves Financial Strength blank.
+### 2. D1 athletics — switch from ACE local file to IPEDS Athletic Aid
 
-**Root cause:** `selectInstitution` (HEBrandEquity.jsx ~lines 997–1009) only auto-fills `endowmentPerStudent` / `totalRevenue` from `src/data/financeSnapshot.json`, which is a 49-school overlay. It never falls back to the values already on the DB row (`school.endowmentPerStudent`, `school.totalRevenue`), so any institution outside the 49 hand-curated rows shows blank — including UVM.
+**Problem:** `is_division_1` currently sourced from `scripts/data/2025-Public-Data-File.xlsx` (ACE), which only covers ~340 schools. Legitimate D1 programs outside that list (UVM/America East, many mid-majors) default to `d1: 0`. Only 96 of 3,189 schools flagged.
 
-**Fix:** in `selectInstitution`, prefer snapshot value, then fall back to `school.endowmentPerStudent` / `school.totalRevenue` from the flattened DB row. Existing snapshot precedence stays the same; this just adds a fallback.
+**Fix:** Add an IPEDS Student Financial Aid Part 2 loader (`SFA{year}_P2.zip`) and read the NCAA division participation field (`ASSOC1` / `ASSOC2` membership codes — NCAA Division I = code `1`). Set `flags.d1 = 1` when the institution reports Division I membership in any sport. Drop the ACE-derived `is_division_1` read.
 
-This single fix lifts finance auto-fill from 49 institutions to ~2,052 (the count in the DB with a totalRevenue value), and resolves the UVM case immediately.
+Keep `flags.bigFour` on the curated overlay (Big Four conference membership isn't in IPEDS — that stays a hand-maintained list).
 
-## 3. Why D1 athletics is wrong, and retention is mostly blank — pipeline issues
+Expected coverage lift: ~3% → ~100% of the ~362 current D1 institutions.
 
-Database audit just now:
+### 3. Re-seed + upsert
 
-```text
-total institutions:                3,189
-with retentionRate populated:         48   (1.5%)
-with flags.d1 = 1:                    96   (3%)
-with finance.totalRevenue:          2,052  (64%)
+- Re-run `node scripts/fetch-ipeds-seed.mjs` to regenerate `institutionsSeed.json` + TSV
+- Upsert to the `institutions` table via the existing `upsert_institutions_full` RPC (chunked, same as prior seeds)
+- Spot-check UVM (unitid 231174): should return non-null `metrics.retentionRate` (~87%) and `flags.d1 = 1`
+
+### Technical details
+
+**Files touched (pipeline only):**
+- `scripts/fetch-ipeds-seed.mjs`
+  - Add `EF_D_FILE = "EF${EF_YEAR}D.zip"` constant near other IPEDS file constants
+  - Add `SFA_P2_FILE = "SFA${SFA_YEAR}_P2.zip"` constant
+  - Add `loadEFD()` function — same shape as existing `loadDRVGR()`, indexed by `UNITID`
+  - Add `loadSFAP2()` function — index by `UNITID`, return `{ d1: bool }`
+  - In the per-institution merge: `retentionRate = num(efd[unitid]?.RRFTCT) ?? num(efd[unitid]?.RRPTCT)`
+  - In flags merge: `d1 = sfaP2[unitid]?.d1 ? 1 : 0` (overrides ACE)
+  - Leave `chk_bigFour` source unchanged (curated overlay)
+
+**IPEDS file URLs (no auth):**
+- `https://nces.ed.gov/ipeds/datacenter/data/EF2023D.zip`
+- `https://nces.ed.gov/ipeds/datacenter/data/SFA2223_P2.zip`
+
+(Confirm latest available year at fetch time; bump `EF_YEAR` / `SFA_YEAR` constants together with the existing IPEDS year vars.)
+
+**Verification before claiming done:**
+```sql
+select count(*) filter (where metrics->>'retentionRate' is not null) as retention_n,
+       count(*) filter (where (flags->>'d1')::int = 1) as d1_n,
+       count(*) as total
+from institutions;
 ```
+Expect retention_n > 2,500 and d1_n between 340–370.
 
-These three are upstream data-load problems, not UI problems. Findings:
-
-**Retention (1.5% coverage).** `scripts/fetch-ipeds-seed.mjs` line 468 pulls retention from the DRVGR file:
-
-```js
-const retentionRate = gr ? num(gr.RET_PCF) : null;
-```
-
-`RET_PCF` no longer lives in the current DRVGR derived-graduation file for most institutions — IPEDS moved the full-time first-year retention rate to `EF{year}D` (Fall Enrollment, Part D — `RRFTCT` for full-time cohort retention, `RRPTCT` for part-time). That's why 98.5% of rows are null. Confirmed by spot-checking UVM (has well-documented ~87% retention but DB row is null).
-
-**Fix:** add an EF{year}D loader to the seed script, read `RRFTCT` (full-time, four-year and grad institutions) with `RRPTCT` fallback, and use that as the retention source. Re-run seed and upsert.
-
-**D1 athletics (3% coverage).** The seed reads `is_division_1` from a local ACE file (line 282). That file only contains the ~340 schools ACE tracks, so any institution outside that list defaults to `d1: 0` — including a lot of legitimate D1 programs (UVM among them; UVM competes in America East).
-
-**Fix options, in order of effort:**
-
-1. Drop in a CSV of the official 2024-25 NCAA D1 membership list (~362 schools, public from ncaa.org) and join on `unitid` or `name`. Cleanest and complete.
-2. Or read IPEDS' Athletic Aid survey (`SFA{year}_P2`) which records NCAA division participation per institution — fully covers all reporting institutions.
-
-After whichever source is chosen, re-run the seed and the d1 flag will populate correctly across the dataset.
-
-**Finance (64% coverage).** Reasonable today; the remaining 36% are mostly small institutions where IPEDS Finance hasn't been pulled for the current fiscal year. Lower priority than the two above, but if you want full coverage we'd re-run `scripts/fetch-ipeds-finance.mjs` against the latest F{year}_F1A / F{year}_F2 files.
-
-## Proposed order of work
-
-1. **Now, this pass (UI-only, no data re-pulls):**
-   - Swap Research / IC order on Classify and Enter Data pages.
-   - Add DB-row fallback for `endowmentPerStudent` / `totalRevenue` in `selectInstitution`.
-
-2. **Next pass (data pipeline — needs re-running seed scripts and re-upserting):**
-   - Add EF{year}D loader → fixes retention universally.
-   - Replace ACE-only D1 flag with NCAA D1 roster CSV (or IPEDS Athletic Aid) → fixes D1 universally.
-   - Optional: re-run finance pull for fuller coverage.
-
-## Open question for you
-
-For step 2, do you want me to wire it up to **IPEDS' Athletic Aid survey** (fully automated re-pull, no manual list to maintain) or **a static NCAA D1 roster CSV** (simpler, but you'd need to refresh it each season)? Athletic Aid is my recommendation. Same question doesn't apply to retention — fix is the same path either way.
+### Not in scope
+- No UI changes
+- No finance re-pull (separate decision, lower priority)
+- `chk_bigFour` stays on curated overlay
+- Specialty US News ranks (Law/Biz/Eng) stay on curated overlay
