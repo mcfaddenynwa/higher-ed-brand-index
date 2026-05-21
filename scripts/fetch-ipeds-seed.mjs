@@ -554,6 +554,18 @@ async function main() {
     const hospitalFlag = num(row.HOSPITAL) === 1 ? 1 : 0;
     const medicalFlag  = ace?.medicalFlag ?? hospitalFlag;
 
+    // NCAA Division I detection from IPEDS IC (CONFNO1..CONFNO4).
+    // NCAA member (ASSOC1=1) AND any reported conference is in the D1 set.
+    let icD1 = 0;
+    if (icr && num(icr.ASSOC1) === 1) {
+      for (const k of ['CONFNO1','CONFNO2','CONFNO3','CONFNO4']) {
+        const c = num(icr[k]);
+        if (c != null && NCAA_D1_CONFERENCES.has(c)) { icD1 = 1; break; }
+      }
+    }
+    // Prefer IC-derived D1 (universal coverage) over ACE master file (~340 schools).
+    const d1Flag = icD1 || (ace?.athleticsD1 ?? 0);
+
     const baseRow = {
       unitid,
       name: (row.INSTNM || '').replace(/"/g, '').trim(),
@@ -567,7 +579,7 @@ async function main() {
       flags: {
         // Athletics + grad program flags now from master file (was overlay-only)
         bigFour:   ace?.athleticsBigFour ?? 0,
-        d1:        ace?.athleticsD1 ?? 0,
+        d1:        d1Flag,
         conference: ace?.ncaaConference ?? null,
         ncaaDivision: ace?.ncaaDivision ?? null,
         health:    medicalFlag,
