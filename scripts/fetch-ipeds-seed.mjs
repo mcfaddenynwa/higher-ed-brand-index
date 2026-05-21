@@ -408,10 +408,12 @@ async function main() {
   }
 
   console.log('\n  Parsing CSVs...');
-  const [hd, drvef, drvgr, adm, sfa, f1a, f2] = await Promise.all([
+  const [hd, ic, drvef, drvgr, efd, adm, sfa, f1a, f2] = await Promise.all([
     parseCsv(paths.hd),
+    parseCsv(paths.ic),
     parseCsv(paths.drvef),
     parseCsv(paths.drvgr),
+    parseCsv(paths.efd),
     parseCsv(paths.adm),
     parseCsv(paths.sfa),
     parseCsv(paths.f1a),
@@ -419,8 +421,9 @@ async function main() {
   ]);
 
   const idx = rows => new Map(rows.map(r => [r.UNITID, r]));
-  const HD = idx(hd), EF = idx(drvef), GR = idx(drvgr), AD = idx(adm),
-        SF = idx(sfa), PUB = idx(f1a), PRIV = idx(f2);
+  const HD = idx(hd), IC = idx(ic), EF = idx(drvef), GR = idx(drvgr),
+        EFD = idx(efd), AD = idx(adm), SF = idx(sfa),
+        PUB = idx(f1a), PRIV = idx(f2);
 
   // Index historical enrollment files; apply per-file row filter (EFFY needs EFFYLEV=1).
   const TREND = {};
