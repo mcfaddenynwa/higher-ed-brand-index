@@ -484,6 +484,8 @@ async function main() {
 
     const ef   = EF.get(unitid);
     const gr   = GR.get(unitid);
+    const efdr = EFD.get(unitid);
+    const icr  = IC.get(unitid);
     const ad   = AD.get(unitid);
     const sf   = SF.get(unitid);
     const pub  = PUB.get(unitid);
