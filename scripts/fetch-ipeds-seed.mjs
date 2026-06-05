@@ -577,9 +577,19 @@ async function main() {
       ? Math.round((endowRaw / fte) / 1_000)
       : null;
 
-    // Flags — combine IPEDS HD flags with ACE flags + new athletics/program flags
+    // Flags — combine IPEDS HD + IC + Completions + ACE master file overrides.
+    // ACE master file wins where present (~340 schools); IPEDS-derived rules
+    // cover the long tail (~2,800 institutions).
     const hospitalFlag = num(row.HOSPITAL) === 1 ? 1 : 0;
-    const medicalFlag  = ace?.medicalFlag ?? hospitalFlag;
+    const compAgg      = COMPLETIONS.get(unitid);
+    const compMed      = (compAgg && compAgg.medDegrees > 0)  ? 1 : 0;
+    const compLaw      = (compAgg && compAgg.lawDegrees > 0)  ? 1 : 0;
+    const compEng      = (compAgg && compAgg.engBach   >= 10) ? 1 : 0;
+    const compBiz      = (compAgg && compAgg.bizBach   >= 10) ? 1 : 0;
+    const medicalFlag  = ace?.medicalFlag || hospitalFlag || compMed;
+    const lawFlag      = ace?.lawTier ? 1 : compLaw;
+    const engFlag      = ace?.engTier ? 1 : compEng;
+    const aacsbFlag    = ace?.bizTier ? 1 : compBiz;
 
     // NCAA Division I detection from IPEDS IC (CONFNO1..CONFNO4).
     // NCAA member (ASSOC1=1) AND any reported conference is in the D1 set.
@@ -610,9 +620,9 @@ async function main() {
         conference: ace?.ncaaConference ?? null,
         ncaaDivision: ace?.ncaaDivision ?? null,
         health:    medicalFlag,
-        law:       ace?.lawTier ? 1 : 0,
-        eng:       ace?.engTier ? 1 : 0,
-        aacsb:     ace?.bizTier ? 1 : 0,
+        law:       lawFlag,
+        eng:       engFlag,
+        aacsb:     aacsbFlag,
         womenOnly: ace?.womenOnly ?? 0,
         hbcu:      ace?.hbcu ?? (num(row.HBCU) === 1 ? 1 : 0),
         tribal:    ace?.tribal ?? (num(row.TRIBAL) === 1 ? 1 : 0),
