@@ -69,6 +69,7 @@ const FILES = {
   sfa:   'SFA2122.zip',
   f1a:   'F2223_F1A.zip',
   f2:    'F2223_F2.zip',
+  comp:  'C2022_A.zip',      // Completions by CIP/AWLEVEL — for law/eng/biz/med flag derivation
 };
 
 // NCAA Division I conference IPEDS codes (CONFNO1-4 in IC).
