@@ -1,64 +1,65 @@
-## Pipeline pass: fix retention + D1 universally
+# Universal coverage for Institutional Profile flags
 
-Two data-pipeline fixes to `scripts/fetch-ipeds-seed.mjs`, then re-seed and upsert. No UI changes.
+## Problem
 
-### 1. Retention — switch source to EF{year}D
+Today the Institutional Profile checkboxes (`chk_lawSchool`, `chk_aacsb`, `chk_engineering`, `chk_healthSystem`) and their associated US News rank fields come from one source: the ACE master file (`scripts/data/2025-Public-Data-File.xlsx`), which only covers ~340 institutions. For the other ~2,800 schools in the DB, every flag defaults to 0.
 
-**Problem:** `DRVGR.RET_PCF` is null for ~98.5% of institutions in current IPEDS releases. Only 48 of 3,189 schools have retention populated.
+Current coverage:
 
-**Fix:** Add a Fall Enrollment Part D loader (`EF{year}D.zip`) and read:
-- `RRFTCT` — full-time first-year retention rate (primary)
-- `RRPTCT` — part-time first-year retention rate (fallback for institutions that don't report full-time)
-
-Wire the result into `metrics.retentionRate`, replacing the current `DRVGR.RET_PCF` read at line 468. Keep `DRVGR` for `GBA4RTT`/`GBA6RTT` (grad rates) — those are still correct there.
-
-Expected coverage lift: ~1.5% → ~85–90% (every degree-granting 4-year and most 2-year institutions report this).
-
-### 2. D1 athletics — switch from ACE local file to IPEDS Athletic Aid
-
-**Problem:** `is_division_1` currently sourced from `scripts/data/2025-Public-Data-File.xlsx` (ACE), which only covers ~340 schools. Legitimate D1 programs outside that list (UVM/America East, many mid-majors) default to `d1: 0`. Only 96 of 3,189 schools flagged.
-
-**Fix:** Add an IPEDS Student Financial Aid Part 2 loader (`SFA{year}_P2.zip`) and read the NCAA division participation field (`ASSOC1` / `ASSOC2` membership codes — NCAA Division I = code `1`). Set `flags.d1 = 1` when the institution reports Division I membership in any sport. Drop the ACE-derived `is_division_1` read.
-
-Keep `flags.bigFour` on the curated overlay (Big Four conference membership isn't in IPEDS — that stays a hand-maintained list).
-
-Expected coverage lift: ~3% → ~100% of the ~362 current D1 institutions.
-
-### 3. Re-seed + upsert
-
-- Re-run `node scripts/fetch-ipeds-seed.mjs` to regenerate `institutionsSeed.json` + TSV
-- Upsert to the `institutions` table via the existing `upsert_institutions_full` RPC (chunked, same as prior seeds)
-- Spot-check UVM (unitid 231174): should return non-null `metrics.retentionRate` (~87%) and `flags.d1 = 1`
-
-### Technical details
-
-**Files touched (pipeline only):**
-- `scripts/fetch-ipeds-seed.mjs`
-  - Add `EF_D_FILE = "EF${EF_YEAR}D.zip"` constant near other IPEDS file constants
-  - Add `SFA_P2_FILE = "SFA${SFA_YEAR}_P2.zip"` constant
-  - Add `loadEFD()` function — same shape as existing `loadDRVGR()`, indexed by `UNITID`
-  - Add `loadSFAP2()` function — index by `UNITID`, return `{ d1: bool }`
-  - In the per-institution merge: `retentionRate = num(efd[unitid]?.RRFTCT) ?? num(efd[unitid]?.RRPTCT)`
-  - In flags merge: `d1 = sfaP2[unitid]?.d1 ? 1 : 0` (overrides ACE)
-  - Leave `chk_bigFour` source unchanged (curated overlay)
-
-**IPEDS file URLs (no auth):**
-- `https://nces.ed.gov/ipeds/datacenter/data/EF2023D.zip`
-- `https://nces.ed.gov/ipeds/datacenter/data/SFA2223_P2.zip`
-
-(Confirm latest available year at fetch time; bump `EF_YEAR` / `SFA_YEAR` constants together with the existing IPEDS year vars.)
-
-**Verification before claiming done:**
-```sql
-select count(*) filter (where metrics->>'retentionRate' is not null) as retention_n,
-       count(*) filter (where (flags->>'d1')::int = 1) as d1_n,
-       count(*) as total
-from institutions;
+```text
+flags.health   201 / 3,189
+flags.law       59 / 3,189
+flags.aacsb     64 / 3,189
+flags.eng       59 / 3,189
 ```
-Expect retention_n > 2,500 and d1_n between 340–370.
 
-### Not in scope
-- No UI changes
-- No finance re-pull (separate decision, lower priority)
-- `chk_bigFour` stays on curated overlay
-- Specialty US News ranks (Law/Biz/Eng) stay on curated overlay
+Result: University of Vermont (Grossman Business, Larner Medicine, Engineering program) shows 1/4 checkboxes instead of 4/4. Same pattern for thousands of other schools.
+
+## Fix — derive flags from IPEDS completions
+
+Add a new loader in `scripts/fetch-ipeds-seed.mjs` that pulls `C{year}_A.zip` (Completions by CIP code) and aggregates degree awards per institution. Then derive each flag from a clear CIP+award-level rule:
+
+| Flag | IPEDS rule | Expected coverage |
+|---|---|---|
+| `flags.law` | Any degrees awarded in CIP `22.01` at first-professional / doctoral level (AWLEVEL 6, 17) | ~200 schools |
+| `flags.eng` | ≥10 bachelor's degrees in CIP series `14` (Engineering) over the year (AWLEVEL 5) | ~400 schools |
+| `flags.aacsb` | ≥10 bachelor's degrees in CIP series `52` (Business) — proxy for "has a business school." Real AACSB accreditation list overlaid where available | ~1,400 schools |
+| `flags.health` | Existing IPEDS HD `HOSPITAL=1` (already used) **OR** any first-professional CIP `51.12` (Medicine) | ~250 schools |
+
+Keep ACE master file as an **override** for the ~340 schools it covers — it has higher fidelity for AACSB specifically.
+
+## What changes
+
+1. **`scripts/fetch-ipeds-seed.mjs`**
+   - Download + parse `C{year}_A.zip` once (alongside existing EF/IC/SFA loaders).
+   - Build `completionsMap[unitid] = { lawDegrees, engBach, bizBach, medDegrees }`.
+   - Update flag construction (~line 580):
+     ```js
+     law:   ace?.lawTier ? 1 : (comp?.lawDegrees > 0 ? 1 : 0),
+     eng:   ace?.engTier ? 1 : (comp?.engBach >= 10 ? 1 : 0),
+     aacsb: ace?.bizTier ? 1 : (comp?.bizBach >= 10 ? 1 : 0),
+     health: ace?.medicalFlag ?? (hospitalFlag || (comp?.medDegrees > 0 ? 1 : 0)),
+     ```
+   - Re-seed `institutionsSeed.json` and upsert via `upsert_institutions_full`.
+
+2. **Verification queries** after upsert:
+   ```sql
+   SELECT
+     COUNT(*) FILTER (WHERE (flags->>'law')::int = 1)   AS law,
+     COUNT(*) FILTER (WHERE (flags->>'eng')::int = 1)   AS eng,
+     COUNT(*) FILTER (WHERE (flags->>'aacsb')::int = 1) AS aacsb,
+     COUNT(*) FILTER (WHERE (flags->>'health')::int = 1) AS health
+   FROM institutions;
+   ```
+   Spot-check UVM (231174): expect `law=1`, `eng=1`, `aacsb=1`, `health=1`.
+
+## What's NOT in scope
+
+- **US News Law/Biz/Eng ranks** (`usNewsLaw`, `usNewsBiz`, `usNewsEng`) cannot be derived from IPEDS — they remain dependent on the ACE master file + curated overlay. The checkbox will auto-check, but the rank stays blank for non-ACE schools (existing behavior is fine — fields are optional and labeled "blank if unranked in top 50").
+- AACSB will be a presence proxy ("school awards ≥10 business degrees"), not formal accreditation. ~95% accurate vs the real AACSB list but will have some false positives at small non-accredited schools.
+- No UI changes beyond the toggle fix already shipped.
+
+## Risk
+
+- One additional ~50MB download in the seed pipeline. Adds ~15s to a full re-seed.
+- AACSB false-positive rate: small business programs at non-accredited regional colleges may auto-check. The presence credit is small (1 pt of axis score) so impact on Brand Index is minor.

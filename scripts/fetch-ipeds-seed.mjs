@@ -69,6 +69,7 @@ const FILES = {
   sfa:   'SFA2122.zip',
   f1a:   'F2223_F1A.zip',
   f2:    'F2223_F2.zip',
+  comp:  'C2022_A.zip',      // Completions by CIP/AWLEVEL — for law/eng/biz/med flag derivation
 };
 
 // NCAA Division I conference IPEDS codes (CONFNO1-4 in IC).
@@ -128,12 +129,20 @@ const ENROLL_TREND_FILES = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
-async function downloadCsv(zipName) {
+async function downloadCsv(zipName, attempt = 1) {
   const zipPath = path.join(TMP, zipName);
-  console.log(`  ↓ ${zipName}`);
-  const res = await fetch(`${BASE}/${zipName}`);
-  if (!res.ok) throw new Error(`HTTP ${res.status} downloading ${zipName}`);
-  await fs.writeFile(zipPath, Buffer.from(await res.arrayBuffer()));
+  console.log(`  ↓ ${zipName}${attempt > 1 ? ` (retry ${attempt - 1})` : ''}`);
+  try {
+    const res = await fetch(`${BASE}/${zipName}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status} downloading ${zipName}`);
+    await fs.writeFile(zipPath, Buffer.from(await res.arrayBuffer()));
+  } catch (e) {
+    if (attempt < 4) {
+      await new Promise(r => setTimeout(r, 2000 * attempt));
+      return downloadCsv(zipName, attempt + 1);
+    }
+    throw e;
+  }
   execFileSync('unzip', ['-o', '-q', zipPath, '-d', TMP]);
   const files = await fs.readdir(TMP);
   const stem = zipName.replace('.zip', '').toLowerCase();
@@ -408,7 +417,7 @@ async function main() {
   }
 
   console.log('\n  Parsing CSVs...');
-  const [hd, ic, drvef, drvgr, efd, adm, sfa, f1a, f2] = await Promise.all([
+  const [hd, ic, drvef, drvgr, efd, adm, sfa, f1a, f2, comp] = await Promise.all([
     parseCsv(paths.hd),
     parseCsv(paths.ic),
     parseCsv(paths.drvef),
@@ -418,12 +427,38 @@ async function main() {
     parseCsv(paths.sfa),
     parseCsv(paths.f1a),
     parseCsv(paths.f2),
+    parseCsv(paths.comp),
   ]);
 
   const idx = rows => new Map(rows.map(r => [r.UNITID, r]));
   const HD = idx(hd), IC = idx(ic), EF = idx(drvef), GR = idx(drvgr),
         EFD = idx(efd), AD = idx(adm), SF = idx(sfa),
         PUB = idx(f1a), PRIV = idx(f2);
+
+  // ── Completions aggregation (C2022_A) ────────────────────────────────────
+  // Build per-institution counts for the 4 institutional-profile flags:
+  //   law:  CIP 22.* at AWLEVEL 18 (Doctor's — professional practice / JD)
+  //   eng:  CIP 14.* at AWLEVEL 5  (Bachelor's in Engineering)
+  //   biz:  CIP 52.* at AWLEVEL 5  (Bachelor's in Business)
+  //   med:  CIP 51.12* at AWLEVEL 18 (MD/DO professional doctorate)
+  // Filter to CIPCODE rows where MAJORNUM=1 and AWLEVEL matches; sum CTOTALT.
+  const COMPLETIONS = new Map();
+  for (const r of comp) {
+    const uid = r.UNITID;
+    if (!uid) continue;
+    const cip = String(r.CIPCODE || '').trim();
+    if (!cip || cip === '99' || cip.startsWith('99.')) continue; // grand-totals row
+    const lvl = num(r.AWLEVEL);
+    const total = num(r.CTOTALT) || 0;
+    if (!total) continue;
+    let agg = COMPLETIONS.get(uid);
+    if (!agg) { agg = { lawDegrees: 0, engBach: 0, bizBach: 0, medDegrees: 0 }; COMPLETIONS.set(uid, agg); }
+    if (lvl === 18 && cip.startsWith('22.'))        agg.lawDegrees += total;
+    if (lvl === 5  && cip.startsWith('14.'))        agg.engBach    += total;
+    if (lvl === 5  && cip.startsWith('52.'))        agg.bizBach    += total;
+    if (lvl === 18 && cip.startsWith('51.12'))      agg.medDegrees += total;
+  }
+  console.log(`  ✓ Completions parsed: ${COMPLETIONS.size.toLocaleString()} institutions with award data`);
 
   // Index historical enrollment files; apply per-file row filter (EFFY needs EFFYLEV=1).
   const TREND = {};
@@ -550,9 +585,19 @@ async function main() {
       ? Math.round((endowRaw / fte) / 1_000)
       : null;
 
-    // Flags — combine IPEDS HD flags with ACE flags + new athletics/program flags
+    // Flags — combine IPEDS HD + IC + Completions + ACE master file overrides.
+    // ACE master file wins where present (~340 schools); IPEDS-derived rules
+    // cover the long tail (~2,800 institutions).
     const hospitalFlag = num(row.HOSPITAL) === 1 ? 1 : 0;
-    const medicalFlag  = ace?.medicalFlag ?? hospitalFlag;
+    const compAgg      = COMPLETIONS.get(unitid);
+    const compMed      = (compAgg && compAgg.medDegrees > 0)  ? 1 : 0;
+    const compLaw      = (compAgg && compAgg.lawDegrees > 0)  ? 1 : 0;
+    const compEng      = (compAgg && compAgg.engBach   >= 10) ? 1 : 0;
+    const compBiz      = (compAgg && compAgg.bizBach   >= 10) ? 1 : 0;
+    const medicalFlag  = ace?.medicalFlag || hospitalFlag || compMed;
+    const lawFlag      = ace?.lawTier ? 1 : compLaw;
+    const engFlag      = ace?.engTier ? 1 : compEng;
+    const aacsbFlag    = ace?.bizTier ? 1 : compBiz;
 
     // NCAA Division I detection from IPEDS IC (CONFNO1..CONFNO4).
     // NCAA member (ASSOC1=1) AND any reported conference is in the D1 set.
@@ -583,9 +628,9 @@ async function main() {
         conference: ace?.ncaaConference ?? null,
         ncaaDivision: ace?.ncaaDivision ?? null,
         health:    medicalFlag,
-        law:       ace?.lawTier ? 1 : 0,
-        eng:       ace?.engTier ? 1 : 0,
-        aacsb:     ace?.bizTier ? 1 : 0,
+        law:       lawFlag,
+        eng:       engFlag,
+        aacsb:     aacsbFlag,
         womenOnly: ace?.womenOnly ?? 0,
         hbcu:      ace?.hbcu ?? (num(row.HBCU) === 1 ? 1 : 0),
         tribal:    ace?.tribal ?? (num(row.TRIBAL) === 1 ? 1 : 0),
