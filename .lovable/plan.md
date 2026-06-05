@@ -1,65 +1,38 @@
-# Universal coverage for Institutional Profile flags
+# R1 Institutional Profile Export (.xlsx)
 
-## Problem
+Generate a single Excel workbook listing every R1 (Carnegie 2025 "Research 1") institution with the same fields the Institutional Profile form shows in-app.
 
-Today the Institutional Profile checkboxes (`chk_lawSchool`, `chk_aacsb`, `chk_engineering`, `chk_healthSystem`) and their associated US News rank fields come from one source: the ACE master file (`scripts/data/2025-Public-Data-File.xlsx`), which only covers ~340 institutions. For the other ~2,800 schools in the DB, every flag defaults to 0.
+## Source
 
-Current coverage:
+- Query Supabase `institutions` directly via `psql`, filtering to R1 (`research2025 = 15` / `research2025name ILIKE 'Research 1%'`). Cross-reference `carnegie_id` / `carnegie2025` to ensure we catch all ~187 R1s.
+- All needed fields already live on the row (`flags`, `rankings`, `metrics`, `finance`, `ic2025*`, `research2025*`, `saec2025*`, `enrollment`, `fte`).
 
-```text
-flags.health   201 / 3,189
-flags.law       59 / 3,189
-flags.aacsb     64 / 3,189
-flags.eng       59 / 3,189
-```
+## Workbook layout
 
-Result: University of Vermont (Grossman Business, Larner Medicine, Engineering program) shows 1/4 checkboxes instead of 4/4. Same pattern for thousands of other schools.
+One sheet, `R1 Institutions`, one row per school. Frozen header, autosized columns, brand-styled header (Navy `#243551` fill, white Bitter text). Checkbox flags rendered as `TRUE`/`FALSE` (Excel-friendly). Blank rankings stay blank.
 
-## Fix — derive flags from IPEDS completions
+Columns, in order:
 
-Add a new loader in `scripts/fetch-ipeds-seed.mjs` that pulls `C{year}_A.zip` (Completions by CIP code) and aggregates degree awards per institution. Then derive each flag from a clear CIP+award-level rule:
+**Identity**
+- UNITID, Name, City, State, Sector, Carnegie 2025 (`research2025name`), IC 2025 group, SAEC 2025, Fiscal Year
 
-| Flag | IPEDS rule | Expected coverage |
-|---|---|---|
-| `flags.law` | Any degrees awarded in CIP `22.01` at first-professional / doctoral level (AWLEVEL 6, 17) | ~200 schools |
-| `flags.eng` | ≥10 bachelor's degrees in CIP series `14` (Engineering) over the year (AWLEVEL 5) | ~400 schools |
-| `flags.aacsb` | ≥10 bachelor's degrees in CIP series `52` (Business) — proxy for "has a business school." Real AACSB accreditation list overlaid where available | ~1,400 schools |
-| `flags.health` | Existing IPEDS HD `HOSPITAL=1` (already used) **OR** any first-professional CIP `51.12` (Medicine) | ~250 schools |
+**Flags (checkboxes)**
+- AACSB, Law School, Engineering, Health System, Hospital, Medical School, NCAA D1 Athletics, plus any other flag keys present on R1 rows (auto-discovered from `flags` jsonb so we don't miss one)
 
-Keep ACE master file as an **override** for the ~340 schools it covers — it has higher fidelity for AACSB specifically.
+**US News rankings** (from `rankings` jsonb)
+- National Universities, Liberal Arts, Law, Business, Engineering, Medical (Research), Medical (Primary Care)
 
-## What changes
+**Metrics & finance**
+- Enrollment, FTE, Retention %, 6-yr Graduation %, Endowment ($), Total Revenue ($), Research Expenditures ($) — pulled from `metrics` / `finance` with the same field names the profile form reads
 
-1. **`scripts/fetch-ipeds-seed.mjs`**
-   - Download + parse `C{year}_A.zip` once (alongside existing EF/IC/SFA loaders).
-   - Build `completionsMap[unitid] = { lawDegrees, engBach, bizBach, medDegrees }`.
-   - Update flag construction (~line 580):
-     ```js
-     law:   ace?.lawTier ? 1 : (comp?.lawDegrees > 0 ? 1 : 0),
-     eng:   ace?.engTier ? 1 : (comp?.engBach >= 10 ? 1 : 0),
-     aacsb: ace?.bizTier ? 1 : (comp?.bizBach >= 10 ? 1 : 0),
-     health: ace?.medicalFlag ?? (hospitalFlag || (comp?.medDegrees > 0 ? 1 : 0)),
-     ```
-   - Re-seed `institutionsSeed.json` and upsert via `upsert_institutions_full`.
+## Steps
 
-2. **Verification queries** after upsert:
-   ```sql
-   SELECT
-     COUNT(*) FILTER (WHERE (flags->>'law')::int = 1)   AS law,
-     COUNT(*) FILTER (WHERE (flags->>'eng')::int = 1)   AS eng,
-     COUNT(*) FILTER (WHERE (flags->>'aacsb')::int = 1) AS aacsb,
-     COUNT(*) FILTER (WHERE (flags->>'health')::int = 1) AS health
-   FROM institutions;
-   ```
-   Spot-check UVM (231174): expect `law=1`, `eng=1`, `aacsb=1`, `health=1`.
+1. `psql` query → JSON dump of R1 rows to `/tmp/r1.json`.
+2. Python script (`openpyxl`) builds the workbook, applies brand header styling, writes to `/mnt/documents/R1_Institutional_Profiles.xlsx`.
+3. QA: open the file, screenshot first/last pages, confirm flag coverage counts (e.g., AACSB, Law, Eng, Health) and spot-check UVM-style schools.
+4. Emit `<presentation-artifact>` so you can download.
 
-## What's NOT in scope
+## Notes
 
-- **US News Law/Biz/Eng ranks** (`usNewsLaw`, `usNewsBiz`, `usNewsEng`) cannot be derived from IPEDS — they remain dependent on the ACE master file + curated overlay. The checkbox will auto-check, but the rank stays blank for non-ACE schools (existing behavior is fine — fields are optional and labeled "blank if unranked in top 50").
-- AACSB will be a presence proxy ("school awards ≥10 business degrees"), not formal accreditation. ~95% accurate vs the real AACSB list but will have some false positives at small non-accredited schools.
-- No UI changes beyond the toggle fix already shipped.
-
-## Risk
-
-- One additional ~50MB download in the seed pipeline. Adds ~15s to a full re-seed.
-- AACSB false-positive rate: small business programs at non-accredited regional colleges may auto-check. The presence credit is small (1 pt of axis score) so impact on Brand Index is minor.
+- This is a one-off export, not a new app feature — no UI or DB changes.
+- Rankings will be blank for R1s not covered by the curated ACE/US News overlay; that matches what the form shows today.
