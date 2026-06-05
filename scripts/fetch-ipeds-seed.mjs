@@ -409,7 +409,7 @@ async function main() {
   }
 
   console.log('\n  Parsing CSVs...');
-  const [hd, ic, drvef, drvgr, efd, adm, sfa, f1a, f2] = await Promise.all([
+  const [hd, ic, drvef, drvgr, efd, adm, sfa, f1a, f2, comp] = await Promise.all([
     parseCsv(paths.hd),
     parseCsv(paths.ic),
     parseCsv(paths.drvef),
@@ -419,12 +419,38 @@ async function main() {
     parseCsv(paths.sfa),
     parseCsv(paths.f1a),
     parseCsv(paths.f2),
+    parseCsv(paths.comp),
   ]);
 
   const idx = rows => new Map(rows.map(r => [r.UNITID, r]));
   const HD = idx(hd), IC = idx(ic), EF = idx(drvef), GR = idx(drvgr),
         EFD = idx(efd), AD = idx(adm), SF = idx(sfa),
         PUB = idx(f1a), PRIV = idx(f2);
+
+  // ── Completions aggregation (C2022_A) ────────────────────────────────────
+  // Build per-institution counts for the 4 institutional-profile flags:
+  //   law:  CIP 22.* at AWLEVEL 18 (Doctor's — professional practice / JD)
+  //   eng:  CIP 14.* at AWLEVEL 5  (Bachelor's in Engineering)
+  //   biz:  CIP 52.* at AWLEVEL 5  (Bachelor's in Business)
+  //   med:  CIP 51.12* at AWLEVEL 18 (MD/DO professional doctorate)
+  // Filter to CIPCODE rows where MAJORNUM=1 and AWLEVEL matches; sum CTOTALT.
+  const COMPLETIONS = new Map();
+  for (const r of comp) {
+    const uid = r.UNITID;
+    if (!uid) continue;
+    const cip = String(r.CIPCODE || '').trim();
+    if (!cip || cip === '99' || cip.startsWith('99.')) continue; // grand-totals row
+    const lvl = num(r.AWLEVEL);
+    const total = num(r.CTOTALT) || 0;
+    if (!total) continue;
+    let agg = COMPLETIONS.get(uid);
+    if (!agg) { agg = { lawDegrees: 0, engBach: 0, bizBach: 0, medDegrees: 0 }; COMPLETIONS.set(uid, agg); }
+    if (lvl === 18 && cip.startsWith('22.'))        agg.lawDegrees += total;
+    if (lvl === 5  && cip.startsWith('14.'))        agg.engBach    += total;
+    if (lvl === 5  && cip.startsWith('52.'))        agg.bizBach    += total;
+    if (lvl === 18 && cip.startsWith('51.12'))      agg.medDegrees += total;
+  }
+  console.log(`  ✓ Completions parsed: ${COMPLETIONS.size.toLocaleString()} institutions with award data`);
 
   // Index historical enrollment files; apply per-file row filter (EFFY needs EFFYLEV=1).
   const TREND = {};
