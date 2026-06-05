@@ -129,12 +129,20 @@ const ENROLL_TREND_FILES = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
-async function downloadCsv(zipName) {
+async function downloadCsv(zipName, attempt = 1) {
   const zipPath = path.join(TMP, zipName);
-  console.log(`  ↓ ${zipName}`);
-  const res = await fetch(`${BASE}/${zipName}`);
-  if (!res.ok) throw new Error(`HTTP ${res.status} downloading ${zipName}`);
-  await fs.writeFile(zipPath, Buffer.from(await res.arrayBuffer()));
+  console.log(`  ↓ ${zipName}${attempt > 1 ? ` (retry ${attempt - 1})` : ''}`);
+  try {
+    const res = await fetch(`${BASE}/${zipName}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status} downloading ${zipName}`);
+    await fs.writeFile(zipPath, Buffer.from(await res.arrayBuffer()));
+  } catch (e) {
+    if (attempt < 4) {
+      await new Promise(r => setTimeout(r, 2000 * attempt));
+      return downloadCsv(zipName, attempt + 1);
+    }
+    throw e;
+  }
   execFileSync('unzip', ['-o', '-q', zipPath, '-d', TMP]);
   const files = await fs.readdir(TMP);
   const stem = zipName.replace('.zip', '').toLowerCase();
