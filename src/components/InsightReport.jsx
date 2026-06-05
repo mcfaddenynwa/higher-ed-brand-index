@@ -110,7 +110,10 @@ export default function InsightReport({
 
       {/* Mode toggle */}
       <div style={{ marginBottom: 18 }}>
-        <div style={{ display: 'flex', gap: 0, width: 'fit-content', border: '1px solid #E4E8EE', borderRadius: 8, overflow: 'hidden' }}>
+        <div style={{ fontSize: 10, letterSpacing: 1.5, color: '#6B7585', textTransform: 'uppercase', marginBottom: 6, fontWeight: 600 }}>
+          Choose your peer set
+        </div>
+        <div style={{ display: 'inline-flex', gap: 0, border: '1px solid #243551', borderRadius: 8, overflow: 'hidden', boxShadow: '0 1px 2px rgba(36,53,81,0.10)' }}>
           {[
             { id: 'classification', label: 'By Classification' },
             { id: 'compare',        label: `Compare Schools (up to ${MAX_COMPARE})` },
@@ -118,13 +121,17 @@ export default function InsightReport({
             const active = mode === m.id;
             return (
               <button key={m.id} onClick={() => setMode(m.id)} style={{
-                padding: '8px 18px', fontSize: 12, letterSpacing: 1, fontFamily: "'Bitter', Georgia, serif",
+                padding: '9px 20px', fontSize: 12, letterSpacing: 1, fontFamily: "'Bitter', Georgia, serif",
                 border: 'none', cursor: 'pointer', transition: 'all 0.15s',
-                background: active ? '#EB5600' : '#F8FAFB',
-                color: active ? '#FFFFFF' : '#6B7585',
-                fontWeight: active ? 700 : 400,
+                background: active ? '#EB5600' : '#243551',
+                color: '#FFFFFF',
+                opacity: active ? 1 : 0.78,
+                fontWeight: active ? 700 : 500,
                 textTransform: 'uppercase',
-              }}>
+              }}
+              onMouseEnter={e => { if (!active) e.currentTarget.style.opacity = '1'; }}
+              onMouseLeave={e => { if (!active) e.currentTarget.style.opacity = '0.78'; }}
+              >
                 {m.label}
               </button>
             );
