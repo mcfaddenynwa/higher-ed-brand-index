@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "sdk_version": "0.22.2",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://mfzjsjovbexwleqhrugl.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "higher-ed-brand-index-mcp",
+      "version": "0.1.0",
+      "title": "Higher Ed Brand Index"
+    },
+    "tools": [
+      {
+        "name": "search_institutions",
+        "title": "Search institutions",
+        "description": "Search higher-ed institutions by name (case-insensitive). Returns up to 25 matches with core identity fields.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Substring to match against institution name."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "description": "Max rows to return (default 25)."
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_institution",
+        "title": "Get institution profile",
+        "description": "Fetch the full institutional profile (identity, flags, rankings, metrics, finance) for a single UNITID.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "unitid": {
+              "type": "string",
+              "minLength": 1,
+              "description": "IPEDS UNITID of the institution."
+            }
+          },
+          "required": [
+            "unitid"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_r1_institutions",
+        "title": "List R1 institutions",
+        "description": "List Carnegie R1 (Research 1) doctoral universities with core identity fields. Optionally filter by state.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "state": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 2,
+              "description": "Two-letter state code, e.g. 'CA'."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 300,
+              "description": "Max rows (default 200)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
