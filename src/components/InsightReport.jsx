@@ -14,7 +14,7 @@ import {
 //   • "compare"        — peers = up to 5 user-selected institutions
 // ─────────────────────────────────────────────────────────────────────────
 
-const MAX_COMPARE = 5;
+const MAX_COMPARE = 8;
 
 export default function InsightReport({
   focal,            // { name, carnegieId, scores, ... }
