@@ -58,7 +58,7 @@ export default function InsightReport({
           !idSet.has(pid) &&
           p.name.toLowerCase().includes(q);
       })
-      .slice(0, 8);
+      .slice(0, 10);
   }, [mode, query, compareIds, scoredPool, focal.name]);
 
   const compareSchools = useMemo(() => {
