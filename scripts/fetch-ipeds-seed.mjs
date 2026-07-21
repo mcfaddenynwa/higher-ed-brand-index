@@ -609,7 +609,11 @@ async function main() {
       }
     }
     // Prefer IC-derived D1 (universal coverage) over ACE master file (~340 schools).
-    const d1Flag = icD1 || (ace?.athleticsD1 ?? 0);
+    // Also fall back to the ACE ncaaDivision string (catches ~30 flagships where
+    // IC conference codes weren't present and athleticsD1 wasn't set).
+    const divStr = ace?.ncaaDivision || '';
+    const divIsD1 = /^Division I(?!I)/.test(divStr) ? 1 : 0;
+    const d1Flag = icD1 || (ace?.athleticsD1 ?? 0) || divIsD1;
 
     const baseRow = {
       unitid,
