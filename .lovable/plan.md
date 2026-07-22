@@ -1,33 +1,61 @@
-## What you're seeing today
+## Two things to address
 
-1. When you add 8 schools in Compare mode, `InsightReport` only uses their **pillar scores** for peer averaging. Their institutional-profile flags (Big Four, D1, med, law, biz, eng, land-grant) and their US News/QS/THE rankings are never rendered — that's why the compared schools look empty on the profile side.
-2. Penn State's `usNewsLaw` is `64` in the database, but earlier we suppressed any grad-school rank above 50 in the focal-school panel, so Penn State's law rank disappeared even though it exists. We'll surface it in the new comparison table (with "#64" shown, not "LOCKED") so above-50 ranks are visible in the compare view even if the focal-school top-50 gate stays.
-3. Today the only cohort-leader signal is a small "Cohort leader: X (score)" sentence at the end of each pillar narrative. It's easy to miss.
+### 1. Overall Brand Index isn't actually weighted right now
 
-## What I'll build
+The **Brand Index — all 9 schools** table computes the Overall column as a plain mean of the six pillar scores (`overallIndex` in `src/components/InsightReport.jsx:404`). But the app already has a full tier-weighted overall (`weightedOverall` in `src/pages/HEBrandEquity.jsx:497`) that blends the Carnegie-tier weights (`WEIGHTS`) with QS-band weights.
 
-### 1. Fix compared-school data pull-through
-`InsightReport` already receives full peer rows via `scoredPool` — every row already carries `flags`, `usNewsLaw/Biz/Eng`, `qsRank`, `theWorldRank`, `nicheRank`, `usNews`, `retentionRate`, `gradRate6yr`, `enrollment`, etc. from `flattenInstitutionRow`. No new fetch needed — I just need to actually render this data. Also verify Penn State's row (`usNewsLaw=64`, `flags.law` currently false) and set `flags.law` from `usNewsLaw != null` at flatten time so the law checkbox shows correctly in downstream displays.
+Confirmed pillar weights by Carnegie tier (`src/pages/HEBrandEquity.jsx:264-280`). Example — **R1**:
 
-### 2. New panel: "Brand Index — all 9 schools" (above pillar readout)
-Compact table, one row per school (focal on top, highlighted), one column per pillar plus an **overall index** column (mean of available pillar scores, same math as `cohortTopLine`'s topInstitution). Cells color-tinted by relative rank within the 9. Sortable by any pillar or by overall. Shown in both Classification and Compare modes (in Classification mode it renders focal + top 8 by overall, so it stays 9 rows).
+```text
+Visibility & Reach ............ 24%
+Academic & Research ........... 24%
+Financial Strength ............ 15%
+Enrollment & Retention ........ 14%
+Diversity & Access ............ 12%
+Institutional Profile ......... 11%
+```
 
-### 3. New panel: "Institutional profile — side-by-side"
-Right under the brand-index table, in Compare mode only: one row per school × columns for Big Four / D1 / Med / Law / Biz / Eng / Land-Grant (✓ / —), plus US News overall, US News Law/Biz/Eng (shown even if >50 here — this is the fix to Penn State's missing law rank), QS, THE, retention, 6-yr grad. Values pulled straight from the `scoredPool` rows so nothing new has to be wired.
+R2, RCU, master's, bac, etc. each have their own profile. For international schools, `blendWeights` averages the Carnegie profile with a QS-band profile and renormalizes to 1.
 
-### 4. Clearer cohort-leader block
-Above the pillar-by-pillar readout, a "Cohort leaders by dimension" grid: one tile per pillar showing pillar name, leader institution, its score, and the delta vs. the focal school. Highlight tiles where the focal school itself is the leader.
+**What I'll change:**
+- Replace the mean-based `overallIndex` in `BrandIndexTable` with the real `weightedOverall(scores, carnegieId, qsBand)` so the Overall column matches the number the sidebar shows for the focal school. Peer rows use each peer's own `carnegieId` + `qsBand`.
+- Add a new compact **"How the overall index is weighted"** readout directly under the Brand Index table, showing the focal school's six pillar weights as a sorted list (label • %) plus a one-line note ("Weights are set by your 2025 Carnegie classification: R1 — Very High Research; QS band: unranked."). Numbers pulled from `blendWeights(carnegieId, qsBand)`.
 
-### 5. Small cleanup
-- Keep the "hide graduate ranks >50" rule on the focal-school Enter Data sidebar (that's what you asked for originally), but do **not** apply it in the new compare table — you need to see Penn State's #64 there.
-- `flattenInstitutionRow` derives `flags.law/biz/eng` from `usNewsLaw/Biz/Eng` presence when the flag is missing, so checkbox-driven counts stay consistent with the ranks.
+### 2. Institutional Profile scores are too low across the board
 
-## Files touched
-- `src/components/InsightReport.jsx` — add BrandIndexTable, ProfileMatrix (compare-only), and CohortLeadersGrid subcomponents; wire them above the existing pillar readout.
-- `src/pages/HEBrandEquity.jsx` — extend `flattenInstitutionRow` to backfill `flags.law/biz/eng` from ranking presence; pass `axes` unchanged.
-- No database or edge-function changes.
+Root cause is in `normalizeAxis` (`src/pages/HEBrandEquity.jsx:404-441`). For the Profile axis with 4 checkboxes (Med, Law, Biz, Eng):
 
-## Out of scope for this pass
-- Re-scraping missing US News / Niche coverage.
-- Changing peer-cohort math or the tier thresholds.
-- Reintroducing capped grad ranks in the focal sidebar.
+- `maxPoints = checkboxes.length * 2 = 8`
+- Each checked box = 1 point of presence
+- Each ranked program adds up to 1 more point (only if ranked #1, and only if a rank is entered)
+
+Consequence: **a school with all 4 assets but no US News ranks entered maxes at 4/8 = 50.** Penn State (all 4 checked, law #64, no biz/eng ranks) lands around 52. Even a top school with #1 in all four grad programs would only be 8/8 = 100 — but that's essentially unreachable. This is why every school looks weak on this pillar.
+
+**What I'll change** (in `normalizeAxis`, profile-axis path only — other pillars untouched):
+
+New split, presence-heavy and normalized to what's actually achievable:
+
+- **Presence: 70%** of the pillar. All 4 assets checked = 70 pts. Each asset = 17.5 pts.
+- **Rank bonus: 30%**, distributed only across the ranked programs (Law/Biz/Eng — Med has no US News rank input). If none of the ranked assets have a rank entered, presence fills the full 100 (rescale). Each ranked asset with a rank contributes `(1 − (rank−1)/(rankMax−1)) × tierMult` scaled into its share of the 30%.
+- Tier multiplier (`top_20`=1.0, `21_50`=0.6) stays as it is now.
+- Unchecked-but-ranked "half credit" behavior gets dropped — it's a data-quality artifact, not a real signal.
+
+Result on realistic profiles:
+
+```text
+All 4 assets, no ranks entered .................... 100
+All 4 assets, law #64 only (Penn State today) ....  ~76
+All 4 assets, law #10 top-20 tier ................. ~85
+2 assets, no ranks ................................  50
+```
+
+That reads much closer to how these institutions actually compare, and it stops punishing schools just for having missing US News grad-rank data.
+
+### Files touched
+- `src/components/InsightReport.jsx` — swap `overallIndex` for `weightedOverall`; add WeightingReadout panel under BrandIndexTable.
+- `src/pages/HEBrandEquity.jsx` — export `weightedOverall` / `blendWeights` and their labels; rework the `axis.key === 'profile'` branch of `normalizeAxis`.
+
+### Out of scope
+- No changes to the other five pillars' scoring.
+- No changes to cohort/lens logic or the compare-mode profile matrix.
+- No data re-seed — this is pure UI/scoring math.
