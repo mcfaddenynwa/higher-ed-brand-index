@@ -471,7 +471,7 @@ export const QS_BAND_LABELS = {
   unranked: "QS Unranked",
 };
 
-function getQsBand(qsRank) {
+export function getQsBand(qsRank) {
   const r = parseFloat(qsRank);
   if (isNaN(r) || !qsRank) return "unranked";
   if (r <= 100)  return "top100";
