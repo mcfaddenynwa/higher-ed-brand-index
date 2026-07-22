@@ -681,8 +681,7 @@ function ProfileMatrix({ focal, focalName, cohort }) {
                     <td key={f.key} style={cellStyle}>
                       {on ? <span style={{ color: '#1A9988', fontWeight: 700 }}>✓</span> : <span style={{ color: '#C7CDD6' }}>—</span>}
                     </td>);
-                  })
-                  ))}
+                  })}
                   {PROFILE_RANKS.map(f => {
                     const v = r.data[f.key];
                     const isPct = f.key === 'retentionRate' || f.key === 'gradRate6yr';
