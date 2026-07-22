@@ -1680,22 +1680,46 @@ export default function App() {
 
           {/* Strategic Insight Report — peer-relative readout */}
           {overall !== null && Object.keys(scores).length > 0 && (
-            <InsightReport
-              focal={{
-                name: institution || "Your institution",
+            (() => {
+              const poolMatch =
+                (unitid && scoredPool.find(p => p.unitid === unitid)) ||
+                scoredPool.find(p => p.name === institution) ||
+                {};
+              const pick = (v, fallback) => (v !== undefined && v !== null && v !== '' ? v : fallback);
+              const focal = {
+                ...poolMatch,
+                name: institution || poolMatch.name || "Your institution",
                 carnegieId,
-                usNewsList: values.usNewsList,
+                usNewsList: pick(values.usNewsList, poolMatch.usNewsList),
+                intlGroup: poolMatch.intlGroup,
                 flags: {
-                  bigFour: values.chk_bigFour ? 1 : 0,
-                  d1:      values.chk_d1athletics ? 1 : 0,
+                  ...(poolMatch.flags || {}),
+                  bigFour: values.chk_bigFour ? 1 : (poolMatch.flags?.bigFour ?? 0),
+                  d1:      values.chk_d1athletics ? 1 : (poolMatch.flags?.d1 ?? 0),
+                  health:  values.chk_healthSystem ? 1 : (poolMatch.flags?.health ?? 0),
+                  law:     values.chk_lawSchool ? 1 : (poolMatch.flags?.law ?? 0),
+                  aacsb:   values.chk_aacsb ? 1 : (poolMatch.flags?.aacsb ?? 0),
+                  eng:     values.chk_engineering ? 1 : (poolMatch.flags?.eng ?? 0),
                 },
-                intlGroup: scoredPool.find(p => p.name === institution)?.intlGroup,
+                usNews:        pick(values.usNews,        poolMatch.usNews),
+                usNewsLaw:     pick(values.usNewsLaw,     poolMatch.usNewsLaw),
+                usNewsBiz:     pick(values.usNewsBiz,     poolMatch.usNewsBiz),
+                usNewsEng:     pick(values.usNewsEng,     poolMatch.usNewsEng),
+                qsRank:        pick(values.qsRank,        poolMatch.qsRank),
+                theWorldRank:  pick(values.theWorldRank,  poolMatch.theWorldRank),
+                retentionRate: pick(values.retentionRate, poolMatch.retentionRate),
+                gradRate6yr:   pick(values.gradRate6yr,   poolMatch.gradRate6yr),
                 scores,
-              }}
-              scoredPool={scoredPool}
-              axes={activeAxes}
-              carnegieLabel={selectedCarnegie?.short || selectedCarnegie?.label || ''}
-            />
+              };
+              return (
+                <InsightReport
+                  focal={focal}
+                  scoredPool={scoredPool}
+                  axes={activeAxes}
+                  carnegieLabel={selectedCarnegie?.short || selectedCarnegie?.label || ''}
+                />
+              );
+            })()
           )}
 
           <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
