@@ -674,11 +674,14 @@ function ProfileMatrix({ focal, focalName, cohort }) {
                     {r.isFocal && <span style={{ color: '#EB5600', marginRight: 6 }}>●</span>}
                     {r.name}
                   </td>
-                  {PROFILE_FLAGS.map(f => (
+                  {PROFILE_FLAGS.map(f => {
+                    // D1 column is "non-Big Four" — suppress when Big Four is checked
+                    const on = f.key === 'd1' ? (!!flags.d1 && !flags.bigFour) : !!flags[f.key];
+                    return (
                     <td key={f.key} style={cellStyle}>
-                      {flags[f.key] ? <span style={{ color: '#1A9988', fontWeight: 700 }}>✓</span> : <span style={{ color: '#C7CDD6' }}>—</span>}
-                    </td>
-                  ))}
+                      {on ? <span style={{ color: '#1A9988', fontWeight: 700 }}>✓</span> : <span style={{ color: '#C7CDD6' }}>—</span>}
+                    </td>);
+                  })}
                   {PROFILE_RANKS.map(f => {
                     const v = r.data[f.key];
                     const isPct = f.key === 'retentionRate' || f.key === 'gradRate6yr';
