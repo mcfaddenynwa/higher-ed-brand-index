@@ -481,7 +481,7 @@ export function getQsBand(qsRank) {
   return "r601plus";
 }
 
-function blendWeights(carnegieId, qsBand) {
+export function blendWeights(carnegieId, qsBand) {
   const cw = INTL_WEIGHTS[carnegieId] ?? WEIGHTS[carnegieId] ?? WEIGHTS["mixed_masters"];
   const qw = QS_BAND_WEIGHTS[qsBand] ?? QS_BAND_WEIGHTS["unranked"];
   const blended = {};
