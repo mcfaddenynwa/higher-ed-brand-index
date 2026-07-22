@@ -431,14 +431,15 @@ function BrandIndexTable({ focal, focalName, cohort, axes, mode }) {
       name: focalName,
       isFocal: true,
       scores: focal.scores || {},
-      overall: overallIndex(focal.scores || {}, axes),
+      overall: overallIndex(focal.scores || {}, focal.carnegieId, focal.qsRank),
     };
     const peerRows = cohort.map(p => ({
       name: p.name,
       isFocal: false,
       scores: p.scores || {},
-      overall: overallIndex(p.scores || {}, axes),
+      overall: overallIndex(p.scores || {}, p.carnegieId, p.qsRank),
     }));
+
     // In Classification mode, cap at top 8 peers by overall
     const peers = mode === 'classification'
       ? peerRows.slice().sort((a, b) => (b.overall ?? -Infinity) - (a.overall ?? -Infinity)).slice(0, 8)
