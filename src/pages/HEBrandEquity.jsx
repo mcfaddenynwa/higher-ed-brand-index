@@ -253,7 +253,7 @@ const INTL_CATEGORIES = [
 
 // International weight profiles — visibility and research weighted higher baseline
 // since global standing is inherently more central for international institutions
-const INTL_WEIGHTS = {
+export const INTL_WEIGHTS = {
   intl_elite:        { visibility: 0.24, enrollment: 0.13, financial: 0.14, profile: 0.13, research: 0.26, diversity: 0.10 },
   intl_research:     { visibility: 0.21, enrollment: 0.16, financial: 0.16, profile: 0.12, research: 0.23, diversity: 0.12 },
   intl_comprehensive:{ visibility: 0.19, enrollment: 0.21, financial: 0.16, profile: 0.12, research: 0.15, diversity: 0.17 },
