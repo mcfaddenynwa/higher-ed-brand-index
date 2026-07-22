@@ -1680,7 +1680,7 @@ export default function App() {
 
           {/* Strategic Insight Report — peer-relative readout */}
           {overall !== null && Object.keys(scores).length > 0 && (
-            {(() => {
+            (() => {
               const poolMatch =
                 (unitid && scoredPool.find(p => p.unitid === unitid)) ||
                 scoredPool.find(p => p.name === institution) ||
