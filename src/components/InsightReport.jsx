@@ -237,6 +237,26 @@ export default function InsightReport({
         </div>
       ) : (
         <>
+          {/* Brand index — focal + peers */}
+          <BrandIndexTable
+            focal={focal}
+            focalName={focalName}
+            cohort={cohort}
+            axes={axes}
+            mode={mode}
+          />
+
+          {/* Institutional profile matrix (Compare mode only) */}
+          {mode === 'compare' && (
+            <ProfileMatrix focal={focal} focalName={focalName} cohort={cohort} />
+          )}
+
+          {/* Cohort leaders by dimension */}
+          <CohortLeadersGrid
+            pillarAnalysis={pillarAnalysis}
+            focalName={focalName}
+          />
+
           {/* Headlines */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginBottom: 24 }}>
             <HeadlineCard
