@@ -1719,7 +1719,7 @@ export default function App() {
                   carnegieLabel={selectedCarnegie?.short || selectedCarnegie?.label || ''}
                 />
               );
-            })()}
+            })()
           )}
 
           <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
