@@ -414,8 +414,70 @@ function PillarRow({ p, focalName }) {
   );
 }
 
+// ── Weighting readout ────────────────────────────────────────────────────
+// Shows each pillar's % contribution to the focal school's Overall index.
+
+function WeightingReadout({ focal, axes, carnegieLabel }) {
+  const carnegieId = focal.carnegieId;
+  const qsBand = getQsBand(focal.qsRank);
+  const w = useMemo(() => blendWeights(carnegieId, qsBand), [carnegieId, qsBand]);
+
+  const rows = axes
+    .map(a => ({ key: a.key, label: a.label, color: a.color, weight: w[a.key] ?? 0 }))
+    .sort((a, b) => b.weight - a.weight);
+
+  const maxW = rows[0]?.weight || 1;
+
+  return (
+    <div style={{ marginBottom: 28 }}>
+      <div style={{ fontSize: 11, letterSpacing: 2, color: '#6B7585', marginBottom: 10 }}>
+        HOW THE OVERALL INDEX IS WEIGHTED
+      </div>
+      <div style={{
+        border: '1px solid #EEF1F4', borderRadius: 10, background: '#FFFFFF',
+        padding: '14px 18px',
+      }}>
+        <div style={{
+          fontSize: 12, color: '#6B7585', marginBottom: 12, lineHeight: 1.5,
+          fontFamily: "'Bitter', Georgia, serif",
+        }}>
+          Weights are set by your 2025 Carnegie classification
+          {carnegieLabel ? <> — <strong style={{ color: '#243551' }}>{carnegieLabel}</strong></> : null}
+          {focal.qsRank ? <>; QS band: <strong style={{ color: '#243551' }}>{QS_BAND_LABELS[qsBand]}</strong></> : null}.
+          Each pillar's share below shows how much it moves the Overall number.
+        </div>
+        <div style={{ display: 'grid', gap: 8 }}>
+          {rows.map(r => {
+            const pct = Math.round(r.weight * 100);
+            const barPct = (r.weight / maxW) * 100;
+            return (
+              <div key={r.key} style={{ display: 'grid', gridTemplateColumns: '180px 1fr 48px', alignItems: 'center', gap: 12 }}>
+                <div style={{ fontSize: 13, color: '#243551', fontFamily: "'Bitter', Georgia, serif" }}>
+                  {r.label}
+                </div>
+                <div style={{ height: 8, background: '#F1F3F5', borderRadius: 4, overflow: 'hidden' }}>
+                  <div style={{
+                    width: `${barPct}%`, height: '100%', background: r.color, borderRadius: 4,
+                  }} />
+                </div>
+                <div style={{
+                  fontSize: 13, color: '#243551', fontWeight: 700, textAlign: 'right',
+                  fontVariantNumeric: 'tabular-nums',
+                }}>
+                  {pct}%
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Brand index table ────────────────────────────────────────────────────
 // One row per school (focal + up to 8 peers), one column per pillar + overall.
+
 
 function overallIndex(scores, carnegieId, qsRank) {
   if (!scores) return null;
