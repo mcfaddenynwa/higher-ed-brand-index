@@ -453,7 +453,7 @@ function normalizeAxis(axis, values) {
 
 // QS World University Rankings bands — weight profiles
 // Higher bands emphasize visibility & research; lower/unranked shift to enrollment, diversity, brand
-const QS_BAND_WEIGHTS = {
+export const QS_BAND_WEIGHTS = {
   top100:    { visibility: 0.28, enrollment: 0.13, financial: 0.14, profile: 0.11, research: 0.26, diversity: 0.08 },
   r101_200:  { visibility: 0.25, enrollment: 0.14, financial: 0.14, profile: 0.11, research: 0.24, diversity: 0.12 },
   r201_400:  { visibility: 0.22, enrollment: 0.16, financial: 0.16, profile: 0.11, research: 0.21, diversity: 0.14 },
