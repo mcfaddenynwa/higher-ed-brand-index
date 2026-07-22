@@ -494,7 +494,7 @@ export function blendWeights(carnegieId, qsBand) {
   return blended;
 }
 
-function weightedOverall(scores, carnegieId, qsBand = "unranked") {
+export function weightedOverall(scores, carnegieId, qsBand = "unranked") {
   const w = blendWeights(carnegieId, qsBand);
   let total = 0, wSum = 0;
   Object.entries(scores).forEach(([key, val]) => {
