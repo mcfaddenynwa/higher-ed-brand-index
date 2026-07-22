@@ -462,7 +462,7 @@ export const QS_BAND_WEIGHTS = {
   unranked:  { visibility: 0.14, enrollment: 0.23, financial: 0.17, profile: 0.10, research: 0.11, diversity: 0.25 },
 };
 
-const QS_BAND_LABELS = {
+export const QS_BAND_LABELS = {
   top100:   "QS Top 100",
   r101_200: "QS 101–200",
   r201_400: "QS 201–400",
