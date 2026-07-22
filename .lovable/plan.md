@@ -1,45 +1,33 @@
-# Plan: 8-school compare + R1 profile audit
+## What you're seeing today
 
-## 1. Raise compare cap from 5 → 8
+1. When you add 8 schools in Compare mode, `InsightReport` only uses their **pillar scores** for peer averaging. Their institutional-profile flags (Big Four, D1, med, law, biz, eng, land-grant) and their US News/QS/THE rankings are never rendered — that's why the compared schools look empty on the profile side.
+2. Penn State's `usNewsLaw` is `64` in the database, but earlier we suppressed any grad-school rank above 50 in the focal-school panel, so Penn State's law rank disappeared even though it exists. We'll surface it in the new comparison table (with "#64" shown, not "LOCKED") so above-50 ranks are visible in the compare view even if the focal-school top-50 gate stays.
+3. Today the only cohort-leader signal is a small "Cohort leader: X (score)" sentence at the end of each pillar narrative. It's easy to miss.
 
-Single-line change in `src/components/InsightReport.jsx`:
+## What I'll build
 
-- `const MAX_COMPARE = 5;` → `8`
+### 1. Fix compared-school data pull-through
+`InsightReport` already receives full peer rows via `scoredPool` — every row already carries `flags`, `usNewsLaw/Biz/Eng`, `qsRank`, `theWorldRank`, `nicheRank`, `usNews`, `retentionRate`, `gradRate6yr`, `enrollment`, etc. from `flattenInstitutionRow`. No new fetch needed — I just need to actually render this data. Also verify Penn State's row (`usNewsLaw=64`, `flags.law` currently false) and set `flags.law` from `usNewsLaw != null` at flatten time so the law checkbox shows correctly in downstream displays.
 
-Everything downstream (toggle label, chip renderer, "N of MAX selected" caption, typeahead cap) already reads `MAX_COMPARE`, so no other UI edits are needed. Typeahead suggestions currently cap at 8 results — I'll bump that to 10 so users still see extra choices once several are picked.
+### 2. New panel: "Brand Index — all 9 schools" (above pillar readout)
+Compact table, one row per school (focal on top, highlighted), one column per pillar plus an **overall index** column (mean of available pillar scores, same math as `cohortTopLine`'s topInstitution). Cells color-tinted by relative rank within the 9. Sortable by any pillar or by overall. Shown in both Classification and Compare modes (in Classification mode it renders focal + top 8 by overall, so it stays 9 rows).
 
-## 2. R1 institutional profile audit
+### 3. New panel: "Institutional profile — side-by-side"
+Right under the brand-index table, in Compare mode only: one row per school × columns for Big Four / D1 / Med / Law / Biz / Eng / Land-Grant (✓ / —), plus US News overall, US News Law/Biz/Eng (shown even if >50 here — this is the fix to Penn State's missing law rank), QS, THE, retention, 6-yr grad. Values pulled straight from the `scoredPool` rows so nothing new has to be wired.
 
-Regenerate the same-shape workbook I built last time (`/mnt/documents/R1_Institutional_Profiles.xlsx`) using the current DB and use it to find gaps, then fix them.
+### 4. Clearer cohort-leader block
+Above the pillar-by-pillar readout, a "Cohort leaders by dimension" grid: one tile per pillar showing pillar name, leader institution, its score, and the delta vs. the focal school. Highlight tiles where the focal school itself is the leader.
 
-### Audit workflow
+### 5. Small cleanup
+- Keep the "hide graduate ranks >50" rule on the focal-school Enter Data sidebar (that's what you asked for originally), but do **not** apply it in the new compare table — you need to see Penn State's #64 there.
+- `flattenInstitutionRow` derives `flags.law/biz/eng` from `usNewsLaw/Biz/Eng` presence when the flag is missing, so checkbox-driven counts stay consistent with the ranks.
 
-1. `psql` dump of all `research2025 = 15` rows (should be ~187) to JSON.
-2. Python (`openpyxl`) workbook: one row per school, columns for identity + every flag key discovered in `flags` jsonb + US News rankings + enrollment/FTE/retention/graduation/endowment/revenue/research spend.
-3. Coverage report tab: for each field, count how many R1s have a value and list the ones missing. Highlight known suspects (Penn State, UVM already fixed; will spot-check ~10 more).
-4. Save workbook to `/mnt/documents/R1_Institutional_Profiles.xlsx` and emit a `<presentation-artifact>` link.
+## Files touched
+- `src/components/InsightReport.jsx` — add BrandIndexTable, ProfileMatrix (compare-only), and CohortLeadersGrid subcomponents; wire them above the existing pillar readout.
+- `src/pages/HEBrandEquity.jsx` — extend `flattenInstitutionRow` to backfill `flags.law/biz/eng` from ranking presence; pass `axes` unchanged.
+- No database or edge-function changes.
 
-### Categories of gaps I expect to find and how I'll fix each
-
-| Gap type | Likely cause | Fix |
-|---|---|---|
-| Missing `chk_medSchool` / `chk_healthSystem` on schools that clearly have one | CIP-code inference in `fetch-ipeds-seed.mjs` is too narrow, or the school reports med under a parent unitid | Widen CIP rule set; add an override list in the seed script for known med schools not caught by CIP inference |
-| Missing `chk_d1Athletics` | `IC2022` conference code missing for that unitid | Fall back to prior-year `IC` files, then a small manual override list of R1 D1s |
-| Retention / grad rate blank | `EF2022D` / graduation file missing the unitid | Try prior-year files as fallback |
-| Endowment / revenue / research spend blank | NACUBO/HERD/finance snapshot doesn't cover the school | Fall back to IPEDS `F_F2` finance file values already on the DB row; if still blank, flag in report (no manual fabrication) |
-| US News rank blank | School not on that list, or scraper miss | Leave blank when genuinely unranked; re-run scraper if the school is on the list but missing |
-| Wrong flag TRUE (false positive) | Overly broad CIP rule | Tighten rule and re-seed |
-
-### Deliverables
-
-- Updated `MAX_COMPARE` (compare UI supports 8 slots).
-- Updated `scripts/fetch-ipeds-seed.mjs` with widened flag rules + any override lists needed.
-- Re-run seeder → re-upsert `institutions` table.
-- New `R1_Institutional_Profiles.xlsx` with a **Coverage** sheet showing before/after gap counts so you can see exactly what changed.
-- Short written summary listing: total R1 count, % coverage per field before/after, any schools still missing data and why.
-
-## Assumptions
-
-- The audit fixes only R1 (as requested). I won't touch R2 / RCU / masters in this pass.
-- Fields I can't populate from any available source (e.g. a private R1 that doesn't report a value) stay blank rather than being estimated.
-- No UI changes beyond `MAX_COMPARE`; the peer-cohort statistics logic is unchanged.
+## Out of scope for this pass
+- Re-scraping missing US News / Niche coverage.
+- Changing peer-cohort math or the tier thresholds.
+- Reintroducing capped grad ranks in the focal sidebar.
