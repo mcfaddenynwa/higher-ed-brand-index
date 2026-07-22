@@ -408,11 +408,13 @@ function PillarRow({ p, focalName }) {
 // ── Brand index table ────────────────────────────────────────────────────
 // One row per school (focal + up to 8 peers), one column per pillar + overall.
 
-function overallIndex(scores, axes) {
-  const vals = axes.map(a => scores?.[a.key]).filter(v => v != null);
-  if (!vals.length) return null;
-  return vals.reduce((a, b) => a + b, 0) / vals.length;
+function overallIndex(scores, carnegieId, qsRank) {
+  if (!scores) return null;
+  const qsBand = getQsBand(qsRank);
+  const w = weightedOverall(scores, carnegieId, qsBand);
+  return w;
 }
+
 
 function cellTint(v, min, max, color) {
   if (v == null || max === min) return 'transparent';
