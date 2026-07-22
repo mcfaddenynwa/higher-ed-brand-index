@@ -45,6 +45,13 @@ function research2025ToScoreVal(r) {
 // so the rest of the form / scoring code can stay untouched.
 function flattenInstitutionRow(r) {
   const carnegieId = deriveCarnegieId(r.ic2025, r.research2025);
+  const rankings = r.rankings || {};
+  const flags = { ...(r.flags || {}) };
+  // Backfill flags from ranking presence so downstream checkbox / profile UI
+  // stays consistent when the seed file didn't set the flag explicitly.
+  if (rankings.usNewsLaw != null && flags.law == null) flags.law = 1;
+  if (rankings.usNewsBiz != null && flags.aacsb == null) flags.aacsb = 1;
+  if (rankings.usNewsEng != null && flags.eng == null) flags.eng = 1;
   return {
     name: r.name,
     unitid: r.unitid,
@@ -62,11 +69,11 @@ function flattenInstitutionRow(r) {
     earningsRatio: r.earnings_ratio,
     pellPct: r.pell_2023 != null ? Math.round(r.pell_2023 * 100) : undefined,
     usNewsList: r.us_news_list,
-    flags: r.flags || {},
+    flags,
     fte: r.fte,
     enrollment: r.enrollment,
     ...(r.metrics || {}),
-    ...(r.rankings || {}),
+    ...rankings,
     ...(r.finance || {}),
   };
 }
