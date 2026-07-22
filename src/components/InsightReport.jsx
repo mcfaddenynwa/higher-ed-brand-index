@@ -5,6 +5,13 @@ import {
   pillarNarrative,
   tierColor,
 } from "../lib/insightFramework";
+import {
+  weightedOverall,
+  blendWeights,
+  getQsBand,
+  QS_BAND_LABELS,
+} from "../pages/HEBrandEquity";
+
 
 // ─────────────────────────────────────────────────────────────────────────
 // InsightReport
