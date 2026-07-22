@@ -237,6 +237,26 @@ export default function InsightReport({
         </div>
       ) : (
         <>
+          {/* Brand index — focal + peers */}
+          <BrandIndexTable
+            focal={focal}
+            focalName={focalName}
+            cohort={cohort}
+            axes={axes}
+            mode={mode}
+          />
+
+          {/* Institutional profile matrix (Compare mode only) */}
+          {mode === 'compare' && (
+            <ProfileMatrix focal={focal} focalName={focalName} cohort={cohort} />
+          )}
+
+          {/* Cohort leaders by dimension */}
+          <CohortLeadersGrid
+            pillarAnalysis={pillarAnalysis}
+            focalName={focalName}
+          />
+
           {/* Headlines */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginBottom: 24 }}>
             <HeadlineCard
@@ -373,6 +393,280 @@ function PillarRow({ p, focalName }) {
 
       <div style={{ fontSize: 13, color: '#3D4F6B', lineHeight: 1.55 }}>
         {pillarNarrative(p, focalName)}
+      </div>
+    </div>
+  );
+}
+
+// ── Brand index table ────────────────────────────────────────────────────
+// One row per school (focal + up to 8 peers), one column per pillar + overall.
+
+function overallIndex(scores, axes) {
+  const vals = axes.map(a => scores?.[a.key]).filter(v => v != null);
+  if (!vals.length) return null;
+  return vals.reduce((a, b) => a + b, 0) / vals.length;
+}
+
+function cellTint(v, min, max, color) {
+  if (v == null || max === min) return 'transparent';
+  const t = (v - min) / (max - min); // 0..1
+  const alpha = 0.08 + t * 0.32;
+  return `${color}${Math.round(alpha * 255).toString(16).padStart(2, '0')}`;
+}
+
+function BrandIndexTable({ focal, focalName, cohort, axes, mode }) {
+  const [sortKey, setSortKey] = useState("overall");
+
+  const rows = useMemo(() => {
+    const focalRow = {
+      name: focalName,
+      isFocal: true,
+      scores: focal.scores || {},
+      overall: overallIndex(focal.scores || {}, axes),
+    };
+    const peerRows = cohort.map(p => ({
+      name: p.name,
+      isFocal: false,
+      scores: p.scores || {},
+      overall: overallIndex(p.scores || {}, axes),
+    }));
+    // In Classification mode, cap at top 8 peers by overall
+    const peers = mode === 'classification'
+      ? peerRows.slice().sort((a, b) => (b.overall ?? -Infinity) - (a.overall ?? -Infinity)).slice(0, 8)
+      : peerRows;
+
+    const all = [focalRow, ...peers];
+    const key = sortKey;
+    const sorted = all.slice().sort((a, b) => {
+      const av = key === 'overall' ? a.overall : a.scores[key];
+      const bv = key === 'overall' ? b.overall : b.scores[key];
+      return (bv ?? -Infinity) - (av ?? -Infinity);
+    });
+    return sorted;
+  }, [focal, focalName, cohort, axes, mode, sortKey]);
+
+  // Column min/max for tinting
+  const colStats = useMemo(() => {
+    const stats = {};
+    axes.forEach(a => {
+      const vals = rows.map(r => r.scores[a.key]).filter(v => v != null);
+      stats[a.key] = { min: Math.min(...vals), max: Math.max(...vals) };
+    });
+    const ovVals = rows.map(r => r.overall).filter(v => v != null);
+    stats.overall = { min: Math.min(...ovVals), max: Math.max(...ovVals) };
+    return stats;
+  }, [rows, axes]);
+
+  const th = (label, key) => (
+    <th
+      onClick={() => setSortKey(key)}
+      style={{
+        textAlign: 'left', padding: '8px 10px', fontSize: 10, letterSpacing: 1,
+        color: sortKey === key ? '#EB5600' : '#6B7585', cursor: 'pointer',
+        borderBottom: '1px solid #E9EDEE', fontWeight: 600, whiteSpace: 'nowrap',
+        textTransform: 'uppercase',
+      }}
+      title="Sort by this column"
+    >
+      {label} {sortKey === key ? '↓' : ''}
+    </th>
+  );
+
+  return (
+    <div style={{ marginBottom: 24 }}>
+      <div style={{ fontSize: 11, letterSpacing: 2, color: '#6B7585', marginBottom: 10 }}>
+        BRAND INDEX — {rows.length} SCHOOLS
+      </div>
+      <div style={{
+        overflowX: 'auto', border: '1px solid #EEF1F4', borderRadius: 10, background: '#FFFFFF',
+      }}>
+        <table style={{ borderCollapse: 'collapse', width: '100%', fontFamily: "'Bitter', Georgia, serif" }}>
+          <thead>
+            <tr>
+              {th('Institution', 'name')}
+              {axes.map(a => th(a.label, a.key))}
+              {th('Overall', 'overall')}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={r.name} style={{
+                background: r.isFocal ? 'rgba(235,86,0,0.06)' : (i % 2 ? '#FBFCFD' : '#FFFFFF'),
+                borderTop: r.isFocal ? '2px solid #EB5600' : 'none',
+                borderBottom: r.isFocal ? '2px solid #EB5600' : '1px solid #F1F3F5',
+              }}>
+                <td style={{
+                  padding: '9px 10px', fontSize: 13, color: '#243551',
+                  fontWeight: r.isFocal ? 700 : 500, whiteSpace: 'nowrap',
+                  maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis',
+                }}>
+                  {r.isFocal && <span style={{ color: '#EB5600', marginRight: 6 }}>●</span>}
+                  {r.name}
+                </td>
+                {axes.map(a => {
+                  const v = r.scores[a.key];
+                  const { min, max } = colStats[a.key] || {};
+                  return (
+                    <td key={a.key} style={{
+                      padding: '9px 10px', fontSize: 13, textAlign: 'right', color: '#243551',
+                      background: cellTint(v, min, max, a.color),
+                      fontVariantNumeric: 'tabular-nums',
+                    }}>
+                      {v != null ? Math.round(v) : '—'}
+                    </td>
+                  );
+                })}
+                <td style={{
+                  padding: '9px 10px', fontSize: 13, textAlign: 'right',
+                  color: '#243551', fontWeight: 700,
+                  background: cellTint(r.overall, colStats.overall.min, colStats.overall.max, '#1C3678'),
+                  fontVariantNumeric: 'tabular-nums',
+                }}>
+                  {r.overall != null ? Math.round(r.overall) : '—'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div style={{ fontSize: 11, color: '#8A93A1', marginTop: 6 }}>
+        Click a column header to sort. Overall = mean of available pillar scores. Focal school highlighted.
+      </div>
+    </div>
+  );
+}
+
+// ── Institutional profile matrix (compare mode) ──────────────────────────
+
+const PROFILE_FLAGS = [
+  { key: 'bigFour',    label: 'Big Four' },
+  { key: 'd1',         label: 'D1 (non-B4)' },
+  { key: 'health',     label: 'Med / Health' },
+  { key: 'law',        label: 'Law' },
+  { key: 'aacsb',      label: 'Biz (AACSB)' },
+  { key: 'eng',        label: 'Engineering' },
+  { key: 'landGrant',  label: 'Land Grant' },
+];
+
+const PROFILE_RANKS = [
+  { key: 'usNews',       label: 'US News' },
+  { key: 'usNewsLaw',    label: 'Law rank' },
+  { key: 'usNewsBiz',    label: 'Biz rank' },
+  { key: 'usNewsEng',    label: 'Eng rank' },
+  { key: 'qsRank',       label: 'QS' },
+  { key: 'theWorldRank', label: 'THE' },
+  { key: 'retentionRate', label: 'Retention %' },
+  { key: 'gradRate6yr',  label: '6-yr Grad %' },
+];
+
+function ProfileMatrix({ focal, focalName, cohort }) {
+  const rows = [
+    { name: focalName, isFocal: true, data: focal },
+    ...cohort.map(p => ({ name: p.name, isFocal: false, data: p })),
+  ];
+
+  const cellStyle = { padding: '8px 10px', fontSize: 12, color: '#243551', borderBottom: '1px solid #F1F3F5', textAlign: 'center', whiteSpace: 'nowrap' };
+  const headStyle = { padding: '8px 10px', fontSize: 10, letterSpacing: 1, color: '#6B7585', borderBottom: '1px solid #E9EDEE', fontWeight: 600, textTransform: 'uppercase', textAlign: 'center', whiteSpace: 'nowrap' };
+
+  return (
+    <div style={{ marginBottom: 24 }}>
+      <div style={{ fontSize: 11, letterSpacing: 2, color: '#6B7585', marginBottom: 10 }}>
+        INSTITUTIONAL PROFILE — SIDE-BY-SIDE
+      </div>
+      <div style={{ overflowX: 'auto', border: '1px solid #EEF1F4', borderRadius: 10, background: '#FFFFFF' }}>
+        <table style={{ borderCollapse: 'collapse', width: '100%', fontFamily: "'Bitter', Georgia, serif" }}>
+          <thead>
+            <tr>
+              <th style={{ ...headStyle, textAlign: 'left' }}>Institution</th>
+              {PROFILE_FLAGS.map(f => <th key={f.key} style={headStyle}>{f.label}</th>)}
+              {PROFILE_RANKS.map(f => <th key={f.key} style={headStyle}>{f.label}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => {
+              const flags = r.data.flags || {};
+              return (
+                <tr key={r.name} style={{
+                  background: r.isFocal ? 'rgba(235,86,0,0.06)' : (i % 2 ? '#FBFCFD' : '#FFFFFF'),
+                }}>
+                  <td style={{ ...cellStyle, textAlign: 'left', fontWeight: r.isFocal ? 700 : 500, maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {r.isFocal && <span style={{ color: '#EB5600', marginRight: 6 }}>●</span>}
+                    {r.name}
+                  </td>
+                  {PROFILE_FLAGS.map(f => (
+                    <td key={f.key} style={cellStyle}>
+                      {flags[f.key] ? <span style={{ color: '#1A9988', fontWeight: 700 }}>✓</span> : <span style={{ color: '#C7CDD6' }}>—</span>}
+                    </td>
+                  ))}
+                  {PROFILE_RANKS.map(f => {
+                    const v = r.data[f.key];
+                    const isPct = f.key === 'retentionRate' || f.key === 'gradRate6yr';
+                    const isRank = !isPct;
+                    return (
+                      <td key={f.key} style={{ ...cellStyle, fontVariantNumeric: 'tabular-nums' }}>
+                        {v != null ? (isRank ? `#${v}` : `${v}%`) : <span style={{ color: '#C7CDD6' }}>—</span>}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <div style={{ fontSize: 11, color: '#8A93A1', marginTop: 6 }}>
+        Ranks shown as reported (US News grad-school ranks display beyond top 50 here for cross-comparison).
+      </div>
+    </div>
+  );
+}
+
+// ── Cohort leaders by dimension ──────────────────────────────────────────
+
+function CohortLeadersGrid({ pillarAnalysis, focalName }) {
+  return (
+    <div style={{ marginBottom: 24 }}>
+      <div style={{ fontSize: 11, letterSpacing: 2, color: '#6B7585', marginBottom: 10 }}>
+        COHORT LEADERS BY DIMENSION
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+        {pillarAnalysis.map(p => {
+          const focalLeads = p.leaderName == null || (p.userScore != null && p.leaderScore != null && p.userScore >= p.leaderScore);
+          const leaderDisplayName = focalLeads ? focalName : p.leaderName;
+          const leaderDisplayScore = focalLeads ? p.userScore : p.leaderScore;
+          const delta = (p.userScore != null && p.leaderScore != null && !focalLeads)
+            ? p.userScore - p.leaderScore : null;
+          return (
+            <div key={p.axis.key} style={{
+              background: focalLeads ? 'rgba(235,86,0,0.06)' : '#FBFCFD',
+              border: `1px solid ${focalLeads ? '#EB5600' : '#EEF1F4'}`,
+              borderRadius: 10, padding: '12px 14px',
+              borderLeft: `4px solid ${p.axis.color}`,
+            }}>
+              <div style={{ fontSize: 10, letterSpacing: 1.5, color: '#6B7585', textTransform: 'uppercase', marginBottom: 6 }}>
+                {p.axis.label}
+              </div>
+              <div style={{ fontSize: 14, color: '#243551', fontWeight: 700, marginBottom: 4, lineHeight: 1.25 }}>
+                {leaderDisplayName || '—'}
+                {focalLeads && (
+                  <span style={{
+                    fontSize: 9, letterSpacing: 1, color: '#EB5600', marginLeft: 8,
+                    border: '1px solid #EB5600', borderRadius: 3, padding: '1px 5px',
+                    textTransform: 'uppercase', verticalAlign: 'middle', fontWeight: 700,
+                  }}>You</span>
+                )}
+              </div>
+              <div style={{ fontSize: 12, color: '#6B7585', fontFamily: "'Bitter', Georgia, serif" }}>
+                Score <span style={{ color: '#243551', fontWeight: 700 }}>{leaderDisplayScore ?? '—'}</span>
+                {delta != null && (
+                  <span style={{ marginLeft: 10, color: delta >= 0 ? '#1A9988' : '#D4786A' }}>
+                    you {delta >= 0 ? '+' : ''}{delta}
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
