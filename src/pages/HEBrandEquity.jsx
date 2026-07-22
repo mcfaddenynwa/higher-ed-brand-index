@@ -253,7 +253,7 @@ const INTL_CATEGORIES = [
 
 // International weight profiles — visibility and research weighted higher baseline
 // since global standing is inherently more central for international institutions
-const INTL_WEIGHTS = {
+export const INTL_WEIGHTS = {
   intl_elite:        { visibility: 0.24, enrollment: 0.13, financial: 0.14, profile: 0.13, research: 0.26, diversity: 0.10 },
   intl_research:     { visibility: 0.21, enrollment: 0.16, financial: 0.16, profile: 0.12, research: 0.23, diversity: 0.12 },
   intl_comprehensive:{ visibility: 0.19, enrollment: 0.21, financial: 0.16, profile: 0.12, research: 0.15, diversity: 0.17 },
@@ -261,7 +261,7 @@ const INTL_WEIGHTS = {
   intl_specialist:   { visibility: 0.22, enrollment: 0.14, financial: 0.17, profile: 0.16, research: 0.18, diversity: 0.13 },
 };
 
-const WEIGHTS = {
+export const WEIGHTS = {
   // 6 dimensions: profile = institutional assets (law, med, biz, eng)
   // Aligned to 2025 Carnegie cohorts.
   r1:            { visibility: 0.24, enrollment: 0.14, financial: 0.15, profile: 0.11, research: 0.24, diversity: 0.12 },
@@ -403,42 +403,81 @@ function normalizeAxis(axis, values) {
   // Weighted at 30% of axis score when checkboxes exist
   let checkboxScore = null;
   if (axis.checkboxes && axis.checkboxes.length > 0) {
-    // Each checkbox contributes 1 base point; ranked programs get a rank bonus
-    let totalPoints = 0;
-    const maxPoints = axis.checkboxes.length * 2; // max 2 pts each (1 presence + 1 rank)
-    axis.checkboxes.forEach(c => {
-      // Tier multiplier for grad program ranks (law/biz/eng):
-      //   top_20 → 1.0, 21_50 → 0.6, null/missing → 1.0 (backward compatible)
-      const tierKey = c.rankId === 'usNewsLaw' ? 'lawTier'
-                    : c.rankId === 'usNewsBiz' ? 'bizTier'
-                    : c.rankId === 'usNewsEng' ? 'engTier'
-                    : null;
-      const tier = tierKey ? values[tierKey] : null;
-      const tierMult = tier === 'top_20' ? 1.0 : tier === '21_50' ? 0.6 : 1.0;
+    if (axis.key === 'profile') {
+      // Profile-axis scoring (Med / Law / Biz / Eng):
+      //   Presence carries 70% of the pillar (evenly across all 4 assets).
+      //   Rank bonus carries 30%, spread only across the ranked assets
+      //   (Law/Biz/Eng). If no ranks are entered, presence rescales to 100
+      //   so schools aren't penalized for missing US News grad-rank data.
+      const nAssets = axis.checkboxes.length; // 4
+      const presencePerAsset = 70 / nAssets;  // 17.5
+      let presencePts = 0;
+      axis.checkboxes.forEach(c => {
+        if (values[c.id] === true) presencePts += presencePerAsset;
+      });
 
-      if (values[c.id] === true) {
-        totalPoints += 1; // presence point
-        if (c.rankId) {
+      const rankable = axis.checkboxes.filter(c => c.rankId);
+      const enteredRanks = rankable
+        .map(c => {
           const rank = parseFloat(values[c.rankId]);
-          if (!isNaN(rank) && rank > 0) {
-            const rankBonus = Math.max(0, 1 - ((rank - 1) / (c.rankMax - 1)));
-            totalPoints += rankBonus * tierMult;
+          if (isNaN(rank) || rank <= 0) return null;
+          const tierKey = c.rankId === 'usNewsLaw' ? 'lawTier'
+                        : c.rankId === 'usNewsBiz' ? 'bizTier'
+                        : c.rankId === 'usNewsEng' ? 'engTier'
+                        : null;
+          const tier = tierKey ? values[tierKey] : null;
+          const tierMult = tier === 'top_20' ? 1.0 : tier === '21_50' ? 0.6 : 1.0;
+          const bonus = Math.max(0, 1 - ((rank - 1) / (c.rankMax - 1))) * tierMult;
+          return { bonus, checked: values[c.id] === true };
+        })
+        .filter(x => x !== null);
+
+      if (enteredRanks.length === 0) {
+        // No US News grad ranks entered — presence fills the whole pillar
+        checkboxScore = Math.min(100, presencePts * (100 / 70));
+      } else {
+        const perRankShare = 30 / enteredRanks.length;
+        let rankPts = 0;
+        enteredRanks.forEach(r => { rankPts += r.bonus * perRankShare; });
+        checkboxScore = Math.min(100, presencePts + rankPts);
+      }
+    } else {
+      // Legacy checkbox scoring for non-profile axes (e.g. Visibility Big Four / D1)
+      let totalPoints = 0;
+      const maxPoints = axis.checkboxes.length * 2;
+      axis.checkboxes.forEach(c => {
+        const tierKey = c.rankId === 'usNewsLaw' ? 'lawTier'
+                      : c.rankId === 'usNewsBiz' ? 'bizTier'
+                      : c.rankId === 'usNewsEng' ? 'engTier'
+                      : null;
+        const tier = tierKey ? values[tierKey] : null;
+        const tierMult = tier === 'top_20' ? 1.0 : tier === '21_50' ? 0.6 : 1.0;
+
+        if (values[c.id] === true) {
+          totalPoints += 1;
+          if (c.rankId) {
+            const rank = parseFloat(values[c.rankId]);
+            if (!isNaN(rank) && rank > 0) {
+              const rankBonus = Math.max(0, 1 - ((rank - 1) / (c.rankMax - 1)));
+              totalPoints += rankBonus * tierMult;
+            }
+          } else {
+            totalPoints += 1;
           }
         } else {
-          totalPoints += 1;
-        }
-      } else {
-        if (c.rankId) {
-          const rank = parseFloat(values[c.rankId]);
-          if (!isNaN(rank) && rank > 0) {
-            const rankBonus = Math.max(0, 1 - ((rank - 1) / (c.rankMax - 1)));
-            totalPoints += 0.5 * rankBonus * tierMult;
+          if (c.rankId) {
+            const rank = parseFloat(values[c.rankId]);
+            if (!isNaN(rank) && rank > 0) {
+              const rankBonus = Math.max(0, 1 - ((rank - 1) / (c.rankMax - 1)));
+              totalPoints += 0.5 * rankBonus * tierMult;
+            }
           }
         }
-      }
-    });
-    checkboxScore = Math.min(100, (totalPoints / maxPoints) * 100);
+      });
+      checkboxScore = Math.min(100, (totalPoints / maxPoints) * 100);
+    }
   }
+
 
   if (inputScores.length === 0 && checkboxScore === null) return null;
 
@@ -453,7 +492,7 @@ function normalizeAxis(axis, values) {
 
 // QS World University Rankings bands — weight profiles
 // Higher bands emphasize visibility & research; lower/unranked shift to enrollment, diversity, brand
-const QS_BAND_WEIGHTS = {
+export const QS_BAND_WEIGHTS = {
   top100:    { visibility: 0.28, enrollment: 0.13, financial: 0.14, profile: 0.11, research: 0.26, diversity: 0.08 },
   r101_200:  { visibility: 0.25, enrollment: 0.14, financial: 0.14, profile: 0.11, research: 0.24, diversity: 0.12 },
   r201_400:  { visibility: 0.22, enrollment: 0.16, financial: 0.16, profile: 0.11, research: 0.21, diversity: 0.14 },
@@ -462,7 +501,7 @@ const QS_BAND_WEIGHTS = {
   unranked:  { visibility: 0.14, enrollment: 0.23, financial: 0.17, profile: 0.10, research: 0.11, diversity: 0.25 },
 };
 
-const QS_BAND_LABELS = {
+export const QS_BAND_LABELS = {
   top100:   "QS Top 100",
   r101_200: "QS 101–200",
   r201_400: "QS 201–400",
@@ -471,7 +510,7 @@ const QS_BAND_LABELS = {
   unranked: "QS Unranked",
 };
 
-function getQsBand(qsRank) {
+export function getQsBand(qsRank) {
   const r = parseFloat(qsRank);
   if (isNaN(r) || !qsRank) return "unranked";
   if (r <= 100)  return "top100";
@@ -481,7 +520,7 @@ function getQsBand(qsRank) {
   return "r601plus";
 }
 
-function blendWeights(carnegieId, qsBand) {
+export function blendWeights(carnegieId, qsBand) {
   const cw = INTL_WEIGHTS[carnegieId] ?? WEIGHTS[carnegieId] ?? WEIGHTS["mixed_masters"];
   const qw = QS_BAND_WEIGHTS[qsBand] ?? QS_BAND_WEIGHTS["unranked"];
   const blended = {};
@@ -494,7 +533,7 @@ function blendWeights(carnegieId, qsBand) {
   return blended;
 }
 
-function weightedOverall(scores, carnegieId, qsBand = "unranked") {
+export function weightedOverall(scores, carnegieId, qsBand = "unranked") {
   const w = blendWeights(carnegieId, qsBand);
   let total = 0, wSum = 0;
   Object.entries(scores).forEach(([key, val]) => {

@@ -5,6 +5,13 @@ import {
   pillarNarrative,
   tierColor,
 } from "../lib/insightFramework";
+import {
+  weightedOverall,
+  blendWeights,
+  getQsBand,
+  QS_BAND_LABELS,
+} from "../pages/HEBrandEquity";
+
 
 // ─────────────────────────────────────────────────────────────────────────
 // InsightReport
@@ -246,6 +253,15 @@ export default function InsightReport({
             mode={mode}
           />
 
+          {/* Weighting readout — how each dimension contributes to Overall */}
+          <WeightingReadout
+            focal={focal}
+            axes={axes}
+            carnegieLabel={carnegieLabel}
+          />
+
+
+
           {/* Institutional profile matrix (Compare mode only) */}
           {mode === 'compare' && (
             <ProfileMatrix focal={focal} focalName={focalName} cohort={cohort} />
@@ -398,14 +414,78 @@ function PillarRow({ p, focalName }) {
   );
 }
 
+// ── Weighting readout ────────────────────────────────────────────────────
+// Shows each pillar's % contribution to the focal school's Overall index.
+
+function WeightingReadout({ focal, axes, carnegieLabel }) {
+  const carnegieId = focal.carnegieId;
+  const qsBand = getQsBand(focal.qsRank);
+  const w = useMemo(() => blendWeights(carnegieId, qsBand), [carnegieId, qsBand]);
+
+  const rows = axes
+    .map(a => ({ key: a.key, label: a.label, color: a.color, weight: w[a.key] ?? 0 }))
+    .sort((a, b) => b.weight - a.weight);
+
+  const maxW = rows[0]?.weight || 1;
+
+  return (
+    <div style={{ marginBottom: 28 }}>
+      <div style={{ fontSize: 11, letterSpacing: 2, color: '#6B7585', marginBottom: 10 }}>
+        HOW THE OVERALL INDEX IS WEIGHTED
+      </div>
+      <div style={{
+        border: '1px solid #EEF1F4', borderRadius: 10, background: '#FFFFFF',
+        padding: '14px 18px',
+      }}>
+        <div style={{
+          fontSize: 12, color: '#6B7585', marginBottom: 12, lineHeight: 1.5,
+          fontFamily: "'Bitter', Georgia, serif",
+        }}>
+          Weights are set by your 2025 Carnegie classification
+          {carnegieLabel ? <> — <strong style={{ color: '#243551' }}>{carnegieLabel}</strong></> : null}
+          {focal.qsRank ? <>; QS band: <strong style={{ color: '#243551' }}>{QS_BAND_LABELS[qsBand]}</strong></> : null}.
+          Each pillar's share below shows how much it moves the Overall number.
+        </div>
+        <div style={{ display: 'grid', gap: 8 }}>
+          {rows.map(r => {
+            const pct = Math.round(r.weight * 100);
+            const barPct = (r.weight / maxW) * 100;
+            return (
+              <div key={r.key} style={{ display: 'grid', gridTemplateColumns: '180px 1fr 48px', alignItems: 'center', gap: 12 }}>
+                <div style={{ fontSize: 13, color: '#243551', fontFamily: "'Bitter', Georgia, serif" }}>
+                  {r.label}
+                </div>
+                <div style={{ height: 8, background: '#F1F3F5', borderRadius: 4, overflow: 'hidden' }}>
+                  <div style={{
+                    width: `${barPct}%`, height: '100%', background: r.color, borderRadius: 4,
+                  }} />
+                </div>
+                <div style={{
+                  fontSize: 13, color: '#243551', fontWeight: 700, textAlign: 'right',
+                  fontVariantNumeric: 'tabular-nums',
+                }}>
+                  {pct}%
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Brand index table ────────────────────────────────────────────────────
 // One row per school (focal + up to 8 peers), one column per pillar + overall.
 
-function overallIndex(scores, axes) {
-  const vals = axes.map(a => scores?.[a.key]).filter(v => v != null);
-  if (!vals.length) return null;
-  return vals.reduce((a, b) => a + b, 0) / vals.length;
+
+function overallIndex(scores, carnegieId, qsRank) {
+  if (!scores) return null;
+  const qsBand = getQsBand(qsRank);
+  const w = weightedOverall(scores, carnegieId, qsBand);
+  return w;
 }
+
 
 function cellTint(v, min, max, color) {
   if (v == null || max === min) return 'transparent';
@@ -422,14 +502,15 @@ function BrandIndexTable({ focal, focalName, cohort, axes, mode }) {
       name: focalName,
       isFocal: true,
       scores: focal.scores || {},
-      overall: overallIndex(focal.scores || {}, axes),
+      overall: overallIndex(focal.scores || {}, focal.carnegieId, focal.qsRank),
     };
     const peerRows = cohort.map(p => ({
       name: p.name,
       isFocal: false,
       scores: p.scores || {},
-      overall: overallIndex(p.scores || {}, axes),
+      overall: overallIndex(p.scores || {}, p.carnegieId, p.qsRank),
     }));
+
     // In Classification mode, cap at top 8 peers by overall
     const peers = mode === 'classification'
       ? peerRows.slice().sort((a, b) => (b.overall ?? -Infinity) - (a.overall ?? -Infinity)).slice(0, 8)
@@ -530,7 +611,7 @@ function BrandIndexTable({ focal, focalName, cohort, axes, mode }) {
         </table>
       </div>
       <div style={{ fontSize: 11, color: '#8A93A1', marginTop: 6 }}>
-        Click a column header to sort. Overall = mean of available pillar scores. Focal school highlighted.
+        Click a column header to sort. Scores are on a 0–100 scale. Overall uses tier-weighted blend (see weighting readout below). Focal school highlighted.
       </div>
     </div>
   );
