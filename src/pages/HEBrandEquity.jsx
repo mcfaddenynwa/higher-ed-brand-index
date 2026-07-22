@@ -403,42 +403,81 @@ function normalizeAxis(axis, values) {
   // Weighted at 30% of axis score when checkboxes exist
   let checkboxScore = null;
   if (axis.checkboxes && axis.checkboxes.length > 0) {
-    // Each checkbox contributes 1 base point; ranked programs get a rank bonus
-    let totalPoints = 0;
-    const maxPoints = axis.checkboxes.length * 2; // max 2 pts each (1 presence + 1 rank)
-    axis.checkboxes.forEach(c => {
-      // Tier multiplier for grad program ranks (law/biz/eng):
-      //   top_20 → 1.0, 21_50 → 0.6, null/missing → 1.0 (backward compatible)
-      const tierKey = c.rankId === 'usNewsLaw' ? 'lawTier'
-                    : c.rankId === 'usNewsBiz' ? 'bizTier'
-                    : c.rankId === 'usNewsEng' ? 'engTier'
-                    : null;
-      const tier = tierKey ? values[tierKey] : null;
-      const tierMult = tier === 'top_20' ? 1.0 : tier === '21_50' ? 0.6 : 1.0;
+    if (axis.key === 'profile') {
+      // Profile-axis scoring (Med / Law / Biz / Eng):
+      //   Presence carries 70% of the pillar (evenly across all 4 assets).
+      //   Rank bonus carries 30%, spread only across the ranked assets
+      //   (Law/Biz/Eng). If no ranks are entered, presence rescales to 100
+      //   so schools aren't penalized for missing US News grad-rank data.
+      const nAssets = axis.checkboxes.length; // 4
+      const presencePerAsset = 70 / nAssets;  // 17.5
+      let presencePts = 0;
+      axis.checkboxes.forEach(c => {
+        if (values[c.id] === true) presencePts += presencePerAsset;
+      });
 
-      if (values[c.id] === true) {
-        totalPoints += 1; // presence point
-        if (c.rankId) {
+      const rankable = axis.checkboxes.filter(c => c.rankId);
+      const enteredRanks = rankable
+        .map(c => {
           const rank = parseFloat(values[c.rankId]);
-          if (!isNaN(rank) && rank > 0) {
-            const rankBonus = Math.max(0, 1 - ((rank - 1) / (c.rankMax - 1)));
-            totalPoints += rankBonus * tierMult;
+          if (isNaN(rank) || rank <= 0) return null;
+          const tierKey = c.rankId === 'usNewsLaw' ? 'lawTier'
+                        : c.rankId === 'usNewsBiz' ? 'bizTier'
+                        : c.rankId === 'usNewsEng' ? 'engTier'
+                        : null;
+          const tier = tierKey ? values[tierKey] : null;
+          const tierMult = tier === 'top_20' ? 1.0 : tier === '21_50' ? 0.6 : 1.0;
+          const bonus = Math.max(0, 1 - ((rank - 1) / (c.rankMax - 1))) * tierMult;
+          return { bonus, checked: values[c.id] === true };
+        })
+        .filter(x => x !== null);
+
+      if (enteredRanks.length === 0) {
+        // No US News grad ranks entered — presence fills the whole pillar
+        checkboxScore = Math.min(100, presencePts * (100 / 70));
+      } else {
+        const perRankShare = 30 / enteredRanks.length;
+        let rankPts = 0;
+        enteredRanks.forEach(r => { rankPts += r.bonus * perRankShare; });
+        checkboxScore = Math.min(100, presencePts + rankPts);
+      }
+    } else {
+      // Legacy checkbox scoring for non-profile axes (e.g. Visibility Big Four / D1)
+      let totalPoints = 0;
+      const maxPoints = axis.checkboxes.length * 2;
+      axis.checkboxes.forEach(c => {
+        const tierKey = c.rankId === 'usNewsLaw' ? 'lawTier'
+                      : c.rankId === 'usNewsBiz' ? 'bizTier'
+                      : c.rankId === 'usNewsEng' ? 'engTier'
+                      : null;
+        const tier = tierKey ? values[tierKey] : null;
+        const tierMult = tier === 'top_20' ? 1.0 : tier === '21_50' ? 0.6 : 1.0;
+
+        if (values[c.id] === true) {
+          totalPoints += 1;
+          if (c.rankId) {
+            const rank = parseFloat(values[c.rankId]);
+            if (!isNaN(rank) && rank > 0) {
+              const rankBonus = Math.max(0, 1 - ((rank - 1) / (c.rankMax - 1)));
+              totalPoints += rankBonus * tierMult;
+            }
+          } else {
+            totalPoints += 1;
           }
         } else {
-          totalPoints += 1;
-        }
-      } else {
-        if (c.rankId) {
-          const rank = parseFloat(values[c.rankId]);
-          if (!isNaN(rank) && rank > 0) {
-            const rankBonus = Math.max(0, 1 - ((rank - 1) / (c.rankMax - 1)));
-            totalPoints += 0.5 * rankBonus * tierMult;
+          if (c.rankId) {
+            const rank = parseFloat(values[c.rankId]);
+            if (!isNaN(rank) && rank > 0) {
+              const rankBonus = Math.max(0, 1 - ((rank - 1) / (c.rankMax - 1)));
+              totalPoints += 0.5 * rankBonus * tierMult;
+            }
           }
         }
-      }
-    });
-    checkboxScore = Math.min(100, (totalPoints / maxPoints) * 100);
+      });
+      checkboxScore = Math.min(100, (totalPoints / maxPoints) * 100);
+    }
   }
+
 
   if (inputScores.length === 0 && checkboxScore === null) return null;
 
