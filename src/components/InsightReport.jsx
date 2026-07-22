@@ -540,7 +540,7 @@ function BrandIndexTable({ focal, focalName, cohort, axes, mode }) {
         </table>
       </div>
       <div style={{ fontSize: 11, color: '#8A93A1', marginTop: 6 }}>
-        Click a column header to sort. Overall = mean of available pillar scores. Focal school highlighted.
+        Click a column header to sort. Scores are on a 0–100 scale. Overall uses tier-weighted blend (see weighting readout below). Focal school highlighted.
       </div>
     </div>
   );
