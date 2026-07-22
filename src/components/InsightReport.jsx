@@ -253,6 +253,15 @@ export default function InsightReport({
             mode={mode}
           />
 
+          {/* Weighting readout — how each dimension contributes to Overall */}
+          <WeightingReadout
+            focal={focal}
+            axes={axes}
+            carnegieLabel={carnegieLabel}
+          />
+
+
+
           {/* Institutional profile matrix (Compare mode only) */}
           {mode === 'compare' && (
             <ProfileMatrix focal={focal} focalName={focalName} cohort={cohort} />
