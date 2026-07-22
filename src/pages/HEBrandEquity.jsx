@@ -261,7 +261,7 @@ const INTL_WEIGHTS = {
   intl_specialist:   { visibility: 0.22, enrollment: 0.14, financial: 0.17, profile: 0.16, research: 0.18, diversity: 0.13 },
 };
 
-const WEIGHTS = {
+export const WEIGHTS = {
   // 6 dimensions: profile = institutional assets (law, med, biz, eng)
   // Aligned to 2025 Carnegie cohorts.
   r1:            { visibility: 0.24, enrollment: 0.14, financial: 0.15, profile: 0.11, research: 0.24, diversity: 0.12 },
